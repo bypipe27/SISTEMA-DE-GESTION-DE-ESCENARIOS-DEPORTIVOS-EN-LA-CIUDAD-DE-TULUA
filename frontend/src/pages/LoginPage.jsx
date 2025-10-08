@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import Button from "../components/Button";
+import NavBar from "../components/NavBar";
 
 function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
@@ -21,9 +22,10 @@ function LoginPage() {
     }
     console.log("Login:", form);
   };
-
+ 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-600 via-green-700 to-green-900 p-6">
+      <NavBar /> 
       <div className="bg-white/10 backdrop-blur-lg rounded-3xl shadow-2xl w-full max-w-md p-8 ring-1 ring-white/20">
         {/* Header */}
         <div className="text-center mb-8">
@@ -31,8 +33,7 @@ function LoginPage() {
             to="/"
             className="inline-flex items-center gap-2 text-green-200 hover:text-white transition"
           >
-            <span className="text-2xl">⚽</span>
-            <span className="text-sm">Volver al inicio</span>
+            {/* <span className="text-sm"> Volver al inicio</span> */}
           </Link>
           <h2 className="text-3xl font-bold text-white mt-3">Iniciar Sesión</h2>
           <p className="text-green-100 text-sm mt-2">

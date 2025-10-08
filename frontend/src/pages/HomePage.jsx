@@ -2,22 +2,14 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { FaFutbol } from "react-icons/fa";
-
+import Button from "../components/Button"; // <-- añadido
+import NavBar from "../components/NavBar";
+ 
 function HomePage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-600 to-green-900 text-white flex flex-col">
       {/* Barra de navegación */}
-      <nav className="w-full py-4 px-10 flex justify-between items-center bg-green-900/80 backdrop-blur-md fixed top-0 z-50 shadow-lg text-white">
-        <h1 className="text-2xl font-bold flex items-center gap-2">
-          <FaFutbol className="text-green-300 text-3xl animate-pulse" />
-          <span>SISTEMA DE GESTION DE ESCENARIOS DEPORTIVOS </span>
-        </h1>
-
-        <div className="space-x-6 text-lg">
-          <Link to="/" className="hover:text-green-300 transition">Inicio</Link>
-          <Link to="/login" className="hover:text-green-300 transition">Registro para cancha</Link>
-        </div>
-      </nav>
+      <NavBar /> 
 
       {/* Sección principal */}
       <div className="flex-grow flex flex-col items-center justify-center text-center mt-20">
@@ -56,15 +48,11 @@ function HomePage() {
           transition={{ delay: 0.5, duration: 1 }}
         >
           <Link to="/login">
-            <button className="bg-white text-green-700 font-semibold px-6 py-3 rounded-full shadow-lg hover:bg-green-100 transition">
-              Iniciar Sesión
-            </button>
+            <Button color="white">Iniciar Sesión</Button>  {/* <-- usa Button */}
           </Link>
 
           <Link to="/register">
-            <button className="bg-green-700 text-white font-semibold px-6 py-3 rounded-full shadow-lg hover:bg-green-800 transition">
-              Crear Cuenta
-            </button>
+            <Button color="green">Crear Cuenta</Button>     {/* <-- usa Button */}
           </Link>
         </motion.div>
       </div>
