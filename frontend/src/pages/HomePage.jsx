@@ -1,27 +1,33 @@
 import React from "react";
 import { Link } from "react-router-dom";
+import Button from "../components/Button";
 
 function HomePage() {
   return (
-    <div style={{ textAlign: "center", marginTop: "60px" }}>
-      <h1>⚽ Bienvenido al Sistema de Gestión de Canchas</h1>
-      <p>Reserva, administra y lleva el control de tus escenarios deportivos.</p>
+    <div className="min-h-screen flex flex-col justify-center items-center bg-gradient-to-br from-green-600 to-green-900 text-white">
+      <h1 className="text-4xl font-bold mb-4 text-center">
+        ⚽ Bienvenido al Sistema de Gestión de Canchas
+      </h1>
+      <p className="text-lg text-center max-w-xl mb-10 opacity-90">
+        Administra, reserva y lleva el control de tus escenarios deportivos de forma rápida y ordenada.
+      </p>
 
-      <div style={{ marginTop: "40px" }}>
+      <div className="flex gap-6">
         <Link to="/login">
-          <button style={{ marginRight: "20px", padding: "10px 20px" }}>
-            Iniciar Sesión
-          </button>
+          <Button color="white">Iniciar Sesión</Button>
         </Link>
 
         <Link to="/register">
-          <button style={{ padding: "10px 20px" }}>
-            Registrarse
-          </button>
+          <Button color="green">Registrarse</Button>
         </Link>
       </div>
+
+      <footer className="mt-20 text-sm text-gray-200">
+        © 2025 Sistema de Gestión de Canchas — Proyecto académico
+      </footer>
     </div>
   );
 }
 
 export default HomePage;
+
