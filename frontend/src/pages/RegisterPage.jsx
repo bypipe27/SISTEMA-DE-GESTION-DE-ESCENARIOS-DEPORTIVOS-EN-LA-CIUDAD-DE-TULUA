@@ -42,6 +42,11 @@ function RegisterPage() {
 
       if (res.ok) {
         setMensaje(data.mensaje || "Registro exitoso. Revisa tu correo para confirmar tu cuenta.");
+
+        // 🔹 CAMBIO: redirigir a la página de verificación con el email
+        window.location.href = `/verify?email=${encodeURIComponent(formData.email)}`;
+
+        // (el reseteo ya no es necesario porque redirigimos, pero lo dejo tal cual pediste)
         setFormData({
           nombre: "",
           email: "",
