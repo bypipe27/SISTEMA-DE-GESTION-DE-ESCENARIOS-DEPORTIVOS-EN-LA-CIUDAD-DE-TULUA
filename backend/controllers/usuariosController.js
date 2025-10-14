@@ -32,7 +32,55 @@ const transporter = nodemailer.createTransport({
 const CODIGO_MINUTOS_EXPIRA = 10;
 const MAX_INTENTOS = 5;
 
+// ...existing code...
 const generarCodigo6 = () => Math.floor(100000 + Math.random() * 900000).toString();
+
+// Helper: autentica credenciales (usa pool, bcrypt, jwt)
+// ...existing code...
+// Helper: autentica credenciales (usa pool, bcrypt, jwt)
+async function autenticarUsuarioPorCredenciales(email, contrasena) {
+  try {
+    const result = await pool.query("SELECT * FROM usuarios WHERE email = $1", [email]);
+    if (result.rowCount === 0) throw new Error("Usuario no encontrado");
+
+    const user = result.rows[0];
+
+    // Soportar nombres de columna distintos; la BD tiene el hash en 'contrasena'
+    const hash = user.contrasena || user.contrasena_hash || user.password || user.hash;
+    if (!hash) {
+      console.error("No se encontró hash de contraseña para el usuario:", { id: user.id, email: user.email });
+      throw new Error("Hash de contraseña no encontrado en la base de datos");
+    }
+
+    const contrasenaValida = await bcrypt.compare(contrasena, hash);
+    if (!contrasenaValida) throw new Error("Contraseña incorrecta");
+
+    const token = jwt.sign({ id: user.id, email: user.email }, process.env.JWT_SECRET, {
+      expiresIn: "7d",
+    });
+
+    return { usuario: user, token };
+  } catch (err) {
+    console.error("Error en autenticarUsuarioPorCredenciales:", err);
+    throw err;
+  }
+}
+
+// Handler HTTP: inicia sesión (usa el helper)
+async function iniciarSesion(req, res) {
+  try {
+    const { email, contrasena } = req.body || {};
+    if (!email || !contrasena) return res.status(400).json({ error: "Email y contraseña son obligatorios." });
+
+    const { usuario, token } = await autenticarUsuarioPorCredenciales(email, contrasena);
+    return res.json({ usuario, token });
+  } catch (error) {
+    console.error("❌ Error login:", error);
+    const status = error.message === "Usuario no encontrado" || error.message === "Contraseña incorrecta" ? 401 : 500;
+    return res.status(status).json({ error: error.message || "Error en el servidor." });
+  }
+}
+// ...existing code...
 
 // =============== REGISTRO: crea pendiente y envía código ==================
 async function registrarUsuario(req, res) {
@@ -166,8 +214,12 @@ async function reenviarCodigo(req, res) {
   }
 }
 
+
+
 module.exports = {
   registrarUsuario,
   verificarCodigo,
   reenviarCodigo,
+  iniciarSesion, 
 };
+

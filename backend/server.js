@@ -9,8 +9,8 @@ app.use(express.json());
 // Importa las rutas
 const usuariosRoutes = require("./routes/usuarios");
 
-console.log("tipo de usuariosRoutes:", typeof usuariosRoutes);
-console.log("usuariosRoutes:", usuariosRoutes);
+// console.log("tipo de usuariosRoutes:", typeof usuariosRoutes);
+// console.log("usuariosRoutes:", usuariosRoutes);
 
 app.use("/api/usuarios", usuariosRoutes);
 
