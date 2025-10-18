@@ -29,85 +29,58 @@ function DashboardPage({
   const [canchas, setCanchas] = useState([]);
   const [fecha, setFecha] = useState(""); // yyyy-mm-dd seleccionada
 
-  useEffect(() => {
-    // datos simulados
-    setCanchas([
-      {
-        id: 1,
-        nombre: "Cancha Central",
-        tipo: "Fútbol 5",
-        capacidad: 10,
-        disponible: true,
-        precio: 20000,
-        descripcion:
-          "Cancha de césped sintético de alta calidad, iluminación LED y graderías techadas.",
-        ocupadas: ["2025-10-12"],
-      },
-      {
-        id: 2,
-        nombre: "Cancha Norte",
-        tipo: "Fútbol 7",
-        capacidad: 14,
-        disponible: true,
-        precio: 30000,
-        descripcion:
-          "Ideal para torneos y entrenamientos grupales, con camerinos y zona de parqueo.",
-        ocupadas: ["2025-10-10", "2025-10-11"],
-      },
-      {
-        id: 3,
-        nombre: "Sede Tenis 1",
-        tipo: "Tenis",
-        capacidad: 4,
-        disponible: true,
-        precio: 15000,
-        descripcion: "Cancha profesional con superficie rápida, excelente iluminación nocturna.",
-        ocupadas: [],
-      },
-      {
-        id: 4,
-        nombre: "Multicancha El Lago",
-        tipo: "Multideporte",
-        capacidad: 12,
-        disponible: true,
-        precio: 25000,
-        descripcion: "Espacio adaptable para baloncesto, voleibol y microfútbol.",
-        ocupadas: ["2025-10-13"],
-      },
-      {
-        id: 5,
-        nombre: "Microfútbol San José",
-        tipo: "Microfútbol",
-        capacidad: 8,
-        disponible: true,
-        precio: 18000,
-        descripcion: "Cancha cubierta con buena ventilación, ideal para partidos rápidos.",
-        ocupadas: ["2025-10-11"],
-      },
-    ]);
-  }, []);
+useEffect(() => {
+  fetch("http://localhost:5000/api/canchas")
+    .then(res => res.json())
+    .then(data => {
+      console.log("✅ Canchas recibidas:", data);
+      setCanchas(data);
+    })
+    .catch(err => console.error("❌ Error al cargar canchas:", err));
+}, []);
 
-  const tipos = useMemo(() => {
-    return Array.from(new Set(canchas.map((c) => c.tipo)));
-  }, [canchas]);
 
-  const estaDisponibleEnFecha = (c, fechaIso) => {
-    if (!fechaIso) return c.disponible;
-    return !((c.ocupadas || []).includes(fechaIso));
-  };
+const tipos = useMemo(() => {
+  return Array.from(new Set(canchas.map((c) => c.tipo)));
+}, [canchas]);
 
-  const resultados = useMemo(() => {
-    return canchas.filter((c) => {
-      if (soloDisponibles && !estaDisponibleEnFecha(c, fecha)) return false;
-      if (tipoFiltro && c.tipo !== tipoFiltro) return false;
-      if (!q) return true;
-      const term = q.toLowerCase();
-      return (
-        c.nombre.toLowerCase().includes(term) ||
-        c.tipo.toLowerCase().includes(term)
-      );
-    });
-  }, [canchas, q, tipoFiltro, soloDisponibles, fecha]);
+// ...existing code...
+
+const estaDisponibleEnFecha = (c, fechaIso) => {
+  if (!fechaIso) return Boolean(c.disponible);
+  try {
+    const d = new Date(fechaIso + "T00:00:00"); // asegurar interpretación como día
+    const dow = d.getDay(); // 0 Domingo ... 6 Sábado
+
+    // si la cancha define días cerrados de la semana (cerradosDias: [0..6])
+    if ((c.cerradosDias || []).includes(dow)) return false;
+
+    // si hay fechas específicas cerradas (cerradosFechas: ["yyyy-mm-dd"])
+    if ((c.cerradosFechas || []).includes(fechaIso)) return false;
+
+    // si la fecha está ocupada por una reserva
+    if ((c.ocupadas || []).includes(fechaIso)) return false;
+
+    return Boolean(c.disponible);
+  } catch {
+    return Boolean(c.disponible);
+  }
+};
+
+// NUEVA: lista filtrada de resultados usada en el render
+const resultados = useMemo(() => {
+  return canchas.filter((c) => {
+    if (soloDisponibles && !estaDisponibleEnFecha(c, fecha)) return false;
+    if (tipoFiltro && c.tipo !== tipoFiltro) return false;
+    if (!q) return true;
+    const term = q.toLowerCase();
+    return (
+      (c.nombre || "").toLowerCase().includes(term) ||
+      (c.tipo || "").toLowerCase().includes(term)
+    );
+  });
+}, [canchas, q, tipoFiltro, soloDisponibles, fecha]);
+// ...existing code...
 
   const handleReservar = (canchaId) => {
     if (!fecha) {
