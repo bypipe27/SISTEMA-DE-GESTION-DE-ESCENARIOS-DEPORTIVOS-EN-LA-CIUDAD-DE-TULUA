@@ -8,10 +8,13 @@ app.use(express.json());
 
 // rutas
 const usuariosRoutes = require("./routes/usuarios");
-const canchasRoutes = require("./routes/canchas");
+const canchasRoutes = require("./routes/canchas"); 
+const passwordRoutes = require("./routes/password");  
+
 
 app.use("/api/usuarios", usuariosRoutes);
 app.use("/api/canchas", canchasRoutes);
+app.use("/api/password", passwordRoutes);  
 
 // servidor
 const PORT = process.env.PORT || 5000;

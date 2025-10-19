@@ -113,8 +113,8 @@ const resultados = useMemo(() => {
     localStorage.removeItem("token");
     localStorage.removeItem("usuario");
     navigate("/login");
-  };
-
+  };  
+  
   return (
     <div className="min-h-screen bg-gray-100">
       {/* NAVBAR */}

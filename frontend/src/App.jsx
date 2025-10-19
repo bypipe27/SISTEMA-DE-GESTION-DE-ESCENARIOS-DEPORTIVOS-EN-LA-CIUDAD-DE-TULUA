@@ -6,6 +6,8 @@ import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import DashboardPage from "./pages/DashboardPage";
 import CanchaDetailsPage from "./pages/CanchaDetailsPage";
+import ForgotPasswordPage from "./pages/ForgotPasswordPage"; // ✅ NUEVO
+import ResetPasswordPage from "./pages/ResetPasswordPage";   // ✅ NUEVO
 
 function App() {
   return (
@@ -17,6 +19,8 @@ function App() {
         <Route path="/verify" element={<VerifyCodePage />} /> {/* ✅ Nueva ruta */}
        <Route path="/cancha/:id" element={<CanchaDetailsPage />} />
         <Route path="/dashboard" element={<DashboardPage />} /> {/* ✅ Nueva ruta */}
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} /> {/* ✅ NUEVO */}
+        <Route path="/reset-password" element={<ResetPasswordPage />} />   {/* ✅ NUEVO */}
       </Routes>
     </Router>
   );
