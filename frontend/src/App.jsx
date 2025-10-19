@@ -1,65 +1,28 @@
 import React from "react";
-import { useState, useEffect } from "react";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import HomePage from "./pages/HomePage";
+import VerifyCodePage from "./pages/VerifyCodePage"; 
+import LoginPage from "./pages/LoginPage";
+import RegisterPage from "./pages/RegisterPage";
+import DashboardPage from "./pages/DashboardPage";
+import CanchaDetailsPage from "./pages/CanchaDetailsPage";
 
 function App() {
-  const [usuarios, setUsuarios] = useState([]);
-  const [nombre, setNombre] = useState("");
-  const [email, setEmail] = useState("");
-
-  useEffect(() => {
-    fetch("http://localhost:5000/api/usuarios")
-      .then(res => res.json())
-      .then(data => setUsuarios(data))
-      .catch(err => console.error("❌ Error al conectar con el backend:", err));
-  }, []);
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
-    const res = await fetch("http://localhost:5000/api/usuarios", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ nombre, email }),
-    });
-
-    const data = await res.json();
-    setUsuarios([...usuarios, data]);
-    setNombre("");
-    setEmail("");
-  };
-
   return (
-    <div style={{ padding: "20px" }}>
-      <h1>Gestión de Usuarios ⚽</h1>
-
-      <form onSubmit={handleSubmit}>
-        <input
-          type="text"
-          placeholder="Nombre"
-          value={nombre}
-          onChange={(e) => setNombre(e.target.value)}
-          required
-        />
-        <input
-          type="email"
-          placeholder="Correo"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-        />
-        <button type="submit">Agregar Usuario</button>
-      </form>
-
-      <h2>Usuarios registrados:</h2>
-      <ul>
-        {usuarios.map((u) => (
-          <li key={u.id}>
-            {u.nombre} — {u.email}
-          </li>
-        ))}
-      </ul>
-    </div>
+    <Router>
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
+        <Route path="/verify" element={<VerifyCodePage />} /> {/* ✅ Nueva ruta */}
+       <Route path="/cancha/:id" element={<CanchaDetailsPage />} />
+        <Route path="/dashboard" element={<DashboardPage />} /> {/* ✅ Nueva ruta */}
+      </Routes>
+    </Router>
   );
 }
 
+
+
 export default App;
+

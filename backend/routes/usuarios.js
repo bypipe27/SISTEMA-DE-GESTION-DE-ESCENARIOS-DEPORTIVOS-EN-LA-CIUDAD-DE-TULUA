@@ -1,31 +1,16 @@
 const express = require("express");
 const router = express.Router();
-const pool = require("../db");
 
-// Obtener todos los usuarios
-router.get("/", async (req, res) => {
-  try {
-    const result = await pool.query("SELECT * FROM usuarios");
-    res.json(result.rows);
-  } catch (error) {
-    console.error("❌ Error al obtener usuarios:", error);
-    res.status(500).json({ error: "Error al obtener usuarios" });
-  }
-});
+const {
+  registrarUsuario,
+  verificarCodigo,
+  reenviarCodigo,
+  iniciarSesion, 
+} = require("../controllers/usuariosController");
 
-// Agregar un nuevo usuario
-router.post("/", async (req, res) => {
-  try {
-    const { nombre, email } = req.body;
-    const result = await pool.query(
-      "INSERT INTO usuarios (nombre, email) VALUES ($1, $2) RETURNING *",
-      [nombre, email]
-    );
-    res.json(result.rows[0]);
-  } catch (error) {
-    console.error("❌ Error al insertar usuario:", error);
-    res.status(500).json({ error: "Error al insertar usuario" });
-  }
-});
+router.post("/register", registrarUsuario);     // crea pendiente y envía código
+router.post("/verify", verificarCodigo);        // valida código y crea usuario
+router.post("/resend-code", reenviarCodigo); 
+router.post("/login", iniciarSesion);             // inicia sesión
 
 module.exports = router;
