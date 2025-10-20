@@ -7,8 +7,9 @@ import RegisterPage from "./pages/RegisterPage";
 import DashboardPage from "./pages/DashboardPage";
 import CanchaDetailsPage from "./pages/CanchaDetailsPage";
 import ReservaPage from "./pages/ReservaPage";
-import ForgotPasswordPage from "./pages/ForgotPasswordPage"; // ✅ NUEVO
-import ResetPasswordPage from "./pages/ResetPasswordPage";   // ✅ NUEVO
+import ForgotPasswordPage from "./pages/ForgotPasswordPage"; 
+import ResetPasswordPage from "./pages/ResetPasswordPage";
+import ConfirmacionReservaPage from "./pages/ConfirmacionReservaPage";
 
 function App() {
   return (
@@ -21,8 +22,9 @@ function App() {
         <Route path="/cancha/:id" element={<CanchaDetailsPage />} />
         <Route path="/dashboard" element={<DashboardPage />} /> {/* ✅ Nueva ruta */}
         <Route path="/reservar/:id" element={<ReservaPage/>} />     
-        <Route path="/forgot-password" element={<ForgotPasswordPage />} /> {/* ✅ NUEVO */}
-        <Route path="/reset-password" element={<ResetPasswordPage />} />   {/* ✅ NUEVO */}
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} /> 
+        <Route path="/reset-password" element={<ResetPasswordPage />} />   
+        <Route path="/confirmacion-reserva" element={<ConfirmacionReservaPage />} />
       </Routes>
     </Router>
   );
