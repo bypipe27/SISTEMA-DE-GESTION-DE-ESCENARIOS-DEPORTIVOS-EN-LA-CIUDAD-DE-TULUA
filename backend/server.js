@@ -10,10 +10,13 @@ app.use(express.json());
 const usuariosRoutes = require("./routes/usuarios");
 const canchasRoutes = require("./routes/canchas");
 const reservasRoutes = require("./routes/reservas");
+const passwordRoutes = require("./routes/password");  
+
 
 app.use("/api/reservas", reservasRoutes);
 app.use("/api/usuarios", usuariosRoutes);
 app.use("/api/canchas", canchasRoutes);
+app.use("/api/password", passwordRoutes);  
 
 
 // servidor
