@@ -200,5 +200,50 @@ async function createReserva(req, res) {
   }
 }
 
+// Obtener reservas del usuario (por email/teléfono)
+async function obtenerReservasUsuario(req, res) {
+  try {
+    const { email, telefono } = req.query;
+    
+    if (!email && !telefono) {
+      return res.status(400).json({ error: "Email o teléfono son requeridos" });
+    }
 
-module.exports = { availability, createReserva };
+    let query = `
+      SELECT r.*, c.nombre as cancha_nombre, c.direccion, c.precio, c.descripcion
+      FROM reservas r
+      JOIN canchas c ON r.cancha_id = c.id
+      WHERE 1=1
+    `;
+    const params = [];
+    let paramCount = 0;
+
+    if (email) {
+      paramCount++;
+      query += ` AND r.cliente_nombre ILIKE $${paramCount}`;
+      params.push(`%${email}%`);
+    }
+
+    if (telefono) {
+      paramCount++;
+      query += ` AND r.cliente_telefono = $${paramCount}`;
+      params.push(telefono);
+    }
+
+    query += ` ORDER BY r.fecha DESC, r.inicio DESC`;
+
+    const result = await db.query(query, params);
+    
+    return res.json({
+      reservas: result.rows,
+      total: result.rowCount
+    });
+    
+  } catch (error) {
+    console.error("❌ Error obteniendo reservas:", error);
+    return res.status(500).json({ error: "Error al obtener reservas" });
+  }
+}
+
+
+module.exports = { availability, createReserva, obtenerReservasUsuario };
