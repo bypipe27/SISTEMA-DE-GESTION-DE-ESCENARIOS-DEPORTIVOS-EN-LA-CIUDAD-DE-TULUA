@@ -1,10 +1,16 @@
-// ...existing code...
 const db = require("../db.js");
 
 async function obtenerCanchas(req, res) {
   try {
     const result = await db.query("SELECT * FROM canchas ORDER BY id ASC");
-    const filas = result.rows || result;
+    const filas = (result.rows || result).map((c) => ({
+      ...c,
+      // 🔧 Asegurar tipos correctos
+      cerradosdias: (c.cerradosdias || []).map(Number),
+      cerradosfechas: c.cerradosfechas || [],
+      ocupadas: c.ocupadas || [],
+    }));
+
     console.log("✅ Canchas consultadas (controller):", filas.length);
     res.json(filas);
   } catch (error) {
@@ -20,7 +26,16 @@ async function obtenerCanchaPorId(req, res) {
     const result = await db.query("SELECT * FROM canchas WHERE id = $1", [id]);
     const fila = (result.rows && result.rows[0]) || null;
     if (!fila) return res.status(404).json({ error: "Cancha no encontrada" });
-    res.json(fila);
+
+    // 🔧 Asegurar tipos también aquí (por consistencia)
+    const cancha = {
+      ...fila,
+      cerradosdias: (fila.cerradosdias || []).map(Number),
+      cerradosfechas: fila.cerradosfechas || [],
+      ocupadas: fila.ocupadas || [],
+    };
+
+    res.json(cancha);
   } catch (error) {
     console.error("❌ Error obtenerCanchaPorId:", error);
     res.status(500).json({ error: "Error al obtener la cancha" });

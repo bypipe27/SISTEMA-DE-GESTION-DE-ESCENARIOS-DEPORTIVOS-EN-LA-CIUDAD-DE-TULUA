@@ -45,27 +45,27 @@ const tipos = useMemo(() => {
 }, [canchas]);
 
 // ...existing code...
-
 const estaDisponibleEnFecha = (c, fechaIso) => {
   if (!fechaIso) return Boolean(c.disponible);
+
   try {
-    const d = new Date(fechaIso + "T00:00:00"); // asegurar interpretación como día
-    const dow = d.getDay(); // 0 Domingo ... 6 Sábado
+    const fechaObj = new Date(fechaIso + "T00:00:00");
+    const dow = fechaObj.getDay(); // 0 = domingo, 1 = lunes, ..., 6 = sábado
 
-    // si la cancha define días cerrados de la semana (cerradosDias: [0..6])
-    if ((c.cerradosDias || []).includes(dow)) return false;
+    // Verifica si el día está cerrado
+    if ((c.cerrados_dias || []).includes(dow)) return false;
 
-    // si hay fechas específicas cerradas (cerradosFechas: ["yyyy-mm-dd"])
-    if ((c.cerradosFechas || []).includes(fechaIso)) return false;
-
-    // si la fecha está ocupada por una reserva
-    if ((c.ocupadas || []).includes(fechaIso)) return false;
+    // Verifica si la fecha exacta está cerrada
+    if ((c.cerrados_fechas || []).includes(fechaIso)) return false;
 
     return Boolean(c.disponible);
-  } catch {
+  } catch (err) {
+    console.error("Error evaluando disponibilidad:", err);
     return Boolean(c.disponible);
   }
 };
+
+
 
 // NUEVA: lista filtrada de resultados usada en el render
 const resultados = useMemo(() => {
@@ -81,27 +81,16 @@ const resultados = useMemo(() => {
   });
 }, [canchas, q, tipoFiltro, soloDisponibles, fecha]);
 // ...existing code...
-
-  const handleReservar = (canchaId) => {
+  const handleReservar = (cancha) => {
     if (!fecha) {
       alert("Seleccione una fecha antes de reservar.");
       return;
     }
+    // navega a /reservar/:id y pasa la cancha + fecha en state
+    navigate(`/reservar/${cancha.id}`, { state: { cancha, fecha } });
+};
 
-    setCanchas((prev) =>
-      prev.map((c) => {
-        if (c.id !== canchaId) return c;
-        const ocup = c.ocupadas || [];
-        if (ocup.includes(fecha)) {
-          alert("La cancha ya está ocupada en esa fecha.");
-          return c;
-        }
-        return { ...c, ocupadas: [...ocup, fecha] };
-      })
-    );
 
-    alert("Reserva simulada guardada para la fecha " + fecha + ".");
-  };
 
   const handleVerDetalles = (cancha) => {
     // Lleva a la página de detalles con el id de la cancha
@@ -113,8 +102,8 @@ const resultados = useMemo(() => {
     localStorage.removeItem("token");
     localStorage.removeItem("usuario");
     navigate("/login");
-  };
-
+  };  
+  
   return (
     <div className="min-h-screen bg-gray-100">
       {/* NAVBAR */}
@@ -211,11 +200,12 @@ const resultados = useMemo(() => {
 
             <label className="block text-sm mb-1">Fecha</label>
             <input
-              type="date"
-              value={fecha}
-              onChange={(e) => setFecha(e.target.value)}
-              className="w-full border rounded px-3 py-2 mb-3 text-sm"
-            />
+                type="date"
+                value={fecha}
+                onChange={(e) => setFecha(e.target.value)}
+                min={new Date().toISOString().split("T")[0]} // 🔒 Bloquea fechas anteriores
+                className="w-full border rounded px-3 py-2 mb-3 text-sm"
+              />
 
             <div className="flex items-center gap-2 mb-3">
               <input
@@ -301,9 +291,9 @@ const resultados = useMemo(() => {
                         {disponibleHoy ? "Disponible" : "No disponible"}
                       </span>
                       <div className="flex gap-2">
-                        <button
+                          <button
                           disabled={!disponibleHoy}
-                          onClick={() => handleReservar(c.id)}
+                          onClick={() => handleReservar(c)}
                           className={`px-3 py-1 rounded ${
                             disponibleHoy
                               ? "bg-green-600 text-white"
@@ -312,6 +302,7 @@ const resultados = useMemo(() => {
                         >
                           Reservar
                         </button>
+
 
                         <button
                           onClick={() => handleVerDetalles(c)}
