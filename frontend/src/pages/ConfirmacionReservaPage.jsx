@@ -4,8 +4,6 @@ import { motion } from "framer-motion";
 import { FaCheckCircle, FaFutbol, FaCalendarAlt, FaClock, FaUser, FaPhone, FaMoneyBillWave, FaArrowLeft, FaShare } from "react-icons/fa";
 import NavBar from "../components/NavBar";
 import Button from "../components/Button";
-// Base URL del API; mantener consistente con el resto de páginas
-const API_BASE = "http://localhost:5000";
 
 function ConfirmacionReservaPage() {
   const location = useLocation();
@@ -203,44 +201,7 @@ const formatearFecha = (fechaStr) => {
                   <FaArrowLeft />
                   Volver al Dashboard
                 </Button>
-                {/* Botón para cancelar la reserva: realiza DELETE a /api/reservas/:id */}
-                <Button
-                  color="red"
-                  onClick={async () => {
-                    if (!window.confirm("¿Estás seguro de cancelar esta reserva?")) return;
-                    try {
-                      const resp = await fetch(`${API_BASE}/api/reservas/${reserva.id}`, {
-                        method: "DELETE",
-                        headers: { "Content-Type": "application/json" },
-                      });
-
-                      if (resp.status === 404) {
-                        alert("Reserva no encontrada o ya fue eliminada.");
-                        navigate("/dashboard");
-                        return;
-                      }
-
-                      if (!resp.ok) {
-                        const err = await resp.json().catch(() => ({}));
-                        alert(err.error || "Error al cancelar la reserva.");
-                        return;
-                      }
-
-                      const body = await resp.json();
-                      // Notificar al usuario y volver al dashboard
-                      alert("Reserva cancelada correctamente.");
-                      navigate("/dashboard");
-                    } catch (error) {
-                      console.error("Error al cancelar reserva:", error);
-                      alert("Error de red al cancelar la reserva.");
-                    }
-                  }}
-                  className="flex items-center gap-2"
-                >
-                  ✖
-                  Cancelar Reserva
-                </Button>
-
+                
                 <Button 
                   color="white" 
                   onClick={compartirReserva}

@@ -140,8 +140,7 @@ async function createReserva(req, res) {
       cliente_telefono,
       metodo_pago = "efectivo",
       total = null,
-    } = req.body; 
-    
+    } = req.body;
 
     // Validación básica
     if (!cancha_id || !date || !start || !end || !cliente_nombre) {
@@ -202,57 +201,4 @@ async function createReserva(req, res) {
 }
 
 
-// Exportamos las funciones del controlador
-// - availability: calcula slots para una cancha/fecha
-// - createReserva: inserta una nueva reserva (usa transacción y chequeo de conflicto)
-// - cancelReserva: elimina una reserva por id (implementada más abajo)
-// Nota: cancelReserva actualmente realiza DELETE físico. Si se desea mantener
-// historial o implementaciones de devolución/reembolso, considerar soft-delete.
 module.exports = { availability, createReserva };
-
-// DELETE /api/reservas/:id
-async function cancelReserva(req, res) {
-  const client = await db.connect();
-  try {
-    const id = Number(req.params.id);
-    // Validación básica del id: debe ser convertible a número distinto de 0.
-    // (Si usas ids autoincrementales, 0 no es válido.)
-    if (!id) return res.status(400).json({ error: "id de reserva inválido" });
-
-    await client.query("BEGIN");
-
-    // verificar existencia
-    const qSelect = `SELECT * FROM reservas WHERE id = $1 LIMIT 1`;
-    const found = await client.query(qSelect, [id]);
-    if (found.rowCount === 0) {
-      await client.query("ROLLBACK");
-      return res.status(404).json({ error: "Reserva no encontrada" });
-    }
-
-    // eliminar y devolver la fila eliminada
-    const qDel = `DELETE FROM reservas WHERE id = $1 RETURNING *`;
-    const deleted = await client.query(qDel, [id]);
-
-    await client.query("COMMIT");
-
-    return res.json({ success: true, reserva: deleted.rows[0] });
-  } catch (err) {
-    try {
-      await client.query("ROLLBACK");
-    } catch (rbErr) {
-      // Log adicional si falla el rollback — útil en entornos con problemas de conexión.
-      console.error("Error haciendo ROLLBACK en cancelReserva:", rbErr);
-    }
-    // Log del error principal y respuesta genérica al cliente.
-    // No devolvemos detalles internos en producción por seguridad.
-    console.error("reservas.cancelReserva error:", err);
-    return res.status(500).json({ error: "Error cancelando reserva" });
-  } finally {
-    client.release();
-  }
-}
-
-// Añadimos la exportación final incluyendo cancelReserva
-// (observa que al principio del archivo ya existe una exportación; esta última
-// sobrescribe/actualiza para exponer también cancelReserva de forma explícita).
-module.exports = { availability, createReserva, cancelReserva };
