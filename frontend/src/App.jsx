@@ -10,6 +10,8 @@ import ReservaPage from "./pages/ReservaPage";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage"; 
 import ResetPasswordPage from "./pages/ResetPasswordPage";
 import ConfirmacionReservaPage from "./pages/ConfirmacionReservaPage";
+import MisReservasPage from "./pages/MisReservasPage";
+
 
 function App() {
   return (
@@ -25,6 +27,7 @@ function App() {
         <Route path="/forgot-password" element={<ForgotPasswordPage />} /> 
         <Route path="/reset-password" element={<ResetPasswordPage />} />   
         <Route path="/confirmacion-reserva" element={<ConfirmacionReservaPage />} />
+        <Route path="/mis-reservas" element={<MisReservasPage />} />
       </Routes>
     </Router>
   );
