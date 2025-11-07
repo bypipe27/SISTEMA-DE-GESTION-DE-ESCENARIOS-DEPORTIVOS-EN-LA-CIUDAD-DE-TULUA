@@ -1,0 +1,32 @@
+services:
+  - type: web
+    name: tulua-fullstack
+    env: node
+    branch: main
+    buildCommand: |
+      cd frontend && npm ci && npm run build
+      cd ../backend && npm ci
+    startCommand: cd backend && node server.js
+    envVars:
+      - key: DB_HOST
+        value: localhost
+      - key: DB_USER
+        value: postgres
+      - key: DB_PASSWORD
+        value: cobypipe27
+      - key: DB_NAME
+        value: reservas_canchas
+      - key: DB_PORT
+        value: "5432"
+      - key: PORT
+        value: "5000"
+      - key: EMAIL_USER
+        value: reservasdecanchasuv@gmail.com
+      - key: EMAIL_PASS
+        value: zevqbgoxrrnshcet
+      - key: JWT_SECRET
+        value: supersecreto123
+      - key: FRONTEND_URL
+        value: http://localhost:5173
+      - key: NODE_ENV
+        value: production
