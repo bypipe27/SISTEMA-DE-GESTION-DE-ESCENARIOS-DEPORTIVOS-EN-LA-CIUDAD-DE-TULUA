@@ -1,12 +1,12 @@
 const dbModule = require("../db.js");
 const pool = dbModule.pool || dbModule.default || dbModule;
 
-async function crearUsuario(nombre, email, telefono, contrasenaHash) {
+async function crearUsuario(nombre, email, telefono, contrasenaHash, role = "user") {
   const result = await pool.query(
-    `INSERT INTO usuarios (nombre, email, telefono, contrasena, verificado)
-     VALUES ($1, $2, $3, $4, TRUE)
-     RETURNING id, nombre, email, telefono, verificado`,
-    [nombre, email, telefono, contrasenaHash]
+    `INSERT INTO usuarios (nombre, email, telefono, contrasena, verificado, role)
+     VALUES ($1, $2, $3, $4, TRUE, $5)
+     RETURNING id, nombre, email, telefono, verificado, role`,
+    [nombre, email, telefono, contrasenaHash, role]
   );
   return result.rows[0];
 }

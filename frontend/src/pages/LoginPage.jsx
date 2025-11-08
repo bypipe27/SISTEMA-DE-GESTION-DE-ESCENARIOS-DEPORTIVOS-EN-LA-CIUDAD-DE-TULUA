@@ -42,8 +42,12 @@ function LoginPage() {
       localStorage.setItem("token", data.token);
       localStorage.setItem("usuario", JSON.stringify(data.usuario));
 
-      // ✅ Redirigir al dashboard
-      navigate("/dashboard");
+      // redirigir según role
+      if (data.usuario?.role === "provider" || data.usuario?.role === "proveedor") {
+        navigate("/dashboard-provider"); // crea esta ruta
+      } else {
+        navigate("/dashboard");
+      }
 
     } catch (err) {
       console.error("❌ Error al iniciar sesión:", err);
