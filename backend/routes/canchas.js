@@ -1,28 +1,55 @@
+
+
+// const express = require("express");
+// const router = express.Router();const {
+//   obtenerCanchas,
+//   ProviderListCanchas,
+//   ProviderCreateCancha,
+//   ProviderUpdateCancha,
+//   ProviderDeleteCancha,
+// } = require("../controllers/canchasController");
+
+// // listado público
+// router.get("/", obtenerCanchas);
+
+// // provider: solo accesible con token (role provider)
+// router.get("/provider", ProviderListCanchas);
+// router.post("/provider", ProviderCreateCancha);
+// router.put("/provider/:id", ProviderUpdateCancha);
+// router.delete("/provider/:id", ProviderDeleteCancha);
+
+// module.exports = router;
+
+
+// const express = require("express");
+// const router = express.Router();const {
+//   obtenerCanchas,
+//   ProviderListCanchas,
+//   ProviderCreateCancha,
+//   ProviderUpdateCancha,
+//   ProviderDeleteCancha,
+// } = require("../controllers/canchasController");
+
+// // listado público
+// router.get("/", obtenerCanchas);
+
+// // provider: solo accesible con token (role provider)
+// router.get("/provider", ProviderListCanchas);
+// router.post("/provider", ProviderCreateCancha);
+// router.put("/provider/:id", ProviderUpdateCancha);
+// router.delete("/provider/:id", ProviderDeleteCancha);
+
+// module.exports = router;
+
 const express = require("express");
 const router = express.Router();
-const { obtenerCanchas, 
-    obtenerCanchaPorId, 
-    registrarCanchaPendiente,
-    verificarCancha,
-    reenviarCodigoCancha
-} = require("../controllers/canchasController");
+const auth = require("../middleware/auth");
+const { obtenerCanchas, ProviderListCanchas, ProviderCreateCancha, ProviderUpdateCancha, ProviderDeleteCancha } = require("../controllers/canchasController");
 
-// GET /api/canchas
 router.get("/", obtenerCanchas);
-
-// GET /api/canchas/:id
-router.get("/:id", obtenerCanchaPorId);
-
-router.post("/", registrarCanchaPendiente);
-
-// Endpoint para verificar código
-router.post("/verify", verificarCancha);
-
-// (Opcional) si prefieres /register en vez de /, añade también:
-router.post("/register", registrarCanchaPendiente);
-
-// REENVIAR CÓDIGO (agregar)
-router.post("/resend-code", reenviarCodigoCancha);
-
+router.get("/provider", auth, ProviderListCanchas);
+router.post("/provider", auth, ProviderCreateCancha);
+router.put("/provider/:id", auth, ProviderUpdateCancha);
+router.delete("/provider/:id", auth, ProviderDeleteCancha);
 
 module.exports = router;

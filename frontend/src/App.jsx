@@ -11,7 +11,7 @@ import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
 import ConfirmacionReservaPage from "./pages/ConfirmacionReservaPage";
 import MisReservasPage from "./pages/MisReservasPage";
-import RegisterCancha from "./pages/RegisterCancha";
+import RegisterProvider from "./pages/RegisterProvider";
 import ProviderDashboard from "./pages/DashboardProvider"; 
 import ProviderReportes from "./pages/ProviderReportes";
 import ProviderReservas from "./pages/ProviderReservas";
@@ -33,7 +33,7 @@ function App() {
         <Route path="/reset-password" element={<ResetPasswordPage />} />   
         <Route path="/confirmacion-reserva" element={<ConfirmacionReservaPage />} />
         <Route path="/mis-reservas" element={<MisReservasPage />} />
-        <Route path="/register-cancha" element={<RegisterCancha />} />
+        <Route path="/register-provider" element={<RegisterProvider/>} />
         <Route path="/dashboard-provider" element={<ProviderDashboard />} />
         <Route path="/reportes-provider" element={<ProviderReportes />} />
         <Route path="/reservas-provider" element={<ProviderReservas />} />

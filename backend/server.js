@@ -1,3 +1,5 @@
+
+
 const express = require("express");
 const cors = require("cors");
 require("dotenv").config();
@@ -11,7 +13,6 @@ const usuariosRoutes = require("./routes/usuarios");
 const canchasRoutes = require("./routes/canchas");
 const reservasRoutes = require("./routes/reservas");
 const passwordRoutes = require("./routes/password");  
-
 
 
 app.use("/api/reservas", reservasRoutes);

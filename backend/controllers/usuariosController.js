@@ -55,7 +55,7 @@ async function autenticarUsuarioPorCredenciales(email, contrasena) {
     const contrasenaValida = await bcrypt.compare(contrasena, hash);
     if (!contrasenaValida) throw new Error("Contraseña incorrecta");
 
-    const token = jwt.sign({ id: user.id, email: user.email }, process.env.JWT_SECRET, {
+    const token = jwt.sign({ id: user.id, email: user.email ,role:user.role}, process.env.JWT_SECRET, {
       expiresIn: "7d",
     });
 

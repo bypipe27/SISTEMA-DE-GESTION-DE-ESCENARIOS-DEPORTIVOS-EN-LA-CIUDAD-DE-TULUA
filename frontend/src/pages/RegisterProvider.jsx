@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import NavBar from "../components/NavBar";
 import { useNavigate } from "react-router-dom";
 
-function RegisterCancha() {
+function RegisterProvider() {
   const navigate = useNavigate();
   const [form, setForm] = useState({
     nombre: "",
@@ -103,4 +103,4 @@ function RegisterCancha() {
   );
 }
 
-export default RegisterCancha;
+export default RegisterProvider;
