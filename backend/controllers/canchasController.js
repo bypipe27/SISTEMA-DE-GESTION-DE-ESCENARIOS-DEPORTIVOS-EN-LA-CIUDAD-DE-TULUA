@@ -14,6 +14,45 @@ const {
   eliminarCancha,
 } = require("../models/canchaModel.js");
 
+async function obtenerCanchaPorId(req, res) {
+  try {
+    const id = Number(req.params.id);
+    if (!id) return res.status(400).json({ error: "id inválido" });
+
+    // reutiliza la función del modelo que ya existe
+    const cancha = await obtenerCanchaPorIdProvider(id);
+    if (!cancha) return res.status(404).json({ error: "Cancha no encontrada" });
+
+    // Normalizar campos para frontend
+    // horarios: object (parsear string si viene como JSON)
+    cancha.horarios = cancha.horarios
+      ? (typeof cancha.horarios === "string" ? (() => { try { return JSON.parse(cancha.horarios); } catch { return {}; } })() : cancha.horarios)
+      : {};
+
+    // cerrados_dias / cerradosfechas normalizados como arrays
+    cancha.cerrados_dias = cancha.cerrados_dias ?? cancha.cerradosdias ?? cancha.cerradosDias ?? [];
+    if (typeof cancha.cerrados_dias === "string") {
+      try { cancha.cerrados_dias = JSON.parse(cancha.cerrados_dias); } catch { cancha.cerrados_dias = []; }
+    }
+
+    cancha.cerrados_fechas = cancha.cerrados_fechas ?? cancha.cerradosfechas ?? cancha.cerradosFechas ?? [];
+    if (typeof cancha.cerrados_fechas === "string") {
+      try { cancha.cerrados_fechas = JSON.parse(cancha.cerrados_fechas); } catch { cancha.cerrados_fechas = []; }
+    }
+
+    // ocupadas (si aplica)
+    cancha.ocupadas = cancha.ocupadas ?? [];
+    if (typeof cancha.ocupadas === "string") {
+      try { cancha.ocupadas = JSON.parse(cancha.ocupadas); } catch { cancha.ocupadas = []; }
+    }
+
+    return res.json(cancha);
+  } catch (err) {
+    console.error("obtenerCanchaPorId error:", err);
+    return res.status(500).json({ error: "Error obteniendo cancha" });
+  }
+}
+
 
 async function obtenerCanchas(req, res) {
   try {
@@ -41,47 +80,6 @@ async function obtenerCanchas(req, res) {
   }
 }
 
-
-// async function ProviderListCanchas(req, res) {
-//   try {
-//     const userId = req.user?.id;
-//     if (!userId) return res.status(401).json({ error: "No autorizado" });
-
-//     const result = await db.query("SELECT * FROM canchas WHERE propietario_id = $1 ORDER BY id DESC", [userId]);
-//     const rows = result.rows || [];
-//     const out = rows.map(r => ({
-//       ...r,
-//       horarios: r.horarios ? (typeof r.horarios === "string" ? JSON.parse(r.horarios) : r.horarios) : {},
-//       cerrados_dias: r.cerrados_dias || [],
-//       cerrados_fechas: r.cerrados_fechas || [],
-//     }));
-//     console.log(`ProviderListCanchas -> provider ${userId} filas:`, out.length);
-//     return res.json(out);
-//   } catch (err) {
-//     console.error("ProviderListCanchas:", err);
-//     return res.status(500).json({ error: "Error listando canchas" });
-//   }
-// }
-// async function ProviderListCanchas(req, res) {
-//   try {
-//     const userId = req.user?.id;
-//     if (!userId) return res.status(401).json({ error: "No autorizado" });
-
-//     const result = await db.query("SELECT * FROM canchas WHERE propietario_id = $1 ORDER BY id DESC", [userId]);
-//     const rows = result.rows || [];
-//     const out = rows.map(r => ({
-//       ...r,
-//       horarios: r.horarios ? (typeof r.horarios === "string" ? JSON.parse(r.horarios) : r.horarios) : {},
-//       cerrados_dias: r.cerrados_dias || [],
-//       cerrados_fechas: r.cerrados_fechas || [],
-//     }));
-//     console.log(`ProviderListCanchas -> provider ${userId} filas:`, out.length);
-//     res.json(out);
-//   } catch (err) {
-//     console.error("ProviderListCanchas error:", err);
-//     res.status(500).json({ error: "Error al listar canchas del proveedor" });
-//   }
-// }
 
 async function ProviderListCanchas(req, res) {
   try {
@@ -183,5 +181,6 @@ module.exports = {
   ProviderListCanchas,
   ProviderCreateCancha,
   ProviderUpdateCancha,
-  ProviderDeleteCancha, 
+  ProviderDeleteCancha,
+  obtenerCanchaPorId, 
 };

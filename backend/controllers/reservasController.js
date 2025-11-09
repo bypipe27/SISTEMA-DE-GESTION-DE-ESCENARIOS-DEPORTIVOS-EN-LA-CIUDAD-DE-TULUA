@@ -248,6 +248,75 @@ async function createReserva(req, res) {
   }
 }
 
+// listar reservas del provider (todas las reservas de canchas que le pertenecen)
+async function ProviderListReservas(req, res) {
+  try {
+    const providerId = req.user?.id;
+    if (!providerId) return res.status(401).json({ error: "No autorizado" });
 
-module.exports = { availability, createReserva , obtenerReservasPorUsuario,
-  cancelarReserva, };
+    const q = `
+      SELECT r.*, c.nombre AS cancha_nombre, c.propietario_id
+      FROM reservas r
+      JOIN canchas c ON c.id = r.cancha_id
+      WHERE c.propietario_id = $1
+      ORDER BY r.fecha DESC, r.inicio ASC
+    `;
+    const result = await db.query(q, [providerId]);
+    return res.json(result.rows || []);
+  } catch (err) {
+    console.error("ProviderListReservas error:", err);
+    return res.status(500).json({ error: "Error listando reservas del provider" });
+  }
+}
+
+// cancelar reserva por provider (mismo criterio: solo si la cancha pertenece al provider y con >=3 horas de anticipación)
+async function ProviderCancelReserva(req, res) {
+  const { id } = req.params;
+  try {
+    const providerId = req.user?.id;
+    if (!providerId) return res.status(401).json({ error: "No autorizado" });
+
+    // traer reserva y cancha (propietario)
+    const rRes = await db.query(
+      `SELECT r.*, c.propietario_id, c.nombre AS cancha_nombre
+       FROM reservas r
+       JOIN canchas c ON c.id = r.cancha_id
+       WHERE r.id = $1
+       LIMIT 1`,
+      [id]
+    );
+    if (!rRes.rows.length) return res.status(404).json({ error: "Reserva no encontrada" });
+    const reserva = rRes.rows[0];
+
+    if (Number(reserva.propietario_id) !== Number(providerId)) {
+      return res.status(403).json({ error: "No eres el propietario de la cancha de esta reserva" });
+    }
+
+    // construir fecha+hora de la reserva y calcular horas restantes
+    const fechaStr = reserva.fecha.toISOString?.().slice(0,10) || (new Date(reserva.fecha)).toISOString().slice(0,10);
+    const inicioTime = (reserva.inicio || reserva.start || "").slice(0,5);
+    const fechaHoraReserva = parseISO(`${fechaStr}T${inicioTime}`);
+    const ahora = new Date();
+    const horasRestantes = differenceInHours(fechaHoraReserva, ahora);
+
+    if (horasRestantes < 3) {
+      return res.status(400).json({ error: "No se puede cancelar una reserva con menos de 3 horas de anticipación." });
+    }
+
+    await db.query("UPDATE reservas SET estado = 'cancelada' WHERE id = $1", [id]);
+    return res.json({ message: "Reserva cancelada correctamente" });
+  } catch (err) {
+    console.error("ProviderCancelReserva error:", err);
+    return res.status(500).json({ error: "Error al cancelar reserva" });
+  }
+}
+
+// ...existing exports...
+module.exports = {
+  availability,
+  createReserva,
+  obtenerReservasPorUsuario,
+  cancelarReserva,
+  ProviderListReservas,
+  ProviderCancelReserva
+};
