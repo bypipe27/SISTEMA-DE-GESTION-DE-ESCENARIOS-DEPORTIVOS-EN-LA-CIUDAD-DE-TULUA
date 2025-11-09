@@ -138,7 +138,7 @@ function MisReservasPage() {
           <div className="text-center mb-8">
             <h1 className="text-4xl font-bold text-gray-800 mb-4">
               Mis Reservas
-        </h1>
+            </h1>
             <p className="text-gray-600 text-lg max-w-2xl mx-auto">
               {usuario 
                 ? `Hola ${usuario.nombre}, aquí puedes gestionar todas tus reservas`
@@ -151,7 +151,7 @@ function MisReservasPage() {
           <div className="bg-white rounded-2xl shadow-lg p-6 mb-8">
             <div className="grid md:grid-cols-3 gap-4">
               {/* Búsqueda */}
-          <div className="relative">
+              <div className="relative">
                 <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                 <input
                   type="text"
@@ -190,7 +190,7 @@ function MisReservasPage() {
           </div>
 
           {/* Contenido */}
-        {loading ? (
+          {loading ? (
             <div className="text-center py-12">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto"></div>
               <p className="text-gray-600 mt-4">Cargando tus reservas...</p>
@@ -218,7 +218,7 @@ function MisReservasPage() {
                 Ir a Reservar Canchas
               </Button>
             </motion.div>
-        ) : (
+          ) : (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -227,7 +227,7 @@ function MisReservasPage() {
               {reservasFiltradas.map((reserva, index) => {
                 const estado = getEstadoReserva(reserva);
                 
-              return (
+                return (
                   <motion.div
                     key={reserva.id}
                     initial={{ opacity: 0, y: 20 }}
@@ -248,13 +248,13 @@ function MisReservasPage() {
                               <div className="flex flex-wrap items-center gap-2 mb-2">
                                 <h3 className="text-xl font-bold text-gray-800">
                                   {reserva.cancha_nombre}
-                    </h3>
-                    <span
+                                </h3>
+                                <span 
                                   className={`px-3 py-1 rounded-full text-sm font-medium bg-${estado.color}-100 text-${estado.color}-800`}
-                    >
+                                >
                                   {estado.texto}
-                    </span>
-                  </div>
+                                </span>
+                              </div>
                               <p className="text-gray-600 text-sm mb-3">
                                 {reserva.descripcion}
                               </p>
@@ -266,7 +266,7 @@ function MisReservasPage() {
                                   <span className="font-medium text-gray-700">
                                     {formatearFecha(reserva.fecha)}
                                   </span>
-                  </div>
+                                </div>
                                 
                                 <div className="flex items-center gap-2 text-sm">
                                   <FaClock className="text-purple-500" />
@@ -362,9 +362,9 @@ function MisReservasPage() {
                   </p>
                   <p className="text-sm text-gray-600">Completadas</p>
                 </div>
-          </div>
+              </div>
             </motion.div>
-        )}
+          )}
         </motion.div>
       </div>
     </div>
