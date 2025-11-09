@@ -10,7 +10,7 @@ import ReservaPage from "./pages/ReservaPage";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage"; 
 import ResetPasswordPage from "./pages/ResetPasswordPage";
 import ConfirmacionReservaPage from "./pages/ConfirmacionReservaPage";
-import MisReservasPage from "./pages/MisReservasPage";
+import MisReservasPage from "./pages/MisReservaspage";
 import RegisterProvider from "./pages/RegisterProvider";
 import ProviderDashboard from "./pages/DashboardProvider"; 
 import ProviderReportes from "./pages/ProviderReportes";
