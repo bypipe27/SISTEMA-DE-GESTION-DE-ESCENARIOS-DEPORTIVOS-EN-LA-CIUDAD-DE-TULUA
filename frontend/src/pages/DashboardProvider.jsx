@@ -1,5 +1,7 @@
 import React, { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
+import { FaFutbol } from "react-icons/fa";
+
 
 function ProviderDashboard() {
   const navigate = useNavigate();
@@ -55,10 +57,13 @@ function ProviderDashboard() {
   return (
     <>
       {/* Barra superior simple (reemplaza NavBarProvider): título + acciones */}
-      <div className="fixed top-0 left-0 right-0 bg-white border-b shadow z-40">
+      <div className="fixed top-0 left-0 right-0 bg-green-600 border-b shadow z-40">
         <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <h2 className="text-lg font-semibold">Panel de proveedor</h2>
+            <h2 className="text-2xl font-bold flex items-center gap-6">
+                    <FaFutbol className="text-green-300 text-3xl animate-pulse" />
+                    <span className="text-white">SISTEMA DE GESTION DE ESCENARIOS DEPORTIVOS</span>
+                  </h2>
           </div>
 
           <div className="flex items-center gap-2">
@@ -68,7 +73,7 @@ function ProviderDashboard() {
                 localStorage.removeItem("usuario");
                 navigate("/login");
               }}
-              className="px-3 py-2 border rounded"
+              className="px-3 py-2 border border-white text-white text-3x rounded hover:text-white transition"
             >
               Cerrar sesión
             </button>
