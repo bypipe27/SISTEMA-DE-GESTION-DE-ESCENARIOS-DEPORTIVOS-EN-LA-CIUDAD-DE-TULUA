@@ -5,7 +5,7 @@ import VerifyCodePage from "./pages/VerifyCodePage";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import DashboardPage from "./pages/DashboardPage";
-import CanchaDetailsPage from "./pages/CanchaDetailsPage";
+import CanchaDetailsPage from "./pages/CanchadetailsPage";
 import ReservaPage from "./pages/ReservaPage";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage"; 
 import ResetPasswordPage from "./pages/ResetPasswordPage";

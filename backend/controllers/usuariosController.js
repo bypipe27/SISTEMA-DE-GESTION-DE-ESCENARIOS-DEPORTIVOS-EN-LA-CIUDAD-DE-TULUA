@@ -138,6 +138,7 @@ async function registrarUsuario(req, res) {
 }
 
 // =============== VERIFICAR CÓDIGO: inserta en usuarios y devuelve token ===
+// ...existing code...
 async function verificarCodigo(req, res) {
   try {
     const { email, codigo } = req.body;
@@ -171,6 +172,26 @@ async function verificarCodigo(req, res) {
       expiresIn: "7d",
     });
 
+    // Enviar correo de confirmación de registro (no bloquear si falla el envío)
+    try {
+      await transporter.verify();
+      await transporter.sendMail({
+        from: `"Sistema de Canchas" <${EMAIL_USER}>`,
+        to: user.email,
+        subject: "Cuenta confirmada - Registro exitoso",
+        html: `
+          <h3>¡Hola ${user.nombre}!</h3>
+          <p>Tu cuenta en el Sistema de Gestión de Canchas ha sido confirmada correctamente.</p>
+          <p>Ya puedes iniciar sesión y comenzar a usar la plataforma.</p>
+          <hr />
+          <p>Si no reconoces esta acción, por favor contacta con el soporte.</p>
+        `,
+      });
+    } catch (mailErr) {
+      console.error("❌ Error enviando correo de confirmación:", mailErr);
+      // no interrumpir el flujo: devolvemos éxito aun cuando el correo no se envía
+    }
+
     return res.json({
       mensaje: "Correo verificado. Cuenta creada.",
       usuario: user,
@@ -181,7 +202,6 @@ async function verificarCodigo(req, res) {
     return res.status(500).json({ error: "Error en el servidor." });
   }
 }
-// ...existing code...
 // =============== REENVIAR CÓDIGO ==========================================
 async function reenviarCodigo(req, res) {
   try {

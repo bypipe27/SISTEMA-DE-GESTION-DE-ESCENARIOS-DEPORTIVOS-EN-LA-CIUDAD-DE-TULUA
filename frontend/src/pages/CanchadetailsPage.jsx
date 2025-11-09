@@ -8,6 +8,10 @@ function CanchaDetailsPage() {
   const navigate = useNavigate();
   const [cancha, setCancha] = useState(null);
   const [loading, setLoading] = useState(true);
+  const currentUser = React.useMemo(() => {
+  try { return JSON.parse(localStorage.getItem("usuario") || "null"); } catch { return null; }
+  }, []);
+  const backTo = currentUser && currentUser.role === "provider" ? "/dashboard-provider" : "/dashboard";
 
   useEffect(() => {
     async function fetchCancha() {
@@ -42,9 +46,10 @@ function CanchaDetailsPage() {
   if (!cancha) return (
     <div className="min-h-screen flex items-center justify-center bg-green-800 text-white">
       <h2>Cancha no encontrada</h2>
-      <button onClick={() => navigate("/dashboard")} className="mt-4 px-4 py-2 bg-white text-green-800 rounded">Volver</button>
+      <button onClick={() => navigate(backTo)} className="mt-4 px-4 py-2 bg-white text-green-800 rounded">Volver</button>
     </div>
   );
+
 
   // usar únicamente el iframe guardado en la BD
   const iframeHtml = cancha.map_iframe;
@@ -165,7 +170,7 @@ function CanchaDetailsPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-700 via-green-800 to-green-900 text-white p-6">
       <div className="max-w-4xl mx-auto bg-white/10 backdrop-blur-lg rounded-3xl shadow-2xl p-8 relative">
-        <Link to="/dashboard" className="absolute top-4 left-4 text-white hover:text-green-300 flex items-center gap-2">
+        <Link to={backTo} className="absolute top-4 left-4 text-white hover:text-green-300 flex items-center gap-2">
           <FaArrowLeft /> Volver
         </Link>
 
@@ -200,7 +205,7 @@ function CanchaDetailsPage() {
         </div>
 
         <div className="mt-8 flex justify-center">
-          <button onClick={() => navigate("/dashboard")} className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-xl">Volver</button>
+          <button onClick={() => navigate(backTo)} className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-xl">Volver</button>
         </div>
       </div>
     </div>

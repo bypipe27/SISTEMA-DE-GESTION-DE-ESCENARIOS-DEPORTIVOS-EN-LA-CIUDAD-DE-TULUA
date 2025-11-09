@@ -1,6 +1,8 @@
-import React, { useEffect, useState,useMemo } from "react";
-import { useNavigate } from "react-router-dom"; 
+import React, { useEffect, useState, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
+import NavBarProvider from "../components/NavBarProvider"; // añadido
 
+// ...existing code...
 function CanchasManager() {
   const navigate = useNavigate();
   const [canchas, setCanchas] = useState([]);
@@ -10,7 +12,7 @@ function CanchasManager() {
   const [openDayPanels, setOpenDayPanels] = useState(()=> {
     const init = {};
     for (let i = 0; i < 7; i++) init[i] = false;
-    return init; 
+    return init;
   });
 
   const [openForm, setOpenForm] = useState(false);
@@ -32,14 +34,12 @@ function CanchasManager() {
   const BACKEND = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
   const DAY_NAMES = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
   const TODAY_STR = new Date().toISOString().split('T')[0];
-  // Horas permitidas para reservas: franjas por hora (ej: 06:00 -> 07:00)
-  const HOUR_START = 6; // primer hour disponible
-  const HOUR_END = 23; // último inicio posible
+  const HOUR_START = 6;
+  const HOUR_END = 23;
   const HOUR_OPTIONS = Array.from({ length: HOUR_END - HOUR_START + 1 }, (_, i) => String(HOUR_START + i).padStart(2, '0') + ':00');
 
   function alignHour(value) {
     if (!value || typeof value !== 'string') return HOUR_OPTIONS[0];
-    // intentar extraer la hora (soporta '6:00', '06:00', '06:30')
     const m = value.match(/(\d{1,2})/);
     let h = m ? parseInt(m[1], 10) : HOUR_START;
     if (Number.isNaN(h)) h = HOUR_START;
@@ -49,15 +49,14 @@ function CanchasManager() {
   }
 
   function addFecha() {
-  if (!fechaToAdd) { setError("Selecciona una fecha"); return; }
-  const iso = fechaToAdd; // input type=date ya entrega YYYY-MM-DD
-  // no permitir fechas anteriores al día actual
-  if (iso < TODAY_STR) { setError("No se pueden añadir fechas anteriores a hoy"); return; }
-  const exists = Array.isArray(form.cerrados_fechas) && form.cerrados_fechas.includes(iso);
-  if (exists) { setError("Fecha ya añadida"); return; }
-  setForm(prev => ({ ...prev, cerrados_fechas: [...(prev.cerrados_fechas || []), iso] }));
-  setFechaToAdd("");
-  setError("");
+    if (!fechaToAdd) { setError("Selecciona una fecha"); return; }
+    const iso = fechaToAdd;
+    if (iso < TODAY_STR) { setError("No se pueden añadir fechas anteriores a hoy"); return; }
+    const exists = Array.isArray(form.cerrados_fechas) && form.cerrados_fechas.includes(iso);
+    if (exists) { setError("Fecha ya añadida"); return; }
+    setForm(prev => ({ ...prev, cerrados_fechas: [...(prev.cerrados_fechas || []), iso] }));
+    setFechaToAdd("");
+    setError("");
   }
   function removeFecha(idx) {
     setForm(prev => ({ ...prev, cerrados_fechas: (prev.cerrados_fechas || []).filter((_, i) => i !== idx) }));
@@ -69,17 +68,14 @@ function CanchasManager() {
     }
     return horarios;
   }
-function normalizeHorarios(input) {
+  function normalizeHorarios(input) {
     if (!input) return initEmptyHorarios();
-    // si viene como string JSON
     if (typeof input === "string") {
       try { input = JSON.parse(input); } catch { return initEmptyHorarios(); }
     }
-    // si ya es objeto, asegurarse de tener keys 0..6 arrays
     const out = initEmptyHorarios();
     Object.keys(out).forEach(k => {
       if (input[k] && Array.isArray(input[k])) out[k] = input[k].map(it => {
-        // aceptar tanto {from,to} como {start,end}
         const rawStart = it.start ?? it.from ?? "";
         const rawEnd = it.end ?? it.to ?? "";
         return { start: alignHour(rawStart), end: alignHour(rawEnd) };
@@ -104,7 +100,6 @@ function normalizeHorarios(input) {
   function addInterval(day) {
     setForm(prev => {
       const horarios = { ...(prev.horarios || initEmptyHorarios()) };
-      // por defecto añadir una franja de 1 hora (06:00 - 07:00)
       const defaultStart = HOUR_OPTIONS[0];
       const defaultEnd = HOUR_OPTIONS[1] || HOUR_OPTIONS[0];
       horarios[day] = horarios[day] ? [...horarios[day], { start: defaultStart, end: defaultEnd }] : [{ start: defaultStart, end: defaultEnd }];
@@ -121,53 +116,45 @@ function normalizeHorarios(input) {
   }
 
   function updateInterval(day, idx, field, value) {
-    // field expected: 'start' or 'end'
     setForm(prev => {
       const horarios = { ...(prev.horarios || initEmptyHorarios()) };
       horarios[day] = horarios[day].map((it,i) => i===idx ? { ...it, [field]: value } : it);
       return { ...prev, horarios };
     });
   }
- 
- 
- 
- 
-      function getHeaders() {
-  const token = localStorage.getItem("token");
-  const headers = { "Content-Type": "application/json" };
-  if (token) headers["Authorization"] = `Bearer ${token}`;
-  return headers;
-}
 
-      // validaciones helpers
-      const ALLOWED_TIPOS = ["Futbol 11", "Futbol sala", "Voley", "Tenis", "Padel"];
-      const ALLOWED_CAPACIDADES = [2,4,6,10,12,14,16,22];
-      const PRICE_OPTIONS = Array.from({ length: ((100000-50000)/5000) + 1 }, (_,i) => 50000 + i*5000);
-      function validatePrice(price) {
-        const p = Number(price);
-        if (Number.isNaN(p)) return false;
-        if (p < 50000 || p > 100000) return false;
-        return ((p - 50000) % 5000) === 0;
-      }
+  function getHeaders() {
+    const token = localStorage.getItem("token");
+    const headers = { "Content-Type": "application/json" };
+    if (token) headers["Authorization"] = `Bearer ${token}`;
+    return headers;
+  }
 
-      function extractIframeSrc(html) {
-        if (!html || typeof html !== 'string') return null;
-        const m = html.match(/src=["']([^"']+)["']/i);
-        return m ? m[1] : null;
-      }
+  const ALLOWED_TIPOS = ["Futbol 11", "Futbol sala", "Voley", "Tenis", "Padel"];
+  const ALLOWED_CAPACIDADES = [2,4,6,10,12,14,16,22];
+  const PRICE_OPTIONS = Array.from({ length: ((100000-50000)/5000) + 1 }, (_,i) => 50000 + i*5000);
+  function validatePrice(price) {
+    const p = Number(price);
+    if (Number.isNaN(p)) return false;
+    if (p < 50000 || p > 100000) return false;
+    return ((p - 50000) % 5000) === 0;
+  }
 
-      function validateIframe(html) {
-        // empty is allowed
-        if (!html) return { ok: true, src: null };
-        const src = extractIframeSrc(html);
-        if (!src) return { ok: false, reason: 'No se encontró el atributo src en el iframe' };
-        // permitir cualquier https embed, preferiblemente google maps
-        if (!src.startsWith('https://')) return { ok: false, reason: 'El src debe comenzar con https://' };
-        return { ok: true, src };
-      }
+  function extractIframeSrc(html) {
+    if (!html || typeof html !== 'string') return null;
+    const m = html.match(/src=["']([^"']+)["']/i);
+    return m ? m[1] : null;
+  }
 
+  function validateIframe(html) {
+    if (!html) return { ok: true, src: null };
+    const src = extractIframeSrc(html);
+    if (!src) return { ok: false, reason: 'No se encontró el atributo src en el iframe' };
+    if (!src.startsWith('https://')) return { ok: false, reason: 'El src debe comenzar con https://' };
+    return { ok: true, src };
+  }
 
- const usuario = useMemo(() => {
+  const usuario = useMemo(() => {
     try { return JSON.parse(localStorage.getItem("usuario") || "null"); } catch { return null; }
   }, []);
   const usuarioId = usuario?.id ?? null;
@@ -175,26 +162,18 @@ function normalizeHorarios(input) {
   useEffect(() => {
     const controller = new AbortController();
     let mounted = true;
-
-    // pasar el controller entero; fetchCanchas extrae signal de forma segura
     fetchCanchas(controller, mounted);
-
     return () => {
       mounted = false;
       controller.abort();
     };
   }, [navigate, usuarioId]);
 
-
   async function fetchCanchas(controllerOrSignal, mounted = true) {
     setLoading(true);
-
-    // extraer signal del controller o usar directamente si ya es AbortSignal
     const signal = (controllerOrSignal && controllerOrSignal.signal) ? controllerOrSignal.signal : controllerOrSignal;
-
     const buildFetchOptions = (extra = {}) => {
       const opts = { headers: getHeaders(), cache: "no-store", ...extra };
-      // incluir signal solo si es AbortSignal válido
       if (signal && typeof signal === "object" && typeof signal.aborted === "boolean") {
         opts.signal = signal;
       }
@@ -203,12 +182,9 @@ function normalizeHorarios(input) {
 
     try {
       const urlProvider = `${BACKEND}/api/canchas/provider`;
-      console.log("-> request a:", urlProvider);
       const res = await fetch(urlProvider, buildFetchOptions());
-      console.log("fetch /api/canchas/provider ->", res.status);
 
       if (res.status === 304) {
-        // retry once
         const retry = await fetch(urlProvider, buildFetchOptions());
         if (retry.ok) {
           const payload = await retry.json();
@@ -219,11 +195,8 @@ function normalizeHorarios(input) {
       }
 
       if (!res.ok) {
-        // auth error -> fallback al endpoint público (igual que ProviderDashboard)
         if (res.status === 401 || res.status === 403) {
-          console.warn("Provider endpoint no autorizado, intentando /api/canchas público");
           const pub = await fetch(`${BACKEND}/api/canchas`, buildFetchOptions());
-          console.log("/api/canchas (público) ->", pub.status);
           if (!pub.ok) throw new Error(`Error ${pub.status} al listar públicamente`);
           const all = await pub.json();
           const mine = Array.isArray(all)
@@ -244,7 +217,6 @@ function normalizeHorarios(input) {
         return;
       }
 
-      // OK
       const data = await res.json();
       if (mounted) {
         setCanchas(Array.isArray(data) ? data : []);
@@ -301,7 +273,6 @@ function normalizeHorarios(input) {
   }
 
   async function guardar() {
-    // validaciones mínimas
     if (!form.nombre || !form.tipo) {
       setError("Nombre y tipo son obligatorios");
       return;
@@ -312,40 +283,33 @@ function normalizeHorarios(input) {
         ? `${BACKEND}/api/canchas/provider/${editing.id}`
         : `${BACKEND}/api/canchas/provider`;
       const method = editing ? "PUT" : "POST";
-  // construir payload sin propietario_id (lo asigna backend)
-  const payload = { ...form };
-  // Normalizar y validar horarios: usar start/end (franjas por hora) y start < end
-  payload.horarios = payload.horarios || {};
-  for (const dayKey of Object.keys(payload.horarios)) {
-    const arr = payload.horarios[dayKey] || [];
-    for (let i = 0; i < arr.length; i++) {
-      const it = arr[i] || {};
-      // aceptar start/end o from/to por compatibilidad
-      const rawStart = it.start ?? it.from ?? "";
-      const rawEnd = it.end ?? it.to ?? "";
-      const start = alignHour(rawStart);
-      const end = alignHour(rawEnd);
-      const sh = parseInt(start.split(':')[0], 10);
-      const eh = parseInt(end.split(':')[0], 10);
-      if (Number.isNaN(sh) || Number.isNaN(eh) || sh >= eh) {
-        setError(`Intervalo inválido en día ${DAY_NAMES[Number(dayKey)] || dayKey}: ${start} - ${end}`);
-        return;
-      }
-      // asegurarse formato { start, end }
-      arr[i] = { start, end };
-    }
-    payload.horarios[dayKey] = arr;
-  }
-  // Validaciones cliente
-  if (!ALLOWED_TIPOS.includes(payload.tipo)) { setError('Tipo inválido'); return; }
-  if (!ALLOWED_CAPACIDADES.includes(Number(payload.capacidad))) { setError('Capacidad inválida'); return; }
-  if (!validatePrice(payload.precio)) { setError('Precio inválido. Debe ser entre 50.000 y 100.000 con incrementos de 5.000'); return; }
-  const iframeCheck = validateIframe(payload.map_iframe);
-  if (!iframeCheck.ok) { setError('Iframe inválido: ' + iframeCheck.reason); return; }
-      delete payload.propietario_id;
-      // asegurarse horarios es un objeto serializable
+      const payload = { ...form };
       payload.horarios = payload.horarios || {};
-      // enviar como JSON
+      for (const dayKey of Object.keys(payload.horarios)) {
+        const arr = payload.horarios[dayKey] || [];
+        for (let i = 0; i < arr.length; i++) {
+          const it = arr[i] || {};
+          const rawStart = it.start ?? it.from ?? "";
+          const rawEnd = it.end ?? it.to ?? "";
+          const start = alignHour(rawStart);
+          const end = alignHour(rawEnd);
+          const sh = parseInt(start.split(':')[0], 10);
+          const eh = parseInt(end.split(':')[0], 10);
+          if (Number.isNaN(sh) || Number.isNaN(eh) || sh >= eh) {
+            setError(`Intervalo inválido en día ${DAY_NAMES[Number(dayKey)] || dayKey}: ${start} - ${end}`);
+            return;
+          }
+          arr[i] = { start, end };
+        }
+        payload.horarios[dayKey] = arr;
+      }
+      if (!ALLOWED_TIPOS.includes(payload.tipo)) { setError('Tipo inválido'); return; }
+      if (!ALLOWED_CAPACIDADES.includes(Number(payload.capacidad))) { setError('Capacidad inválida'); return; }
+      if (!validatePrice(payload.precio)) { setError('Precio inválido. Debe ser entre 50.000 y 100.000 con incrementos de 5.000'); return; }
+      const iframeCheck = validateIframe(payload.map_iframe);
+      if (!iframeCheck.ok) { setError('Iframe inválido: ' + iframeCheck.reason); return; }
+      delete payload.propietario_id;
+      payload.horarios = payload.horarios || {};
       const res = await fetch(url, { method, headers: getHeaders(), body: JSON.stringify(payload) });
       const text = await res.text();
       let data;
@@ -354,7 +318,6 @@ function normalizeHorarios(input) {
         setError((data && (data.error||data.message)) || `Error ${res.status}`);
         return;
       }
-      // actualizar listado local
       const cancha = (data && (data.cancha || data)) || null;
       if (cancha) {
         if (editing) setCanchas(prev => prev.map(p => p.id === cancha.id ? cancha : p));
@@ -368,7 +331,6 @@ function normalizeHorarios(input) {
       setError("Error al guardar cancha");
     }
   }
-// ...existing code...
 
   async function eliminar(cancha) {
     if (!confirm(`Eliminar cancha "${cancha.nombre}"?`)) return;
@@ -388,7 +350,6 @@ function normalizeHorarios(input) {
     }
   }
 
-  // helpers de UI para editar horarios JSON (texto simple)
   function handleHorariosTextChange(e) {
     try {
       const parsed = JSON.parse(e.target.value || "{}");
@@ -400,147 +361,146 @@ function normalizeHorarios(input) {
   }
 
   return (
-    <div className="p-6 max-w-6xl mx-auto">
-      <header className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold">Gestión de canchas</h1>
-        <div className="flex gap-2">
-          <button onClick={() => navigate("/dashboard-provider")} className="px-4 py-2 border rounded">Volver al panel</button>
-          <button onClick={abrirNuevo} className="px-4 py-2 bg-green-600 text-white rounded">Agregar cancha</button>
-          <button onClick={() => fetchCanchas()} className="px-4 py-2 border rounded">Refrescar</button>
-        </div>
-      </header>
+    <div>
+      {/* NavBarProvider añadido */}
+      <NavBarProvider />
 
-      {loading ? <p>Cargando...</p> : (
-        <>
-          {error && <p className="text-red-600">{error}</p>}
-          <ul className="space-y-4">
-            {canchas.map(c => (
-              <li key={c.id} className="p-4 border rounded flex justify-between">
-                <div>
-                  <h3 className="text-lg font-semibold">{c.nombre}</h3>
-                  <p className="text-sm text-gray-600">{c.tipo} — {c.direccion}</p>
-                </div>
-                <div className="flex gap-2">
-                  <button onClick={() => abrirEdicion(c)} className="px-3 py-1 border rounded">Editar</button>
-                  <button onClick={() => eliminar(c)} className="px-3 py-1 bg-red-600 text-white rounded">Eliminar</button>
-                </div>
-              </li>
-            ))}
-          </ul>
-        </>
-      )}
+      <div className="p-6 max-w-6xl mx-auto pt-28">
+        <header className="flex items-center justify-between mb-6">
+          <h1 className="text-2xl font-bold">Gestión de canchas</h1>
+          <div className="flex gap-2">
+            <button onClick={abrirNuevo} className="px-4 py-2 bg-green-600 text-white rounded">Agregar cancha</button>
+            <button onClick={() => fetchCanchas()} className="px-4 py-2 border rounded">Refrescar</button>
+          </div>
+        </header>
 
-      {openForm && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-          <div className="bg-white p-6 rounded max-w-4xl w-full max-h-[80vh] overflow-auto shadow-lg">
-            <h2 className="text-xl font-semibold mb-3">{editing ? "Editar cancha" : "Agregar cancha"}</h2>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <input placeholder="Nombre" value={form.nombre} onChange={e => setForm({...form, nombre: e.target.value})} className="px-3 py-2 border rounded" />
-              {/* Tipo: select con opciones válidas */}
-              <select value={form.tipo} onChange={e => setForm({...form, tipo: e.target.value})} className="px-3 py-2 border rounded">
-                <option value="">-- Seleccionar tipo --</option>
-                {ALLOWED_TIPOS.map(t => <option key={t} value={t}>{t}</option>)}
-              </select>
-              {/* Capacidad: select con opciones válidas */}
-              <select value={form.capacidad || ""} onChange={e => setForm({...form, capacidad: e.target.value ? Number(e.target.value) : ""})} className="px-3 py-2 border rounded">
-                <option value="">-- Capacidad --</option>
-                {ALLOWED_CAPACIDADES.map(n => <option key={n} value={n}>{n}</option>)}
-              </select>
-              {/* Precio: select con opciones fijas para evitar teclear libremente */}
-              <select value={form.precio || ""} onChange={e => setForm({...form, precio: e.target.value ? Number(e.target.value) : ""})} className="px-3 py-2 border rounded">
-                <option value="">-- Precio --</option>
-                {PRICE_OPTIONS.map(p => <option key={p} value={p}>{p.toLocaleString('es-CO')}</option>)}
-              </select>
-
-              <input placeholder="Dirección" value={form.direccion} onChange={e => setForm({...form, direccion: e.target.value})} className="px-3 py-2 border rounded col-span-2" />
-              <textarea placeholder="Descripción" value={form.descripcion} onChange={e => setForm({...form, descripcion: e.target.value})} className="px-3 py-2 border rounded col-span-2" />
-
-              {/* Iframe de mapa (pegar el código <iframe> de Google Maps) */}
-              <label className="col-span-2 text-sm">Mapa (iframe embed)</label>
-              <textarea placeholder="Pega aquí el iframe de Google Maps" value={form.map_iframe || ""} onChange={e => setForm({...form, map_iframe: e.target.value})} className="px-3 py-2 border rounded col-span-2 h-24" />
-              <p className="text-xs text-gray-500 col-span-2">Pega el código completo del iframe. Se validará que contenga un src con https (ej: embed de Google Maps).</p>
-
-              <label className="col-span-2 text-sm font-semibold">Horarios semanales</label>
-              <div className="col-span-2 grid gap-2">
-                {DAY_NAMES.map((name, day) => (
-                  <div key={day} className="border rounded">
-                    <button
-                      type="button"
-                      onClick={() => togglePanel(day)}
-                      className="w-full text-left px-4 py-3 flex items-center justify-between bg-gray-50 hover:bg-gray-100"
-                    >
-                      <div className="flex items-center gap-3">
-                        <input type="checkbox" checked={form.cerrados_dias.includes(day)} onChange={() => toggleClosedDay(day)} onClick={e => e.stopPropagation()} />
-                        <span className="font-medium">{name}</span>
-                      </div>
-                      <div className="text-sm text-gray-600">{openDayPanels[day] ? "Ocultar" : (form.horarios && form.horarios[day] && form.horarios[day].length ? `${form.horarios[day].length} intervalo(s)` : "Sin horarios")}</div>
-                    </button>
-
-                    {openDayPanels[day] && (
-                      <div className="p-3 space-y-2">
-                        {!form.cerrados_dias.includes(day) && (
-                          <>
-                            {(form.horarios && form.horarios[day] ? form.horarios[day] : []).map((it, idx) => (
-                              <div key={idx} className="flex items-center gap-2">
-                                <select value={it.start || ""} onChange={e => updateInterval(day, idx, "start", e.target.value)} className="px-2 py-1 border rounded">
-                                  {HOUR_OPTIONS.map(h => <option key={h} value={h}>{h}</option>)}
-                                </select>
-                                <span className="text-sm">a</span>
-                                <select value={it.end || ""} onChange={e => updateInterval(day, idx, "end", e.target.value)} className="px-2 py-1 border rounded">
-                                  {HOUR_OPTIONS.map(h => <option key={h} value={h}>{h}</option>)}
-                                </select>
-                                <button type="button" onClick={() => removeInterval(day, idx)} className="px-2 py-1 text-sm bg-red-600 text-white rounded">Quitar</button>
-                              </div>
-                            ))}
-                            <div>
-                              <button type="button" onClick={() => addInterval(day)} className="px-3 py-1 mt-1 bg-blue-600 text-white rounded text-sm">Añadir intervalo</button>
-                            </div>
-                          </>
-                        )}
-                        {form.cerrados_dias.includes(day) && <p className="text-sm text-gray-500">Día marcado como cerrado</p>}
-                      </div>
-                    )}
+        {loading ? <p>Cargando...</p> : (
+          <>
+            {error && <p className="text-red-600">{error}</p>}
+            <ul className="space-y-4">
+              {canchas.map(c => (
+                <li key={c.id} className="p-4 border rounded flex justify-between">
+                  <div>
+                    <h3 className="text-lg font-semibold">{c.nombre}</h3>
+                    <p className="text-sm text-gray-600">{c.tipo} — {c.direccion}</p>
                   </div>
-                ))}
-              </div>
+                  <div className="flex gap-2">
+                    <button onClick={() => abrirEdicion(c)} className="px-3 py-1 border rounded">Editar</button>
+                    <button onClick={() => eliminar(c)} className="px-3 py-1 bg-red-600 text-white rounded">Eliminar</button>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </>
+        )}
 
-              {/* Fechas cerradas: selector de calendario y lista */}
-              <label className="col-span-2 text-sm">Fechas cerradas (selecciona desde el calendario):</label>
-              <div className="col-span-2 flex flex-col gap-2">
-                <div className="flex gap-2">
-                  <input
-                    type="date"
-                    value={fechaToAdd}
-                    onChange={e => setFechaToAdd(e.target.value)}
-                    className="px-3 py-2 border rounded"
-                  />
-                  <button type="button" onClick={addFecha} className="px-3 py-2 bg-blue-600 text-white rounded">Añadir fecha</button>
-                </div>
+        {openForm && (
+          <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+            <div className="bg-white p-6 rounded max-w-4xl w-full max-h-[80vh] overflow-auto shadow-lg">
+              <h2 className="text-xl font-semibold mb-3">{editing ? "Editar cancha" : "Agregar cancha"}</h2>
 
-                <div className="flex flex-wrap gap-2">
-                  {(!form.cerrados_fechas || form.cerrados_fechas.length === 0) && (
-                    <p className="text-sm text-gray-500">Sin fechas cerradas</p>
-                  )}
-                  {(form.cerrados_fechas || []).map((f, i) => (
-                    <div key={f + i} className="flex items-center gap-2 px-3 py-1 bg-gray-100 rounded">
-                      <span className="text-sm">{f}</span>
-                      <button type="button" onClick={() => removeFecha(i)} className="text-red-600 px-2">✕</button>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <input placeholder="Nombre" value={form.nombre} onChange={e => setForm({...form, nombre: e.target.value})} className="px-3 py-2 border rounded" />
+                <select value={form.tipo} onChange={e => setForm({...form, tipo: e.target.value})} className="px-3 py-2 border rounded">
+                  <option value="">-- Seleccionar tipo --</option>
+                  {ALLOWED_TIPOS.map(t => <option key={t} value={t}>{t}</option>)}
+                </select>
+                <select value={form.capacidad || ""} onChange={e => setForm({...form, capacidad: e.target.value ? Number(e.target.value) : ""})} className="px-3 py-2 border rounded">
+                  <option value="">-- Capacidad --</option>
+                  {ALLOWED_CAPACIDADES.map(n => <option key={n} value={n}>{n}</option>)}
+                </select>
+                <select value={form.precio || ""} onChange={e => setForm({...form, precio: e.target.value ? Number(e.target.value) : ""})} className="px-3 py-2 border rounded">
+                  <option value="">-- Precio --</option>
+                  {PRICE_OPTIONS.map(p => <option key={p} value={p}>{p.toLocaleString('es-CO')}</option>)}
+                </select>
+
+                <input placeholder="Dirección" value={form.direccion} onChange={e => setForm({...form, direccion: e.target.value})} className="px-3 py-2 border rounded col-span-2" />
+                <textarea placeholder="Descripción" value={form.descripcion} onChange={e => setForm({...form, descripcion: e.target.value})} className="px-3 py-2 border rounded col-span-2" />
+
+                <label className="col-span-2 text-sm">Mapa (iframe embed)</label>
+                <textarea placeholder="Pega aquí el iframe de Google Maps" value={form.map_iframe || ""} onChange={e => setForm({...form, map_iframe: e.target.value})} className="px-3 py-2 border rounded col-span-2 h-24" />
+                <p className="text-xs text-gray-500 col-span-2">Pega el código completo del iframe. Se validará que contenga un src con https (ej: embed de Google Maps).</p>
+
+                <label className="col-span-2 text-sm font-semibold">Horarios semanales</label>
+                <div className="col-span-2 grid gap-2">
+                  {DAY_NAMES.map((name, day) => (
+                    <div key={day} className="border rounded">
+                      <button
+                        type="button"
+                        onClick={() => togglePanel(day)}
+                        className="w-full text-left px-4 py-3 flex items-center justify-between bg-gray-50 hover:bg-gray-100"
+                      >
+                        <div className="flex items-center gap-3">
+                          <input type="checkbox" checked={form.cerrados_dias.includes(day)} onChange={() => toggleClosedDay(day)} onClick={e => e.stopPropagation()} />
+                          <span className="font-medium">{name}</span>
+                        </div>
+                        <div className="text-sm text-gray-600">{openDayPanels[day] ? "Ocultar" : (form.horarios && form.horarios[day] && form.horarios[day].length ? `${form.horarios[day].length} intervalo(s)` : "Sin horarios")}</div>
+                      </button>
+
+                      {openDayPanels[day] && (
+                        <div className="p-3 space-y-2">
+                          {!form.cerrados_dias.includes(day) && (
+                            <>
+                              {(form.horarios && form.horarios[day] ? form.horarios[day] : []).map((it, idx) => (
+                                <div key={idx} className="flex items-center gap-2">
+                                  <select value={it.start || ""} onChange={e => updateInterval(day, idx, "start", e.target.value)} className="px-2 py-1 border rounded">
+                                    {HOUR_OPTIONS.map(h => <option key={h} value={h}>{h}</option>)}
+                                  </select>
+                                  <span className="text-sm">a</span>
+                                  <select value={it.end || ""} onChange={e => updateInterval(day, idx, "end", e.target.value)} className="px-2 py-1 border rounded">
+                                    {HOUR_OPTIONS.map(h => <option key={h} value={h}>{h}</option>)}
+                                  </select>
+                                  <button type="button" onClick={() => removeInterval(day, idx)} className="px-2 py-1 text-sm bg-red-600 text-white rounded">Quitar</button>
+                                </div>
+                              ))}
+                              <div>
+                                <button type="button" onClick={() => addInterval(day)} className="px-3 py-1 mt-1 bg-blue-600 text-white rounded text-sm">Añadir intervalo</button>
+                              </div>
+                            </>
+                          )}
+                          {form.cerrados_dias.includes(day) && <p className="text-sm text-gray-500">Día marcado como cerrado</p>}
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
+
+                <label className="col-span-2 text-sm">Fechas cerradas (selecciona desde el calendario):</label>
+                <div className="col-span-2 flex flex-col gap-2">
+                  <div className="flex gap-2">
+                    <input
+                      type="date"
+                      value={fechaToAdd}
+                      onChange={e => setFechaToAdd(e.target.value)}
+                      className="px-3 py-2 border rounded"
+                    />
+                    <button type="button" onClick={addFecha} className="px-3 py-2 bg-blue-600 text-white rounded">Añadir fecha</button>
+                  </div>
+
+                  <div className="flex flex-wrap gap-2">
+                    {(!form.cerrados_fechas || form.cerrados_fechas.length === 0) && (
+                      <p className="text-sm text-gray-500">Sin fechas cerradas</p>
+                    )}
+                    {(form.cerrados_fechas || []).map((f, i) => (
+                      <div key={f + i} className="flex items-center gap-2 px-3 py-1 bg-gray-100 rounded">
+                        <span className="text-sm">{f}</span>
+                        <button type="button" onClick={() => removeFecha(i)} className="text-red-600 px-2">✕</button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
-            </div>
 
-            <div className="mt-4 flex justify-end gap-3">
-              <button onClick={() => { setOpenForm(false); }} className="px-4 py-2 border rounded">Cancelar</button>
-              <button onClick={guardar} className="px-4 py-2 bg-green-600 text-white rounded">{editing ? "Guardar" : "Crear"}</button>
-            </div>
+              <div className="mt-4 flex justify-end gap-3">
+                <button onClick={() => { setOpenForm(false); }} className="px-4 py-2 border rounded">Cancelar</button>
+                <button onClick={guardar} className="px-4 py-2 bg-green-600 text-white rounded">{editing ? "Guardar" : "Crear"}</button>
+              </div>
 
-            {error && <p className="text-red-600 mt-3">{error}</p>}
+              {error && <p className="text-red-600 mt-3">{error}</p>}
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }
