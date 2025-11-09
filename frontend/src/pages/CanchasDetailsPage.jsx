@@ -195,7 +195,7 @@ function CanchaDetailsPage() {
           {iframeHtml ? (
             <div dangerouslySetInnerHTML={{ __html: iframeHtml }} />
           ) : (
-            <p className="text-sm text-gray-200">No hay iframe guardado para esta cancha.</p>
+            <p className="text-sm text-gray-200">No hay iframe guardado para esta cancha .</p>
           )}
         </div>
 
