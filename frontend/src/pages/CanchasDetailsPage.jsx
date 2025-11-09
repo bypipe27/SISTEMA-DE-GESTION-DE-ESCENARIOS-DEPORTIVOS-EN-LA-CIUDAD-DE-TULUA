@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { FaArrowLeft } from "react-icons/fa";
 
-function CanchaDetailsPage() {
+function CanchasDetailsPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [cancha, setCancha] = useState(null);
@@ -207,5 +207,5 @@ function CanchaDetailsPage() {
   );
 }
 
-export default CanchaDetailsPage;
+export default CanchasDetailsPage;
 // ...existing code...
