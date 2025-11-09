@@ -5,7 +5,7 @@ import VerifyCodePage from "./pages/VerifyCodePage";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import DashboardPage from "./pages/DashboardPage";
-import CanchaDetailsPage from "./pages/CanchaDetailsPage";
+import CanchasDetailsPage from "./pages/CanchaDetailsPage";
 import ReservaPage from "./pages/ReservaPage";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage"; 
 import ResetPasswordPage from "./pages/ResetPasswordPage";
@@ -44,6 +44,7 @@ function App() {
         <Route path="/reportes-provider" element={<ProviderReportes />} />
         <Route path="/reservas-provider" element={<ProviderReservas />} />
         <Route path="/canchas-manager" element={<CanchasManager />} />
+        <Route path="/canchas-details/:id" element={<CanchasDetailsPage />} />
       </Routes>
     </Router>
   );
