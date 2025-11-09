@@ -27,7 +27,7 @@ function MisReservasPage() {
 
   // Obtener usuario del localStorage
   useEffect(() => {
-    const usuarioStorage = localStorage.getItem("usuario");
+      const usuarioStorage = localStorage.getItem("usuario");
     if (usuarioStorage) {
       try {
         setUsuario(JSON.parse(usuarioStorage));
@@ -37,49 +37,93 @@ function MisReservasPage() {
     }
   }, []);
 
-  // Cargar reservas
   useEffect(() => {
-    cargarReservas();
-  }, []);
-
-  const cargarReservas = async () => {
-    try {
-      setLoading(true);
-      
-      // Usar nombre del usuario logueado o permitir búsqueda manual
-      const nombreBusqueda = usuario?.nombre || searchTerm;
-      
-      if (!nombreBusqueda) {
-        setReservas([]);
-        return;
-      }
-
-      const res = await fetch(
-        `${API_BASE}/api/reservas/mis-reservas?email=${encodeURIComponent(nombreBusqueda)}`
-      );
-
-      if (res.ok) {
-        const data = await res.json();
-        setReservas(data.reservas || []);
-      } else {
-        console.error("Error cargando reservas");
-      }
-    } catch (error) {
-      console.error("Error:", error);
-    } finally {
+    // Solo cargar automáticamente si hay usuario en localStorage
+   if (usuario) {
+      cargarReservas();
+   } else {
+     // si no hay usuario, quitar loading inicial hasta que el usuario busque
       setLoading(false);
     }
-  };
+  }, [usuario]);
 
-  // Formatear fecha
-  const formatearFecha = (fechaStr) => {
+  // ...existing code...
+const cargarReservas = async () => {
+  try {
+    setLoading(true);
+
+    // Si hay usuario logueado pedimos por usuario_id (ruta: /api/reservas/usuario/:id)
+    if (usuario && usuario.id) {
+      const res = await fetch(`${API_BASE}/api/reservas/usuario/${usuario.id}`);
+      if (res.ok) {
+        const data = await res.json();
+        // El backend puede devolver un array o { reservas: [...] }
+        if (Array.isArray(data)) setReservas(data);
+        else setReservas(data.reservas || []);
+      } else {
+        console.error("Error cargando reservas por usuario:", res.status, res.statusText);
+        setReservas([]);
+      }
+      return;
+    }
+
+    // Si no hay usuario, usar búsqueda manual por nombre/email (fallback)
+    if (!searchTerm) {
+      setReservas([]);
+      return;
+    }
+
+    const res = await fetch(
+      `${API_BASE}/api/reservas/mis-reservas?email=${encodeURIComponent(searchTerm)}`
+    );
+    if (res.ok) {
+      const data = await res.json();
+      if (Array.isArray(data)) setReservas(data);
+      else setReservas(data.reservas || []);
+    } else {
+      console.error("Error cargando reservas por búsqueda:", res.status, res.statusText);
+      setReservas([]);
+    }
+  } catch (error) {
+    console.error("Error cargando reservas:", error);
+    setReservas([]);
+  } finally {
+    setLoading(false);
+  }
+};
+// ...existing code...
+
+  // Helpers para normalizar y formatear fechas (evita Invalid Date)
+  function toISODate(fechaInput) {
+    if (!fechaInput && fechaInput !== 0) return "";
+    if (typeof fechaInput === "string") {
+      // Si ya viene como YYYY-MM-DD o YYYY-MM-DDTHH:mm:ss
+      const m = fechaInput.match(/^(\d{4}-\d{2}-\d{2})/);
+      if (m) return m[1];
+      // intentar parsear como fecha y extraer YYYY-MM-DD
+      const d = new Date(fechaInput);
+      if (!isNaN(d.getTime())) return d.toISOString().slice(0, 10);
+      return fechaInput;
+    }
+    if (fechaInput instanceof Date) return fechaInput.toISOString().slice(0, 10);
+    try {
+      return new Date(fechaInput).toISOString().slice(0, 10);
+    } catch {
+      return String(fechaInput).slice(0, 10);
+    }
+  }
+
+  // Formatear fecha (recibe string o Date)
+  const formatearFecha = (fechaInput) => {
+    const fechaStr = toISODate(fechaInput);
+    if (!fechaStr) return "";
     try {
       const fecha = new Date(fechaStr + "T00:00:00");
       const formateada = fecha.toLocaleDateString("es-ES", {
-        weekday: 'long',
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
+        weekday: "long",
+        year: "numeric",
+        month: "long",
+        day: "numeric",
       });
       return formateada.charAt(0).toUpperCase() + formateada.slice(1);
     } catch (error) {
@@ -89,20 +133,28 @@ function MisReservasPage() {
 
   // Determinar estado de la reserva
   const getEstadoReserva = (reserva) => {
-    const ahora = new Date();
-    const fechaReserva = new Date(reserva.fecha + "T" + reserva.fin);
-    
-    if (fechaReserva < ahora) {
+    // Priorizar estado explícito si viene en la API
+    const estadoBD = (reserva.estado || "").toString().toLowerCase();
+    if (estadoBD === "cancelada" || estadoBD === "cancelado")
+      return { texto: "Cancelada", color: "red", tipo: "cancelada" };
+    if (estadoBD === "completada" || estadoBD === "completado")
       return { texto: "Completada", color: "gray", tipo: "completada" };
+
+    // intentar inferir por fecha y hora
+    const ahora = new Date();
+    const fechaISO = toISODate(reserva.fecha);
+    // buscar hora de fin en campos conocidos
+    const finTime = (reserva.fin || reserva.hora_fin || reserva.end || "").toString().slice(0, 5);
+
+    if (!fechaISO || !finTime) {
+      return { texto: "Programada", color: "blue", tipo: "programada" };
     }
-    
-    const diferencia = fechaReserva - ahora;
-    const horas = diferencia / (1000 * 60 * 60);
-    
-    if (horas < 24) {
-      return { texto: "Próxima", color: "green", tipo: "proxima" };
-    }
-    
+    const fechaReserva = new Date(`${fechaISO}T${finTime}`);
+    if (isNaN(fechaReserva.getTime())) return { texto: "Programada", color: "blue", tipo: "programada" };
+
+    if (fechaReserva < ahora) return { texto: "Completada", color: "gray", tipo: "completada" };
+    const horas = (fechaReserva - ahora) / (1000 * 60 * 60);
+    if (horas < 24) return { texto: "Próxima", color: "green", tipo: "proxima" };
     return { texto: "Programada", color: "blue", tipo: "programada" };
   };
 
@@ -174,6 +226,7 @@ function MisReservasPage() {
                   <option value="proxima">Próximas</option>
                   <option value="programada">Programadas</option>
                   <option value="completada">Completadas</option>
+                  <option value="cancelada">Canceladas</option>
                 </select>
               </div>
 
@@ -226,6 +279,7 @@ function MisReservasPage() {
             >
               {reservasFiltradas.map((reserva, index) => {
                 const estado = getEstadoReserva(reserva);
+                const precioNum = Number(reserva.total ?? reserva.precio ?? reserva.total_final ?? 0) || 0;
                 
                 return (
                   <motion.div
@@ -285,7 +339,7 @@ function MisReservasPage() {
                                 <div className="flex items-center gap-2 text-sm">
                                   <FaMoneyBillWave className="text-green-500" />
                                   <span className="font-bold text-green-600">
-                                    ${reserva.precio?.toLocaleString() || '0'} COP
+                                    ${precioNum.toLocaleString()} COP
                                   </span>
                                 </div>
                               </div>
@@ -339,7 +393,7 @@ function MisReservasPage() {
               transition={{ delay: 0.5 }}
               className="mt-8 bg-white rounded-2xl shadow-lg p-6"
             >
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-center">
                 <div>
                   <p className="text-2xl font-bold text-green-600">{reservas.length}</p>
                   <p className="text-sm text-gray-600">Total Reservas</p>
@@ -361,6 +415,12 @@ function MisReservasPage() {
                     {reservas.filter(r => getEstadoReserva(r).tipo === 'completada').length}
                   </p>
                   <p className="text-sm text-gray-600">Completadas</p>
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-red-600">
+                    {reservas.filter(r => getEstadoReserva(r).tipo === 'cancelada').length}
+                  </p>
+                  <p className="text-sm text-gray-600">Canceladas</p>
                 </div>
               </div>
             </motion.div>
