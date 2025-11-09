@@ -44,7 +44,7 @@ function App() {
         <Route path="/reportes-provider" element={<ProviderReportes />} />
         <Route path="/reservas-provider" element={<ProviderReservas />} />
         <Route path="/canchas-manager" element={<CanchasManager />} />
-        <Route path="/canchas-details/:id" element={<CanchaDetailsPage />} />
+        <Route path="/canchas-details/:id" element={<CanchasDetailsPage />} />
       </Routes>
     </Router>
   );
