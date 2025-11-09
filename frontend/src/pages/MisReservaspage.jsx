@@ -43,7 +43,7 @@ function MisReservasPage() {
     }
   };
 
-  const getEstado = (reserva) => {
+   const getEstado = (reserva) => {
     const fechaHora = parseISO(`${reserva.fecha}T${reserva.hora_fin}`);
     if (isBefore(fechaHora, new Date())) return "Finalizada";
     return reserva.estado === "cancelada" ? "Cancelada" : "Activa";
