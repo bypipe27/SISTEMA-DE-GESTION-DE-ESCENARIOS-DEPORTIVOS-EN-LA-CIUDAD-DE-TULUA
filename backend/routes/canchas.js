@@ -1,13 +1,13 @@
 const express = require("express");
 const router = express.Router();
-const { obtenerCanchas, obtenerCanchaPorId } = require("../controllers/canchasController");
+const auth = require("../middleware/auth");
+const { obtenerCanchaPorId, obtenerCanchas, ProviderListCanchas, ProviderCreateCancha, ProviderUpdateCancha, ProviderDeleteCancha } = require("../controllers/canchasController");
 
-// GET /api/canchas
 router.get("/", obtenerCanchas);
-
-// GET /api/canchas/:id
+router.get("/provider", auth, ProviderListCanchas);
+router.post("/provider", auth, ProviderCreateCancha);
+router.put("/provider/:id", auth, ProviderUpdateCancha);
+router.delete("/provider/:id", auth, ProviderDeleteCancha);
 router.get("/:id", obtenerCanchaPorId);
-
-
 
 module.exports = router;

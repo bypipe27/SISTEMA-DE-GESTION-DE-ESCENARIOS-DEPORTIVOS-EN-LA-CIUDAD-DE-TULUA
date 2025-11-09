@@ -12,10 +12,7 @@ function NavBar() {
 
       <div className="space-x-6 text-lg">
         <Link to="/" className="hover:text-green-300 transition">Inicio</Link>
-        <Link to="/login" className="hover:text-green-300 transition">Registro para cancha</Link>
-        <Link to="/mis-reservas" className="hover:text-green-300 transition">
-            Mis Reservas
-        </Link>
+        <Link to="/register-provider" className="hover:text-green-300 transition">Registro para proveedor</Link>
       </div>
     </nav>
   );

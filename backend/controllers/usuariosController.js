@@ -55,7 +55,7 @@ async function autenticarUsuarioPorCredenciales(email, contrasena) {
     const contrasenaValida = await bcrypt.compare(contrasena, hash);
     if (!contrasenaValida) throw new Error("Contraseña incorrecta");
 
-    const token = jwt.sign({ id: user.id, email: user.email }, process.env.JWT_SECRET, {
+    const token = jwt.sign({ id: user.id, email: user.email ,role:user.role}, process.env.JWT_SECRET, {
       expiresIn: "7d",
     });
 
@@ -85,7 +85,7 @@ async function iniciarSesion(req, res) {
 // =============== REGISTRO: crea pendiente y envía código ==================
 async function registrarUsuario(req, res) {
   try {
-    const { nombre, email, telefono, contrasena } = req.body;
+    const { nombre, email, telefono, contrasena, role="user" } = req.body;
 
     // Verificar si ya existe en usuarios
     const existe = await pool.query("SELECT 1 FROM usuarios WHERE email = $1 LIMIT 1", [email]);
@@ -110,6 +110,7 @@ async function registrarUsuario(req, res) {
       contrasena_hash: contrasenaHash,
       codigo_hash: codigoHash,
       expira_en,
+      role,
     });
 
     // Enviar correo
@@ -137,6 +138,7 @@ async function registrarUsuario(req, res) {
 }
 
 // =============== VERIFICAR CÓDIGO: inserta en usuarios y devuelve token ===
+// ...existing code...
 async function verificarCodigo(req, res) {
   try {
     const { email, codigo } = req.body;
@@ -160,26 +162,46 @@ async function verificarCodigo(req, res) {
       return res.status(400).json({ error: "Código incorrecto." });
     }
 
-    // Crear usuario definitivo (verificado=TRUE) y eliminar pendiente
-    const user = await crearUsuario(pend.nombre, pend.email, pend.telefono, pend.contrasena_hash);
+    // Crear usuario definitivo usando el role guardado en el pendiente (si existe)
+    const roleToAssign = pend.role || "user";
+    const user = await crearUsuario(pend.nombre, pend.email, pend.telefono, pend.contrasena_hash, roleToAssign);
     await eliminarPendiente(email);
 
-    // (Opcional) login inmediato
-    const token = jwt.sign({ id: user.id, email: user.email }, process.env.JWT_SECRET, {
+    // login inmediato: devolver token y usuario en JSON (no hacer return de objeto)
+    const token = jwt.sign({ id: user.id, email: user.email, role: user.role }, process.env.JWT_SECRET, {
       expiresIn: "7d",
     });
+
+    // Enviar correo de confirmación de registro (no bloquear si falla el envío)
+    try {
+      await transporter.verify();
+      await transporter.sendMail({
+        from: `"Sistema de Canchas" <${EMAIL_USER}>`,
+        to: user.email,
+        subject: "Cuenta confirmada - Registro exitoso",
+        html: `
+          <h3>¡Hola ${user.nombre}!</h3>
+          <p>Tu cuenta en el Sistema de Gestión de Canchas ha sido confirmada correctamente.</p>
+          <p>Ya puedes iniciar sesión y comenzar a usar la plataforma.</p>
+          <hr />
+          <p>Si no reconoces esta acción, por favor contacta con el soporte.</p>
+        `,
+      });
+    } catch (mailErr) {
+      console.error("❌ Error enviando correo de confirmación:", mailErr);
+      // no interrumpir el flujo: devolvemos éxito aun cuando el correo no se envía
+    }
 
     return res.json({
       mensaje: "Correo verificado. Cuenta creada.",
       usuario: user,
       token,
     });
-  } catch (error) {
-    console.error("❌ Error al verificar:", error);
+  } catch (err) {
+    console.error("❌ Error verificarCodigo:", err);
     return res.status(500).json({ error: "Error en el servidor." });
   }
 }
-
 // =============== REENVIAR CÓDIGO ==========================================
 async function reenviarCodigo(req, res) {
   try {
@@ -213,10 +235,21 @@ async function reenviarCodigo(req, res) {
     return res.status(500).json({ error: "Error en el servidor." });
   }
 }
-
+async function registrarUsuarioProvider(req, res) {
+  // forzar role a provider aunque el cliente no lo envíe
+  try {
+    req.body = req.body || {};
+    req.body.role = "provider";
+    return await registrarUsuario(req, res);
+  } catch (err) {
+    console.error("❌ Error registrarUsuarioProvider:", err);
+    return res.status(500).json({ error: "Error en el servidor." });
+  }
+}
 
 
 module.exports = {
+  registrarUsuarioProvider,
   registrarUsuario,
   verificarCodigo,
   reenviarCodigo,

@@ -20,8 +20,12 @@ function VerifyCodePage() {
   const [loading, setLoading] = useState(false);
   const [seconds, setSeconds] = useState(RESEND_SECONDS);
 
+// ...existing code...
   useEffect(() => {
-    if (!email) navigate("/register", { replace: true });
+    if (!email) {
+      // si no viene email en query, regresar al home
+      navigate("/", { replace: true });
+    }
   }, [email, navigate]);
 
   useEffect(() => {
@@ -31,43 +35,93 @@ function VerifyCodePage() {
 
   const onVerify = async (e) => {
     e.preventDefault();
-    if (!codigo) return;
+    if (!codigo) {
+      setMsg("Ingrese el código recibido.");
+      return;
+    }
 
     setLoading(true);
     setMsg("");
+
+    const tipo = q.get("type") || "user"; // 'cancha' o 'user'
     try {
-      const r = await fetch("http://localhost:5000/api/usuarios/verify", {
+      let endpoint = "";
+      let body = {};
+
+      if (tipo === "cancha") {
+        endpoint = "http://localhost:5000/api/canchas/verify";
+        body = { correo: email, codigo };
+      } else {
+        endpoint = "http://localhost:5000/api/usuarios/verify";
+        body = { email, codigo };
+      }
+
+      const res = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, codigo }),
+        body: JSON.stringify(body),
       });
-      const data = await r.json();
-      if (!r.ok) throw new Error(data?.error || "No se pudo verificar");
 
-      if (data?.token) localStorage.setItem("token", data.token);
-      navigate("/login", { replace: true });
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        setMsg(data.error || `Error ${res.status} verificando código.`);
+        setLoading(false);
+        return;
+      }
+
+      // éxito: si era verificación de CANCHA, dirigir a login; si user, también a login
+      setMsg(data.mensaje || "Verificación correcta.");
+      setTimeout(() => {
+        navigate("/login");
+      }, 800);
     } catch (err) {
-      setMsg(err.message);
+      console.error(err);
+      setMsg("No se pudo conectar con el servidor.");
     } finally {
       setLoading(false);
     }
   };
 
   const onResend = async () => {
-    if (seconds > 0) return;
+    // reenvío: intenta llamar al endpoint de reenvío según type.
+    const tipo = q.get("type") || "user";
     setMsg("");
+    setLoading(true);
+
     try {
-      const r = await fetch("http://localhost:5000/api/usuarios/resend-code", {
+      let endpoint = "";
+      let body = {};
+
+      if (tipo === "cancha") {
+        // si implementaste un endpoint de reenvío para canchas, usa /api/canchas/resend-code
+        endpoint = "http://localhost:5000/api/canchas/resend-code";
+        body = { correo: email };
+      } else {
+        endpoint = "http://localhost:5000/api/usuarios/resend-code";
+        body = { email };
+      }
+
+      const res = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify(body),
       });
-      const data = await r.json();
-      if (!r.ok) throw new Error(data?.error || "No se pudo reenviar el código");
+
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setMsg(data.error || `Error ${res.status} al reenviar código.`);
+        setLoading(false);
+        return;
+      }
+
+      setMsg(data.mensaje || "Se reenvió el código al correo.");
       setSeconds(RESEND_SECONDS);
-      setMsg("Te enviamos un nuevo código. Revisa tu correo.");
     } catch (err) {
-      setMsg(err.message);
+      console.error(err);
+      setMsg("No se pudo conectar con el servidor.");
+    } finally {
+      setLoading(false);
     }
   };
 

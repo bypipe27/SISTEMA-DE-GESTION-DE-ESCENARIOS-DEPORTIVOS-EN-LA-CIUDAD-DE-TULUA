@@ -78,6 +78,7 @@ function ReservaPage() {
     if (!clienteNombre) return alert("Nombre requerido");
     setSubmitting(true);
     try {
+      const usuario = JSON.parse(localStorage.getItem("usuario")); // 👈 obtiene el usuario
       const body = {
         cancha_id: Number(id),
         date,
@@ -86,6 +87,7 @@ function ReservaPage() {
         cliente_nombre: clienteNombre,
         cliente_telefono: clienteTelefono,
         metodo_pago: "efectivo",
+        usuario_id: usuario?.id // 👈 añade el id del usuario
       };
       const res = await fetch(`${API_BASE}/api/reservas`, {
         method: "POST",

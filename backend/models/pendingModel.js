@@ -2,11 +2,11 @@ const dbModule = require("../db.js");
 const pool = dbModule.pool || dbModule.default || dbModule;
 
 async function crearRegistroPendiente({
-  nombre, email, telefono, contrasena_hash, codigo_hash, expira_en
+  nombre, email, telefono, contrasena_hash, codigo_hash, expira_en, role = "user"
 }) {
   const q = `
-    INSERT INTO pending_registros (nombre, email, telefono, contrasena_hash, codigo_hash, expira_en)
-    VALUES ($1, $2, $3, $4, $5, $6)
+    INSERT INTO pending_registros (nombre, email, telefono, contrasena_hash, codigo_hash, expira_en, role)
+    VALUES ($1, $2, $3, $4, $5, $6, $7)
     ON CONFLICT (email)
     DO UPDATE SET
       nombre = EXCLUDED.nombre,
@@ -14,10 +14,11 @@ async function crearRegistroPendiente({
       contrasena_hash = EXCLUDED.contrasena_hash,
       codigo_hash = EXCLUDED.codigo_hash,
       expira_en = EXCLUDED.expira_en,
+      role = EXCLUDED.role,
       intentos = 0
     RETURNING *;
   `;
-  const vals = [nombre, email, telefono, contrasena_hash, codigo_hash, expira_en];
+  const vals = [nombre, email, telefono, contrasena_hash, codigo_hash, expira_en, role];
   const r = await pool.query(q, vals);
   return r.rows[0];
 }

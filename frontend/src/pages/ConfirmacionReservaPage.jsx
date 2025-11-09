@@ -1,15 +1,27 @@
-import React from "react";
+import React ,{useState} from "react";
 import { useLocation, useNavigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { FaCheckCircle, FaFutbol, FaCalendarAlt, FaClock, FaUser, FaPhone, FaMoneyBillWave, FaArrowLeft, FaShare } from "react-icons/fa";
-import NavBar from "../components/NavBar";
 import Button from "../components/Button";
 
 function ConfirmacionReservaPage() {
   const location = useLocation();
+  const [open, setOpen] = useState(false);
   const navigate = useNavigate();
   const { reserva, cancha, horario } = location.state || {};
+  const usuario = React.useMemo(() => {
+  try {
+    return JSON.parse(localStorage.getItem("usuario") || "null");
+  } catch {
+    return null;
+  }
+  }, []);
 
+  const handleLogout = () => {
+  localStorage.removeItem("token");
+  localStorage.removeItem("usuario");
+  navigate("/login");
+  };
   // Si no hay datos de reserva, redirigir al dashboard
   if (!reserva || !cancha) {
     React.useEffect(() => {
@@ -19,10 +31,10 @@ function ConfirmacionReservaPage() {
   }
 
   // Formatear fecha en español - VERSIÓN CORREGIDA PARA FORMATO ISO
-const formatearFecha = (fechaStr) => {
-  try {
-    // Manejar tanto formato YYYY-MM-DD como formato ISO completo
-    let fecha;
+  const formatearFecha = (fechaStr) => {
+    try {
+      // Manejar tanto formato YYYY-MM-DD como formato ISO completo
+      let fecha;
     
     if (fechaStr.includes('T')) {
       // Es formato ISO: "2025-10-21T05:00:00.000Z"
@@ -74,10 +86,86 @@ const formatearFecha = (fechaStr) => {
     }
   };
 
-  return (
+return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-green-100">
-      <NavBar />
-      
+      {/* Barra de navegación igual al Dashboard */}
+
+      <nav className="w-full py-4 px-6 flex justify-between items-center bg-green-900/80 backdrop-blur-md fixed top-0 z-50 shadow-lg text-white">
+        <h1 className="text-lg md:text-2xl font-bold flex items-center gap-3">
+          <FaFutbol className="text-green-300 text-2xl md:text-3xl" />
+          <span className="hidden md:inline">
+            SISTEMA DE GESTIÓN DE ESCENARIOS DEPORTIVOS
+          </span>
+          <span className="md:hidden">Tulúa Deportes</span>
+        </h1>
+
+        <div className="flex items-center gap-4">
+          <span className="text-sm md:text-base">
+            Hola, <span className="font-medium">{usuario?.nombre || "Usuario"}</span>
+          </span>
+
+          <div className="relative">
+            <button
+              onClick={() => setOpen((v) => !v)}
+              className="flex items-center gap-2 bg-white/5 hover:bg-white/10 px-3 py-1 rounded text-white text-sm"
+            >
+              Opciones <span className="text-xs">▾</span>
+            </button>
+
+            {open && (
+              <div
+                className="absolute right-0 mt-2 w-56 bg-white text-gray-900 rounded-md shadow-lg overflow-hidden"
+                onMouseLeave={() => setOpen(false)}
+              >
+                <button
+                  className="w-full text-left px-4 py-2 hover:bg-gray-100"
+                  onClick={() => alert("Agregar medio de pago (simulado).")}
+                >
+                  ➕ Agregar medio de pago
+                </button>
+
+                <button
+                  className="w-full text-left px-4 py-2 hover:bg-gray-100"
+                  onClick={() => {
+                    setOpen(false);
+                    navigate("/mis-reservas");
+                  }}
+                >
+                  📋 Ver reservas
+                </button>
+
+                <button
+                  className="w-full text-left px-4 py-2 hover:bg-gray-100"
+                  onClick={() => {
+                    setOpen(false);
+                    navigate("/dashboard");
+                  }}
+                >
+                  🏠 Ir al Dashboard
+                </button>
+
+                <button
+                  className="w-full text-left px-4 py-2 hover:bg-gray-100"
+                  onClick={() => alert("Cambiar contraseña (simulado).")}
+                >
+                  🔒 Cambiar contraseña
+                </button>
+
+                <hr />
+
+                <button
+                  className="w-full text-left px-4 py-2 hover:bg-gray-100 text-red-600"
+                  onClick={handleLogout}
+                >
+                  Cerrar sesión
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      </nav>
+
+
       <div className="container mx-auto px-4 py-8 pt-24">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -243,5 +331,4 @@ const formatearFecha = (fechaStr) => {
     </div>
   );
 }
-
 export default ConfirmacionReservaPage;

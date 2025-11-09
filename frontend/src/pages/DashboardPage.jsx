@@ -45,11 +45,33 @@ const tipos = useMemo(() => {
 }, [canchas]);
 
 // ...existing code...
+// const estaDisponibleEnFecha = (c, fechaIso) => {
+//   if (!fechaIso) return Boolean(c.disponible);
+
+//   try {
+//     const fechaObj = new Date(fechaIso + "T00:00:00");
+//     const dow = fechaObj.getDay(); // 0 = domingo, 1 = lunes, ..., 6 = sábado
+
+//     // Verifica si el día está cerrado
+//     if ((c.cerrados_dias || []).includes(dow)) return false;
+
+//     // Verifica si la fecha exacta está cerrada
+//     if ((c.cerrados_fechas || []).includes(fechaIso)) return false;
+
+//     return Boolean(c.disponible);
+//   } catch (err) {
+//     console.error("Error evaluando disponibilidad:", err);
+//     return Boolean(c.disponible);
+//   }
+// };
+// ...existing code...
 const estaDisponibleEnFecha = (c, fechaIso) => {
   if (!fechaIso) return Boolean(c.disponible);
 
   try {
-    const fechaObj = new Date(fechaIso + "T00:00:00");
+    // Divide la fecha yyyy-mm-dd y crea el objeto Date en local
+    const [year, month, day] = fechaIso.split("-");
+    const fechaObj = new Date(Number(year), Number(month) - 1, Number(day));
     const dow = fechaObj.getDay(); // 0 = domingo, 1 = lunes, ..., 6 = sábado
 
     // Verifica si el día está cerrado
@@ -64,7 +86,7 @@ const estaDisponibleEnFecha = (c, fechaIso) => {
     return Boolean(c.disponible);
   }
 };
-
+// ...existing code...
 
 
 // NUEVA: lista filtrada de resultados usada en el render
@@ -143,9 +165,22 @@ const resultados = useMemo(() => {
 
                 <button
                   className="w-full text-left px-4 py-2 hover:bg-gray-100"
-                  onClick={() => alert("Modificar número (simulado).")}
+                  onClick={() => {
+                    setOpen(false);
+                    navigate("/mis-reservas");
+                  }}
                 >
-                  ☎️ Modificar número
+                  📋 Ver reservas
+                </button>
+
+                <button
+                  className="w-full text-left px-4 py-2 hover:bg-gray-100"
+                  onClick={() => {
+                    setOpen(false);
+                    navigate("/dashboard");
+                  }}
+                >
+                  🏠 Ir al Dashboard
                 </button>
 
                 <button
@@ -200,13 +235,18 @@ const resultados = useMemo(() => {
 
             <label className="block text-sm mb-1">Fecha</label>
             <input
-                type="date"
-                value={fecha}
-                onChange={(e) => setFecha(e.target.value)}
-                min={new Date().toISOString().split("T")[0]} // 🔒 Bloquea fechas anteriores
-                className="w-full border rounded px-3 py-2 mb-3 text-sm"
-              />
-
+              type="date"
+              value={fecha}
+              onChange={(e) => setFecha(e.target.value)}
+              min={(() => {
+                const hoy = new Date();
+                const yyyy = hoy.getFullYear();
+                const mm = String(hoy.getMonth() + 1).padStart(2, "0");
+                const dd = String(hoy.getDate()).padStart(2, "0");
+                return `${yyyy}-${mm}-${dd}`;
+              })()} // ✅ Fecha mínima local
+              className="w-full border rounded px-3 py-2 mb-3 text-sm"
+            />
             <div className="flex items-center gap-2 mb-3">
               <input
                 id="disp"
