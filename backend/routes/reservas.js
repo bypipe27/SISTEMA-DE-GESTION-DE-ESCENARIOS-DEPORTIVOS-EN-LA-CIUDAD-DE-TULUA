@@ -2,7 +2,7 @@
 const express = require("express");
 const router = express.Router();
 const auth = require("../middleware/auth");
-const { ProviderReportes,ProviderMarkNoShow,ProviderMarkCompleted,availability, createReserva, obtenerReservasPorUsuario, cancelarReserva, ProviderListReservas, ProviderCancelReserva } = require("../controllers/reservasController");
+const {ProviderReportes,ProviderMarkNoShow,ProviderMarkCompleted,availability, createReserva, obtenerReservasPorUsuario, cancelarReserva, ProviderListReservas, ProviderCancelReserva } = require("../controllers/reservasController");
 
 // usuario
 router.get("/usuario/:id", obtenerReservasPorUsuario);
@@ -23,6 +23,5 @@ router.put("/cancelar/:id", cancelarReserva);
 router.post("/", createReserva);
 
 // obtener reservas del usuario 
-router.get("/mis-reservas", obtenerReservasUsuario);
 
 module.exports = router;
