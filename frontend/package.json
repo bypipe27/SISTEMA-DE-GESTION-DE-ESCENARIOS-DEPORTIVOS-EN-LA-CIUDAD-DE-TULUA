@@ -5,14 +5,13 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build",
+    "build": "vite build",
     "preview": "vite preview",
     "predeploy": "npm run build",
     "deploy": "gh-pages -d dist"
   },
   "homepage": "https://bypipe27.github.io/SISTEMA-DE-GESTI-N-DE-ESCENARIOS-DEPORTIVOS-EN-LA-CIUDAD-DE-TULUA/",
   "devDependencies": {
-    "typescript": "~5.9.3",
     "vite": "^7.1.7",
     "gh-pages": "^5.0.0"
   },
