@@ -6,6 +6,11 @@ on:
       - bypipe
   workflow_dispatch: {}
 
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
 concurrency:
   group: deploy-frontend
   cancel-in-progress: true
