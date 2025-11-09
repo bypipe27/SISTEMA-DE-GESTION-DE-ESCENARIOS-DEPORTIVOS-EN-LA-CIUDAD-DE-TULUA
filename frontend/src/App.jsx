@@ -19,8 +19,14 @@ import CanchasManager from "./pages/CanchasMananger";
 
 
 function App() {
+  // `import.meta.env.BASE_URL` viene de Vite y será '/' en dev
+  // y '/<repo>/' en producción si lo configuraste en `vite.config.js`.
+  // Usar este basename permite que React Router funcione tanto
+  // en localhost como en GitHub Pages sin cambiar el código.
+  const basename = import.meta.env.BASE_URL || '/'
+
   return (
-    <Router>
+    <Router basename={basename}>
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/login" element={<LoginPage />} />
