@@ -29,7 +29,6 @@ function DashboardPage({
   const [canchas, setCanchas] = useState([]);
   const [fecha, setFecha] = useState(""); // yyyy-mm-dd seleccionada
 
-<<<<<<< HEAD
 useEffect(() => {
   fetch(`${import.meta.env.VITE_API_BASE || "http://localhost:5000"}/api/canchas`)
     .then(res => res.json())
@@ -39,17 +38,6 @@ useEffect(() => {
     })
     .catch(err => console.error("❌ Error al cargar canchas:", err));
 }, []);
-=======
-  useEffect(() => {
-    fetch("http://localhost:5000/api/canchas")
-      .then((res) => res.json())
-      .then((data) => {
-        console.log("✅ Canchas recibidas:", data);
-        setCanchas(data);
-      })
-      .catch((err) => console.error("❌ Error al cargar canchas:", err));
-  }, []);
->>>>>>> origin/deploy
 
   const tipos = useMemo(() => {
     return Array.from(new Set(canchas.map((c) => c.tipo)));
