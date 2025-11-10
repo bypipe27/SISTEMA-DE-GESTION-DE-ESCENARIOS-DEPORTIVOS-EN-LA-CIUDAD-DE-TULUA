@@ -1,6 +1,5 @@
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-const nodemailer = require("nodemailer");
 const dotenv = require("dotenv");
 const dbModule = require("../db.js");
 const {
@@ -23,11 +22,8 @@ const pool = dbModule.pool || dbModule.default || dbModule;
 const EMAIL_USER = (process.env.EMAIL_USER || "").trim();
 const EMAIL_PASS = (process.env.EMAIL_PASS || "").replace(/\s+/g, "");
 
-// SMTP
-const transporter = nodemailer.createTransport({
-  service: "gmail",
-  auth: { user: EMAIL_USER, pass: EMAIL_PASS },
-});
+// SMTP transporter centralizado
+const transporter = require("../utils/mailer");
 
 const CODIGO_MINUTOS_EXPIRA = 10;
 const MAX_INTENTOS = 5;
@@ -112,25 +108,37 @@ async function registrarUsuario(req, res) {
       expira_en,
       role,
     });
-
-    // Enviar correo
-    await transporter.verify();
-    await transporter.sendMail({
-      from: `"Sistema de Canchas" <${EMAIL_USER}>`,
-      to: email,
-      subject: "Tu código de verificación",
-      html: `
-        <h3>¡Hola ${nombre}!</h3>
-        <p>Usa este código para confirmar tu cuenta:</p>
-        <div style="font-size:28px;font-weight:bold;letter-spacing:4px">${codigo}</div>
-        <p>Caduca en <b>${CODIGO_MINUTOS_EXPIRA} minutos</b>.</p>
-      `,
-    });
-
-    return res.json({
+    // Responder inmediatamente (registro pendiente creado)
+    res.json({
       mensaje: "Registro en espera. Te enviamos un código al correo para confirmar.",
-      next: "/verify"
+      next: "/verify",
     });
+
+    // Enviar correo de forma asíncrona (no bloquear la respuesta)
+    if (process.env.DISABLE_EMAILS === "true") {
+      console.log("Envío de emails deshabilitado (DISABLE_EMAILS=true)");
+      return;
+    }
+
+    (async () => {
+      try {
+        await transporter.sendMail({
+          from: `"Sistema de Canchas" <${EMAIL_USER}>`,
+          to: email,
+          subject: "Tu código de verificación",
+          html: `
+            <h3>¡Hola ${nombre}!</h3>
+            <p>Usa este código para confirmar tu cuenta:</p>
+            <div style="font-size:28px;font-weight:bold;letter-spacing:4px">${codigo}</div>
+            <p>Caduca en <b>${CODIGO_MINUTOS_EXPIRA} minutos</b>.</p>
+          `,
+        });
+        console.log("Código de verificación enviado a", email);
+      } catch (mailErr) {
+        console.error("No se pudo enviar código por email (no bloqueante):", mailErr);
+      }
+    })();
+    return;
   } catch (error) {
     console.error("❌ Error al registrar:", error);
     return res.status(500).json({ error: "Error en el servidor." });
@@ -172,24 +180,29 @@ async function verificarCodigo(req, res) {
       expiresIn: "7d",
     });
 
-    // Enviar correo de confirmación de registro (no bloquear si falla el envío)
-    try {
-      await transporter.verify();
-      await transporter.sendMail({
-        from: `"Sistema de Canchas" <${EMAIL_USER}>`,
-        to: user.email,
-        subject: "Cuenta confirmada - Registro exitoso",
-        html: `
-          <h3>¡Hola ${user.nombre}!</h3>
-          <p>Tu cuenta en el Sistema de Gestión de Canchas ha sido confirmada correctamente.</p>
-          <p>Ya puedes iniciar sesión y comenzar a usar la plataforma.</p>
-          <hr />
-          <p>Si no reconoces esta acción, por favor contacta con el soporte.</p>
-        `,
-      });
-    } catch (mailErr) {
-      console.error("❌ Error enviando correo de confirmación:", mailErr);
-      // no interrumpir el flujo: devolvemos éxito aun cuando el correo no se envía
+    // Enviar correo de confirmación de registro de forma asíncrona (no bloquear si falla)
+    if (process.env.DISABLE_EMAILS === "true") {
+      console.log("Envío de emails deshabilitado (DISABLE_EMAILS=true)");
+    } else {
+      (async () => {
+        try {
+          await transporter.sendMail({
+            from: `"Sistema de Canchas" <${EMAIL_USER}>`,
+            to: user.email,
+            subject: "Cuenta confirmada - Registro exitoso",
+            html: `
+              <h3>¡Hola ${user.nombre}!</h3>
+              <p>Tu cuenta en el Sistema de Gestión de Canchas ha sido confirmada correctamente.</p>
+              <p>Ya puedes iniciar sesión y comenzar a usar la plataforma.</p>
+              <hr />
+              <p>Si no reconoces esta acción, por favor contacta con el soporte.</p>
+            `,
+          });
+          console.log("Email de confirmación enviado a", user.email);
+        } catch (mailErr) {
+          console.error("❌ Error enviando correo de confirmación (no bloqueante):", mailErr);
+        }
+      })();
     }
 
     return res.json({
@@ -217,19 +230,32 @@ async function reenviarCodigo(req, res) {
 
     await actualizarCodigo(email, codigoHash, expira_en);
 
-    await transporter.verify();
-    await transporter.sendMail({
-      from: `"Sistema de Canchas" <${EMAIL_USER}>`,
-      to: email,
-      subject: "Nuevo código de verificación",
-      html: `
-        <p>Tu nuevo código:</p>
-        <div style="font-size:28px;font-weight:bold;letter-spacing:4px">${codigo}</div>
-        <p>Caduca en <b>${CODIGO_MINUTOS_EXPIRA} minutos</b>.</p>
-      `,
-    });
+    // Responder inmediatamente
+    res.json({ mensaje: "Nuevo código enviado." });
 
-    return res.json({ mensaje: "Nuevo código enviado." });
+    if (process.env.DISABLE_EMAILS === "true") {
+      console.log("Envío de emails deshabilitado (DISABLE_EMAILS=true)");
+      return;
+    }
+
+    (async () => {
+      try {
+        await transporter.sendMail({
+          from: `"Sistema de Canchas" <${EMAIL_USER}>`,
+          to: email,
+          subject: "Nuevo código de verificación",
+          html: `
+            <p>Tu nuevo código:</p>
+            <div style="font-size:28px;font-weight:bold;letter-spacing:4px">${codigo}</div>
+            <p>Caduca en <b>${CODIGO_MINUTOS_EXPIRA} minutos</b>.</p>
+          `,
+        });
+        console.log("Nuevo código enviado a", email);
+      } catch (mailErr) {
+        console.error("No se pudo enviar nuevo código por email (no bloqueante):", mailErr);
+      }
+    })();
+    return;
   } catch (error) {
     console.error("❌ Error al reenviar código:", error);
     return res.status(500).json({ error: "Error en el servidor." });
