@@ -64,18 +64,31 @@ function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-600 to-green-900">
+    <div className="min-h-screen bg-gray-50 text-gray-800 flex items-center justify-center p-6">
+      {/* estilos locales para look minimalista (no tocan la tipografía global ni la lógica) */}
+      <style>{`
+        .rp-card { width:100%; max-width:520px; border-radius:16px; background: #fff; box-shadow: 0 12px 30px rgba(2,6,23,0.06); border: 1px solid rgba(2,6,23,0.04); }
+        .rp-legend { color: #065f46; }
+        .rp-input { background: #fff; border: 1px solid rgba(15,23,42,0.06); padding: 12px 14px; border-radius: 12px; }
+        .rp-note { color: #6b7280; font-size:0.95rem; }
+        .rp-btn { border-radius: 12px; padding: 12px 14px; box-shadow: 0 6px 18px rgba(2,6,23,0.06); transition: transform .08s ease; }
+        .rp-btn:active { transform: translateY(1px); }
+      `}</style>
+
       <NavBar />
 
-      <div className="bg-white rounded-2xl shadow-2xl p-10 w-full max-w-md mt-20">
-        <h2 className="text-3xl font-bold text-center text-green-700 mb-6">
-          Crear Cuenta
+      <div className="rp-card p-8 mt-20">
+        <h2 className="text-2xl font-semibold text-gray-900 text-center mb-4 rp-legend">
+          Crear cuenta
         </h2>
+        <p className="text-center rp-note mb-6">
+          Regístrate para gestionar reservas y canchas.
+        </p>
 
         <form onSubmit={handleSubmit} className="space-y-5">
           {/* Nombre */}
           <div>
-            <label className="block text-gray-700 font-semibold mb-2">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
               Nombre completo
             </label>
             <input
@@ -84,14 +97,14 @@ function RegisterPage() {
               value={formData.nombre}
               onChange={handleChange}
               placeholder="Ingresa tu nombre"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+              className="w-full rp-input text-gray-800 focus:outline-none focus:ring-2 focus:ring-green-200"
               required
             />
           </div>
 
           {/* Correo */}
           <div>
-            <label className="block text-gray-700 font-semibold mb-2">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
               Correo electrónico
             </label>
             <input
@@ -100,14 +113,14 @@ function RegisterPage() {
               value={formData.email}
               onChange={handleChange}
               placeholder="correo@ejemplo.com"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+              className="w-full rp-input text-gray-800 focus:outline-none focus:ring-2 focus:ring-green-200"
               required
             />
           </div>
 
           {/* Teléfono */}
           <div>
-            <label className="block text-gray-700 font-semibold mb-2">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
               Teléfono
             </label>
             <input
@@ -116,13 +129,13 @@ function RegisterPage() {
               value={formData.telefono}
               onChange={handleChange}
               placeholder="Número de contacto"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+              className="w-full rp-input text-gray-800 focus:outline-none focus:ring-2 focus:ring-green-200"
             />
           </div>
 
           {/* Contraseña */}
           <div>
-            <label className="block text-gray-700 font-semibold mb-2">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
               Contraseña
             </label>
             <input
@@ -131,14 +144,14 @@ function RegisterPage() {
               value={formData.contrasena}
               onChange={handleChange}
               placeholder="Crea una contraseña"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+              className="w-full rp-input text-gray-800 focus:outline-none focus:ring-2 focus:ring-green-200"
               required
             />
           </div>
 
           {/* Confirmar contraseña */}
           <div>
-            <label className="block text-gray-700 font-semibold mb-2">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
               Confirmar contraseña
             </label>
             <input
@@ -147,7 +160,7 @@ function RegisterPage() {
               value={formData.confirmarContrasena}
               onChange={handleChange}
               placeholder="Repite la contraseña"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+              className="w-full rp-input text-gray-800 focus:outline-none focus:ring-2 focus:ring-green-200"
               required
             />
           </div>
@@ -167,7 +180,7 @@ function RegisterPage() {
           {/* Botón */}
           <button
             type="submit"
-            className="w-full bg-green-600 text-white font-bold py-2 rounded-lg hover:bg-green-700 transition-all"
+            className="w-full bg-green-600 text-white font-semibold rp-btn hover:bg-green-700"
           >
             Registrarse
           </button>
@@ -175,7 +188,7 @@ function RegisterPage() {
 
         <p className="text-center text-gray-600 mt-6">
           ¿Ya tienes una cuenta?{" "}
-          <a href="/login" className="text-green-700 font-semibold hover:underline">
+          <a href="/login" className="text-green-600 font-medium hover:underline">
             Inicia sesión
           </a>
         </p>

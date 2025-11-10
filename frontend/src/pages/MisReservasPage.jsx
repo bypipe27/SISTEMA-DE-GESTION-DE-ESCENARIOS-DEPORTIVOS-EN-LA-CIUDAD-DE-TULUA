@@ -47,51 +47,49 @@ function MisReservasPage() {
     }
   }, [usuario]);
 
-  // ...existing code...
-const cargarReservas = async () => {
-  try {
-    setLoading(true);
+  const cargarReservas = async () => {
+    try {
+      setLoading(true);
 
-    // Si hay usuario logueado pedimos por usuario_id (ruta: /api/reservas/usuario/:id)
-    if (usuario && usuario.id) {
-      const res = await fetch(`${API_BASE}/api/reservas/usuario/${usuario.id}`);
+      // Si hay usuario logueado pedimos por usuario_id (ruta: /api/reservas/usuario/:id)
+      if (usuario && usuario.id) {
+        const res = await fetch(`${API_BASE}/api/reservas/usuario/${usuario.id}`);
+        if (res.ok) {
+          const data = await res.json();
+          // El backend puede devolver un array o { reservas: [...] }
+          if (Array.isArray(data)) setReservas(data);
+          else setReservas(data.reservas || []);
+        } else {
+          console.error("Error cargando reservas por usuario:", res.status, res.statusText);
+          setReservas([]);
+        }
+        return;
+      }
+
+      // Si no hay usuario, usar búsqueda manual por nombre/email (fallback)
+      if (!searchTerm) {
+        setReservas([]);
+        return;
+      }
+
+      const res = await fetch(
+        `${API_BASE}/api/reservas/mis-reservas?email=${encodeURIComponent(searchTerm)}`
+      );
       if (res.ok) {
         const data = await res.json();
-        // El backend puede devolver un array o { reservas: [...] }
         if (Array.isArray(data)) setReservas(data);
         else setReservas(data.reservas || []);
       } else {
-        console.error("Error cargando reservas por usuario:", res.status, res.statusText);
+        console.error("Error cargando reservas por búsqueda:", res.status, res.statusText);
         setReservas([]);
       }
-      return;
-    }
-
-    // Si no hay usuario, usar búsqueda manual por nombre/email (fallback)
-    if (!searchTerm) {
+    } catch (error) {
+      console.error("Error cargando reservas:", error);
       setReservas([]);
-      return;
+    } finally {
+      setLoading(false);
     }
-
-    const res = await fetch(
-      `${API_BASE}/api/reservas/mis-reservas?email=${encodeURIComponent(searchTerm)}`
-    );
-    if (res.ok) {
-      const data = await res.json();
-      if (Array.isArray(data)) setReservas(data);
-      else setReservas(data.reservas || []);
-    } else {
-      console.error("Error cargando reservas por búsqueda:", res.status, res.statusText);
-      setReservas([]);
-    }
-  } catch (error) {
-    console.error("Error cargando reservas:", error);
-    setReservas([]);
-  } finally {
-    setLoading(false);
-  }
-};
-// ...existing code...
+  };
 
   // Helpers para normalizar y formatear fechas (evita Invalid Date)
   function toISODate(fechaInput) {
@@ -176,8 +174,36 @@ const cargarReservas = async () => {
     return true;
   });
 
+  // Mapa visual de colores (solo para estilo)
+  const colorMap = {
+    green: "#10B981",
+    blue: "#3B82F6",
+    gray: "#6B7280",
+    red: "#EF4444",
+    purple: "#8B5CF6",
+    yellow: "#F59E0B",
+  };
+
+  function hexToRgba(hex, alpha = 0.12) {
+    if (!hex) return `rgba(16,185,129,${alpha})`;
+    const h = hex.replace("#", "");
+    const bigint = parseInt(h.length === 3 ? h.split('').map(c=>c+c).join('') : h, 16);
+    const r = (bigint >> 16) & 255;
+    const g = (bigint >> 8) & 255;
+    const b = bigint & 255;
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+  }
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-green-100">
+    <div className="min-h-screen bg-gray-50 text-gray-800">
+      {/* estilos locales mínimos para aspecto minimalista (no cambia lógica) */}
+      <style>{`
+        .mr-card { border-radius: 14px; background: #fff; border: 1px solid rgba(2,6,23,0.04); box-shadow: 0 10px 30px rgba(2,6,23,0.04); }
+        .mr-input { border: 1px solid rgba(2,6,23,0.06); border-radius: 12px; padding: 12px; }
+        .mr-badge { padding: 6px 10px; border-radius: 999px; font-weight:600; font-size:0.85rem; }
+        .mr-card-accent { border-left-width: 4px; border-left-style: solid; }
+      `}</style>
+
       <NavBar />
       
       <div className="container mx-auto px-4 py-8 pt-24">
@@ -200,7 +226,7 @@ const cargarReservas = async () => {
           </div>
 
           {/* Controles de búsqueda y filtro */}
-          <div className="bg-white rounded-2xl shadow-lg p-6 mb-8">
+          <div className="mr-card rounded-2xl p-6 mb-8">
             <div className="grid md:grid-cols-3 gap-4">
               {/* Búsqueda */}
               <div className="relative">
@@ -210,7 +236,7 @@ const cargarReservas = async () => {
                   placeholder={usuario ? "Buscar en mis reservas..." : "Ingresa tu nombre..."}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500"
+                  className="w-full pl-10 pr-4 py-3 mr-input focus:outline-none focus:ring-2 focus:ring-green-200"
                 />
               </div>
 
@@ -220,7 +246,7 @@ const cargarReservas = async () => {
                 <select
                   value={filterStatus}
                   onChange={(e) => setFilterStatus(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 appearance-none bg-white"
+                  className="w-full pl-10 pr-4 py-3 mr-input focus:outline-none focus:ring-2 focus:ring-green-200 appearance-none bg-white"
                 >
                   <option value="todas">Todas las reservas</option>
                   <option value="proxima">Próximas</option>
@@ -252,7 +278,7 @@ const cargarReservas = async () => {
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="text-center py-12 bg-white rounded-2xl shadow-lg"
+              className="text-center py-12 mr-card"
             >
               <FaExclamationTriangle className="text-6xl text-gray-400 mx-auto mb-4" />
               <h3 className="text-xl font-semibold text-gray-700 mb-2">
@@ -280,6 +306,9 @@ const cargarReservas = async () => {
               {reservasFiltradas.map((reserva, index) => {
                 const estado = getEstadoReserva(reserva);
                 const precioNum = Number(reserva.total ?? reserva.precio ?? reserva.total_final ?? 0) || 0;
+                const borderColor = colorMap[estado.color] || colorMap.green;
+                const badgeBg = hexToRgba(colorMap[estado.color] || colorMap.green, 0.12);
+                const badgeColor = colorMap[estado.color] || colorMap.green;
                 
                 return (
                   <motion.div
@@ -287,8 +316,8 @@ const cargarReservas = async () => {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: index * 0.1 }}
-                    className="bg-white rounded-2xl shadow-lg overflow-hidden border-l-4"
-                    style={{ borderLeftColor: `var(--${estado.color}-500)` }}
+                    className="mr-card overflow-hidden mr-card-accent"
+                    style={{ borderLeftColor: borderColor }}
                   >
                     <div className="p-6">
                       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
@@ -304,7 +333,8 @@ const cargarReservas = async () => {
                                   {reserva.cancha_nombre}
                                 </h3>
                                 <span 
-                                  className={`px-3 py-1 rounded-full text-sm font-medium bg-${estado.color}-100 text-${estado.color}-800`}
+                                  className="mr-badge"
+                                  style={{ backgroundColor: badgeBg, color: badgeColor }}
                                 >
                                   {estado.texto}
                                 </span>

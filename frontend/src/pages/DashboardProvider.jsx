@@ -56,24 +56,37 @@ function ProviderDashboard() {
 
   return (
     <>
-      {/* Barra superior simple (reemplaza NavBarProvider): título + acciones */}
-      <div className="fixed top-0 left-0 right-0 bg-green-600 border-b shadow z-40">
-        <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
+      <style>{`
+        /* estilos locales minimalistas (no tocan tipografía global ni lógica) */
+        .pd-topbar { background: linear-gradient(90deg,#059669,#047857); border-bottom: 1px solid rgba(0,0,0,0.06); }
+        .pd-container { max-width:1100px; margin:0 auto; padding:1rem; }
+        .pd-grid { display:grid; gap:1rem; grid-template-columns:1fr; }
+        @media(min-width:640px){ .pd-grid { grid-template-columns: repeat(3, 1fr); } }
+        .pd-card { background:#fff; border-radius:12px; padding:1rem; border:1px solid rgba(2,6,23,0.04); box-shadow:0 10px 30px rgba(2,6,23,0.04); }
+        .pd-kpi { text-align:center; padding:1rem; border-radius:10px; background:linear-gradient(180deg,#ffffff,#fbfbfb); }
+        .pd-list-item { background:#fff; border-radius:10px; padding:12px; border:1px solid rgba(2,6,23,0.04); box-shadow:none; display:flex; justify-content:space-between; gap:12px; align-items:flex-start; }
+        .pd-btn { padding:8px 12px; border-radius:10px; transition:transform .08s ease; }
+        .pd-btn.primary { background:#10B981; color:#fff; border:none; }
+      `}</style>
+
+      <div className="fixed top-0 left-0 right-0 pd-topbar shadow z-40">
+        <div className="pd-container flex items-center justify-between h-16">
           <div className="flex items-center gap-4">
-            <h2 className="text-2xl font-bold flex items-center gap-6">
-                    <FaFutbol className="text-green-300 text-3xl animate-pulse" />
-                    <span className="text-white">SISTEMA DE GESTION DE ESCENARIOS DEPORTIVOS</span>
-                  </h2>
+            <h2 className="text-lg sm:text-xl font-semibold text-white flex items-center gap-3">
+              <FaFutbol className="text-white text-2xl" />
+              <span className="hidden sm:inline">SISTEMA DE GESTION DE ESCENARIOS DEPORTIVOS</span>
+              <span className="sm:hidden">Tulúa Deportes</span>
+            </h2>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
             <button
               onClick={() => {
                 localStorage.removeItem("token");
                 localStorage.removeItem("usuario");
                 navigate("/login");
               }}
-              className="px-3 py-2 border border-white text-white text-3x rounded hover:text-white transition"
+              className="px-3 py-2 border border-white text-white rounded-md pd-btn"
             >
               Cerrar sesión
             </button>
@@ -81,36 +94,43 @@ function ProviderDashboard() {
         </div>
       </div>
 
-      {/* Contenido principal con padding-top para no quedar oculto por la barra fija */}
-      <div className="p-6 max-w-6xl mx-auto pt-24">
+      <div className="p-6 pd-container pt-24">
         <header className="flex items-center justify-between mb-6">
-          <h1 className="text-3xl font-bold">Panel de proveedor</h1>
-
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-semibold text-gray-900">Panel de proveedor</h1>
+            <p className="text-sm text-gray-600 mt-1">Resumen y accesos rápidos</p>
+          </div>
         </header>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
-          <div className="p-6 border rounded shadow">
-            <h2 className="text-xl font-semibold mb-3">Gestión de canchas</h2>
-            <p className="text-sm text-gray-600 mb-4">Agregar, editar y listar tus canchas.</p>
-            <button onClick={() => navigate("/canchas-manager")} className="px-4 py-2 bg-blue-600 text-white rounded">
-              Ir a mis canchas
-            </button>
+        <div className="pd-grid mb-6">
+          <div className="pd-card pd-kpi">
+            <h3 className="text-sm text-gray-500">Gestión de canchas</h3>
+            <p className="mt-2 text-lg font-bold text-gray-900">Agregar, editar y listar</p>
+            <div className="mt-4">
+              <button onClick={() => navigate("/canchas-manager")} className="pd-btn primary">
+                Ir a mis canchas
+              </button>
+            </div>
           </div>
 
-          <div className="p-6 border rounded shadow">
-            <h2 className="text-xl font-semibold mb-3">Reservas</h2>
-            <p className="text-sm text-gray-600 mb-4">Ver y gestionar las reservas de tus canchas.</p>
-            <button onClick={() => navigate("/reservas-provider")} className="px-4 py-2 bg-blue-600 text-white rounded">
-              Ir a reservas
-            </button>
+          <div className="pd-card pd-kpi">
+            <h3 className="text-sm text-gray-500">Reservas</h3>
+            <p className="mt-2 text-lg font-bold text-gray-900">Ver y gestionar reservas</p>
+            <div className="mt-4">
+              <button onClick={() => navigate("/reservas-provider")} className="pd-btn primary">
+                Ir a reservas
+              </button>
+            </div>
           </div>
 
-          <div className="p-6 border rounded shadow">
-            <h2 className="text-xl font-semibold mb-3">Reportes</h2>
-            <p className="text-sm text-gray-600 mb-4">Estadísticas básicas de tus canchas y reservas.</p>
-            <button onClick={() => navigate("/reportes-provider")} className="px-4 py-2 bg-blue-600 text-white rounded">
-              Ver reportes
-            </button>
+          <div className="pd-card pd-kpi">
+            <h3 className="text-sm text-gray-500">Reportes</h3>
+            <p className="mt-2 text-lg font-bold text-gray-900">Estadísticas básicas</p>
+            <div className="mt-4">
+              <button onClick={() => navigate("/reportes-provider")} className="pd-btn primary">
+                Ver reportes
+              </button>
+            </div>
           </div>
         </div>
 
@@ -118,25 +138,25 @@ function ProviderDashboard() {
           <h2 className="text-lg font-semibold mb-3">Mis canchas</h2>
 
           {loading ? (
-            <p>Cargando...</p>
+            <p className="text-gray-600">Cargando...</p>
           ) : canchas.length === 0 ? (
-            <div>
-              <p>No tienes canchas registradas todavía.</p>
-              <button onClick={() => navigate("/register-cancha")} className="px-3 py-2 bg-blue-600 text-white rounded mt-2">
+            <div className="pd-card">
+              <p className="text-gray-700">No tienes canchas registradas todavía.</p>
+              <button onClick={() => navigate("/register-cancha")} className="mt-3 pd-btn primary">
                 Registrar cancha
               </button>
             </div>
           ) : (
             <ul className="space-y-4">
               {canchas.map((c) => (
-                <li key={c.id} className="p-4 border rounded flex justify-between items-start">
+                <li key={c.id} className="pd-list-item">
                   <div>
-                    <h3 className="text-xl font-semibold">{c.nombre}</h3>
+                    <h3 className="text-lg font-semibold text-gray-900">{c.nombre}</h3>
                     <p className="text-sm text-gray-600">{c.tipo} — Capacidad: {c.capacidad} — Precio: {c.precio}</p>
-                    <p className="text-sm mt-2">{c.descripcion}</p>
+                    <p className="text-sm mt-2 text-gray-700">{c.descripcion}</p>
                   </div>
                   <div className="flex flex-col gap-2">
-                    <button onClick={() => navigate(`/cancha/${c.id}`)} className="px-3 py-1 border rounded">
+                    <button onClick={() => navigate(`/cancha/${c.id}`)} className="pd-btn border rounded-md">
                       Ver
                     </button>
                   </div>

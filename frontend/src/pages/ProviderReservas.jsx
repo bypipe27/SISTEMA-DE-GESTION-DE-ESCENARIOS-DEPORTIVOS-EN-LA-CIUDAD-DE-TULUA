@@ -210,106 +210,137 @@ import NavBarProvider from "../components/NavBarProvider";
 
       {/* Contenido con padding-top para no quedar oculto por la navbar fija */}
       <div className="p-6 max-w-6xl mx-auto pt-28">
+        {/* estilos locales mínimos para aspecto limpio (sin tocar tipografía global) */}
+        <style>{`
+          .pr-card { background: #fff; border-radius: 12px; border: 1px solid rgba(2,6,23,0.04); box-shadow: 0 10px 28px rgba(2,6,23,0.04); overflow: hidden; }
+          .pr-table th { text-align:left; padding: 14px; color:#374151; font-weight:600; background:#fafafa; }
+          .pr-table td { padding: 14px; vertical-align: middle; color:#374151; }
+          .pr-row + .pr-row { border-top: 1px solid rgba(2,6,23,0.04); }
+          .pr-badge { display:inline-block; padding:6px 10px; border-radius:999px; font-weight:600; font-size:0.85rem; }
+          .pr-actions-btn { padding:8px 12px; border-radius:8px; background:#f3f4f6; border:1px solid rgba(2,6,23,0.04); cursor:pointer; }
+          .pr-dropdown { min-width:220px; border-radius:10px; overflow:hidden; box-shadow:0 8px 24px rgba(2,6,23,0.08); }
+          .pr-note { font-size:0.875rem; color:#6b7280; }
+        `}</style>
+
         <h1 className="text-2xl font-bold mb-4">Reservas</h1>
 
-        {loading ? <p>Cargando...</p> :
-          <table className="w-full table-auto border-collapse">
-            <thead>
-              <tr className="text-left">
-                <th>Cancha</th>
-                <th>Usuario</th>
-                <th>Fecha</th>
-                <th>Hora</th>
-                <th>Estado</th>
-                <th>Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              {reservas.map(r => (
-                <tr key={r.id} className="border-t">
-                  <td className="py-2">{r.cancha_nombre || r.cancha_id}</td>
-                  <td className="py-2">
-                    <div className="font-medium">{r.cliente_nombre || r.usuario_email || '-'}</div>
-                    {r.cliente_telefono && <div className="text-sm text-gray-500">{r.cliente_telefono}</div>}
-                  </td>
-                  <td className="py-2">{formatDate(r.fecha)}</td>
-                  <td className="py-2">{formatTime(r.inicio)} — {formatTime(r.fin)}</td>
-                  <td className="py-2">{r.estado}</td>
-                  <td className="py-2 relative">
-                    {/* Botón que abre el mini-menu */}
-                    <button
-                      onClick={() => setOpenMenu(openMenu === r.id ? null : r.id)}
-                      className="px-3 py-1 bg-gray-200 rounded"
-                      aria-haspopup="true"
-                      aria-expanded={openMenu === r.id}
-                    >Acciones ▾</button>
-
-                    {/* Menú desplegable */}
-                    {openMenu === r.id && (
-                      <div className="absolute right-0 mt-2 w-60 bg-white border rounded shadow z-10">
-                        {/* Cancelar */}
-                        {(() => {
-                          const info = getCancelInfo(r);
-                          return (
-                            <div className="px-3 py-2 border-b">
-                              <button
-                                disabled={!info.allowed}
-                                onClick={async () => {
-                                  if (!info.allowed) return;
-                                  await cancelarReserva(r.id);
-                                  setOpenMenu(null);
-                                }}
-                                className={`w-full text-left ${info.allowed ? 'text-red-600' : 'text-gray-400 cursor-not-allowed'}`}
-                              >Cancelar reserva</button>
-                              {!info.allowed && <div className="text-xs text-gray-500 mt-1">{info.reason}</div>}
-                            </div>
-                          );
-                        })()}
-
-                        {/* Completar */}
-                        {(() => {
-                          const info = getCompleteInfo(r);
-                          return (
-                            <div className="px-3 py-2 border-b">
-                              <button
-                                disabled={!info.allowed}
-                                onClick={async () => {
-                                  if (!info.allowed) return;
-                                  await completarReserva(r.id);
-                                  setOpenMenu(null);
-                                }}
-                                className={`w-full text-left ${info.allowed ? 'text-green-600' : 'text-gray-400 cursor-not-allowed'}`}
-                              >Marcar como completada</button>
-                              {!info.allowed && <div className="text-xs text-gray-500 mt-1">{info.reason}</div>}
-                            </div>
-                          );
-                        })()}
-
-                        {/* No-show */}
-                        {(() => {
-                          const info = getCompleteInfo(r); // mismo criterio temporal
-                          return (
-                            <div className="px-3 py-2">
-                              <button
-                                disabled={!info.allowed}
-                                onClick={async () => {
-                                  if (!info.allowed) return;
-                                  await marcarNoShow(r.id);
-                                  setOpenMenu(null);
-                                }}
-                                className={`w-full text-left ${info.allowed ? 'text-yellow-600' : 'text-gray-400 cursor-not-allowed'}`}
-                              >Marcar no se presenta Cliente (no-show)</button>
-                              {!info.allowed && <div className="text-xs text-gray-500 mt-1">{info.reason}</div>}
-                            </div>
-                          );
-                        })()}
-                      </div>
-                    )}
-                  </td>
+        {loading ? <p className="pr-note">Cargando...</p> :
+          <div className="pr-card">
+            <table className="w-full table-auto pr-table">
+              <thead>
+                <tr>
+                  <th>Cancha</th>
+                  <th>Usuario</th>
+                  <th>Fecha</th>
+                  <th>Hora</th>
+                  <th>Estado</th>
+                  <th style={{width: 180}}>Acciones</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {reservas.map(r => (
+                  <tr key={r.id} className="pr-row">
+                    <td className="py-2">
+                      <div className="font-medium text-gray-900">{r.cancha_nombre || r.cancha_id}</div>
+                      {r.tipo && <div className="pr-note">{r.tipo}</div>}
+                    </td>
+                    <td className="py-2">
+                      <div className="font-medium">{r.cliente_nombre || r.usuario_email || '-'}</div>
+                      {r.cliente_telefono && <div className="pr-note">{r.cliente_telefono}</div>}
+                    </td>
+                    <td className="py-2 pr-note">{formatDate(r.fecha)}</td>
+                    <td className="py-2 pr-note">{formatTime(r.inicio)} — {formatTime(r.fin)}</td>
+                    <td className="py-2">
+                      <span
+                        className="pr-badge"
+                        style={{
+                          background: r.estado === 'cancelada' ? 'rgba(239,68,68,0.12)' :
+                                     r.estado === 'completada' ? 'rgba(107,114,128,0.12)' :
+                                     'rgba(59,130,246,0.08)',
+                          color: r.estado === 'cancelada' ? '#dc2626' :
+                                 r.estado === 'completada' ? '#374151' :
+                                 '#2563eb'
+                        }}
+                      >
+                        {r.estado || 'programada'}
+                      </span>
+                    </td>
+                    <td className="py-2 relative">
+                      {/* Botón que abre el mini-menu */}
+                      <button
+                        onClick={() => setOpenMenu(openMenu === r.id ? null : r.id)}
+                        className="pr-actions-btn"
+                        aria-haspopup="true"
+                        aria-expanded={openMenu === r.id}
+                      >Acciones ▾</button>
+
+                      {/* Menú desplegable */}
+                      {openMenu === r.id && (
+                        <div className="absolute right-0 mt-2 w-60 bg-white border pr-dropdown z-10">
+                          {/* Cancelar */}
+                          {(() => {
+                            const info = getCancelInfo(r);
+                            return (
+                              <div className="px-3 py-2 border-b">
+                                <button
+                                  disabled={!info.allowed}
+                                  onClick={async () => {
+                                    if (!info.allowed) return;
+                                    await cancelarReserva(r.id);
+                                    setOpenMenu(null);
+                                  }}
+                                  className={`w-full text-left ${info.allowed ? 'text-red-600' : 'text-gray-400 cursor-not-allowed'}`}
+                                >Cancelar reserva</button>
+                                {!info.allowed && <div className="text-xs text-gray-500 mt-1">{info.reason}</div>}
+                              </div>
+                            );
+                          })()}
+
+                          {/* Completar */}
+                          {(() => {
+                            const info = getCompleteInfo(r);
+                            return (
+                              <div className="px-3 py-2 border-b">
+                                <button
+                                  disabled={!info.allowed}
+                                  onClick={async () => {
+                                    if (!info.allowed) return;
+                                    await completarReserva(r.id);
+                                    setOpenMenu(null);
+                                  }}
+                                  className={`w-full text-left ${info.allowed ? 'text-green-600' : 'text-gray-400 cursor-not-allowed'}`}
+                                >Marcar como completada</button>
+                                {!info.allowed && <div className="text-xs text-gray-500 mt-1">{info.reason}</div>}
+                              </div>
+                            );
+                          })()}
+
+                          {/* No-show */}
+                          {(() => {
+                            const info = getCompleteInfo(r); // mismo criterio temporal
+                            return (
+                              <div className="px-3 py-2">
+                                <button
+                                  disabled={!info.allowed}
+                                  onClick={async () => {
+                                    if (!info.allowed) return;
+                                    await marcarNoShow(r.id);
+                                    setOpenMenu(null);
+                                  }}
+                                  className={`w-full text-left ${info.allowed ? 'text-yellow-600' : 'text-gray-400 cursor-not-allowed'}`}
+                                >Marcar no se presenta Cliente (no-show)</button>
+                                {!info.allowed && <div className="text-xs text-gray-500 mt-1">{info.reason}</div>}
+                              </div>
+                            );
+                          })()}
+                        </div>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         }
       </div>
     </div>
