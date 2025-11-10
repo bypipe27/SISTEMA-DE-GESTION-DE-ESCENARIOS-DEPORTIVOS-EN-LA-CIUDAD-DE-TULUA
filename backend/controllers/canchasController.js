@@ -1,7 +1,6 @@
 // ...existing code...
 const db = require("../db.js");
 const bcrypt = require("bcrypt");
-const nodemailer = require("nodemailer");
 const dotenv = require("dotenv");
 
 dotenv.config();
