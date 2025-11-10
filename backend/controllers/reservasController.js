@@ -1,16 +1,10 @@
 const db = require("../db.js");
 const { differenceInHours, parseISO } = require("date-fns");
-const nodemailer = require("nodemailer");
 const dotenv = require("dotenv");
 dotenv.config();
 
-const EMAIL_USER = (process.env.EMAIL_USER || "").trim();
-const EMAIL_PASS = (process.env.EMAIL_PASS || "").replace(/\s+/g, "");
-
-const transporter = nodemailer.createTransport({
-  service: "gmail",
-  auth: { user: EMAIL_USER, pass: EMAIL_PASS },
-});
+// Usamos el helper centralizado de envío de correos (Brevo / API HTTP)
+const { enviarCorreo } = require("../utils/mailer");
 
 // utilidades
 function timeToMinutes(t) {
@@ -88,25 +82,30 @@ async function cancelarReserva(req, res) {
       const canchaRes = await db.query(canchaQ, [reserva.cancha_id]);
       const canchaInfo = canchaRes.rows[0];
       if (canchaInfo && canchaInfo.propietario_email) {
-        await transporter.verify();
-        await transporter.sendMail({
-          from: `"Sistema de Canchas" <${EMAIL_USER}>`,
-          to: canchaInfo.propietario_email,
-          subject: `Reserva cancelada - ${canchaInfo.cancha_nombre}`,
-          html: `
-            <h3>Hola ${canchaInfo.propietario_nombre || "propietario"}</h3>
-            <p>La siguiente reserva ha sido cancelada:</p>
-            <ul>
-              <li><b>Cancha:</b> ${canchaInfo.cancha_nombre}</li>
-              <li><b>Fecha:</b> ${reserva.fecha.toISOString().slice(0,10)}</li>
-              <li><b>Inicio:</b> ${reserva.inicio || reserva.hora_inicio}</li>
-              <li><b>Fin:</b> ${reserva.fin || reserva.hora_fin}</li>
-              <li><b>Cliente:</b> ${reserva.cliente_nombre || "N/A"}</li>
-              <li><b>Teléfono:</b> ${reserva.cliente_telefono || "N/A"}</li>
-            </ul>
-            <p>Si no reconoces esta acción, por favor contacta con el soporte.</p>
-          `,
-        });
+        (async () => {
+          try {
+            await enviarCorreo({
+              to: canchaInfo.propietario_email,
+              subject: `Reserva cancelada - ${canchaInfo.cancha_nombre}`,
+              html: `
+                <h3>Hola ${canchaInfo.propietario_nombre || "propietario"}</h3>
+                <p>La siguiente reserva ha sido cancelada:</p>
+                <ul>
+                  <li><b>Cancha:</b> ${canchaInfo.cancha_nombre}</li>
+                  <li><b>Fecha:</b> ${reserva.fecha.toISOString().slice(0,10)}</li>
+                  <li><b>Inicio:</b> ${reserva.inicio || reserva.hora_inicio}</li>
+                  <li><b>Fin:</b> ${reserva.fin || reserva.hora_fin}</li>
+                  <li><b>Cliente:</b> ${reserva.cliente_nombre || "N/A"}</li>
+                  <li><b>Teléfono:</b> ${reserva.cliente_telefono || "N/A"}</li>
+                </ul>
+                <p>Si no reconoces esta acción, por favor contacta con el soporte.</p>
+              `,
+            });
+            console.log("Correo de cancelación enviado a", canchaInfo.propietario_email);
+          } catch (mailErr) {
+            console.error("❌ Error enviando correo de cancelación al propietario (no bloqueante):", mailErr);
+          }
+        })();
       }
     } catch (mailErr) {
       console.error("❌ Error enviando correo de cancelación al propietario:", mailErr);
@@ -162,7 +161,7 @@ async function availability(req, res) {
 
 
   // 🕒 Obtener ventanas del día
-  const ventanas = (horarios && horarios[weekdayKey]) || [];
+    const ventanas = (horarios && horarios[weekdayKey]) || [];
   let slots = [];
   ventanas.forEach((w) => {
     slots = slots.concat(splitWindow(w.start, w.end, slotMinutes));
@@ -178,30 +177,11 @@ async function availability(req, res) {
     fin: r.fin.slice(0, 5),
   }));
 
-  // 🟥 Bloqueos recurrentes (si existe tabla)
-  let bloqueos = [];
-  try {
-    const bRes = await db.query(
-      "SELECT inicio::text AS inicio, fin::text AS fin FROM bloqueos WHERE cancha_id=$1 AND weekday=$2",
-      [canchaId, weekday]
-    );
-    bloqueos = (bRes.rows || []).map((b) => ({
-      inicio: b.inicio.slice(0, 5),
-      fin: b.fin.slice(0, 5),
-    }));
-  } catch {
-    bloqueos = [];
-  }
-
-  // 🟩 Marcar estado de cada slot
+  // (Se eliminó la consulta a la tabla `bloqueos` porque no existe en la BD)
+  // 🟩 Marcar estado de cada slot (solo teniendo en cuenta reservas)
   const annotated = slots.map((s) => {
     const sStart = timeToMinutes(s.start);
     const sEnd = timeToMinutes(s.end);
-
-    const isBlocked = bloqueos.some((b) =>
-      overlaps(sStart, sEnd, timeToMinutes(b.inicio), timeToMinutes(b.fin))
-    );
-    if (isBlocked) return { ...s, status: "blocked" };
 
     const isReserved = reservas.some((r) =>
       overlaps(sStart, sEnd, timeToMinutes(r.inicio), timeToMinutes(r.fin))
@@ -306,28 +286,33 @@ async function createReserva(req, res) {
       const canchaRes = await db.query(canchaQ, [cancha_id]);
       const canchaInfo = canchaRes.rows[0];
       if (canchaInfo && canchaInfo.propietario_email) {
-        await transporter.verify();
-        await transporter.sendMail({
-          from: `"Sistema de Canchas" <${EMAIL_USER}>`,
-          to: canchaInfo.propietario_email,
-          subject: `Nueva reserva - ${canchaInfo.cancha_nombre}`,
-          html: `
-            <h3>Hola ${canchaInfo.propietario_nombre || "propietario"}</h3>
-            <p>Se ha realizado una nueva reserva en tu cancha:</p>
-            <ul>
-              <li><b>Cancha:</b> ${canchaInfo.cancha_nombre}</li>
-              <li><b>Fecha:</b> ${date}</li>
-              <li><b>Inicio:</b> ${start}</li>
-              <li><b>Fin:</b> ${end}</li>
-              <li><b>Cliente:</b> ${cliente_nombre}</li>
-              <li><b>Teléfono:</b> ${cliente_telefono || "N/A"}</li>
-              <li><b>Método pago:</b> ${metodo_pago}</li>
-              <li><b>Total:</b> ${totalStr}</li>
-              <li><b>ID reserva:</b> ${reserva.id}</li>
-            </ul>
-            <p>Revisa el panel para más detalles.</p>
-          `,
-        });
+        (async () => {
+          try {
+            await enviarCorreo({
+              to: canchaInfo.propietario_email,
+              subject: `Nueva reserva - ${canchaInfo.cancha_nombre}`,
+              html: `
+                <h3>Hola ${canchaInfo.propietario_nombre || "propietario"}</h3>
+                <p>Se ha realizado una nueva reserva en tu cancha:</p>
+                <ul>
+                  <li><b>Cancha:</b> ${canchaInfo.cancha_nombre}</li>
+                  <li><b>Fecha:</b> ${date}</li>
+                  <li><b>Inicio:</b> ${start}</li>
+                  <li><b>Fin:</b> ${end}</li>
+                  <li><b>Cliente:</b> ${cliente_nombre}</li>
+                  <li><b>Teléfono:</b> ${cliente_telefono || "N/A"}</li>
+                  <li><b>Método pago:</b> ${metodo_pago}</li>
+                  <li><b>Total:</b> ${totalStr}</li>
+                  <li><b>ID reserva:</b> ${reserva.id}</li>
+                </ul>
+                <p>Revisa el panel para más detalles.</p>
+              `,
+            });
+            console.log("Correo de nueva reserva enviado a", canchaInfo.propietario_email);
+          } catch (mailErr) {
+            console.error("❌ Error enviando correo de nueva reserva al propietario (no bloqueante):", mailErr);
+          }
+        })();
       }
     } catch (mailErr) {
       console.error("❌ Error enviando correo de nueva reserva al propietario:", mailErr);
@@ -418,24 +403,28 @@ async function ProviderCancelReserva(req, res) {
       const userRes = await db.query(userQ, [reserva.usuario_id]);
       const cliente = userRes.rows[0];
       if (cliente && cliente.cliente_email) {
-        await transporter.verify();
-        await transporter.sendMail({
-          from: `"Sistema de Canchas" <${EMAIL_USER}>`,
-          to: cliente.cliente_email,
-          subject: `Reserva cancelada por el proveedor - ${reserva.cancha_nombre || ''}`,
-          html: `
-            <h3>Hola ${cliente.cliente_nombre || 'cliente'}</h3>
-            <p>Tu reserva ha sido cancelada por el proveedor de la cancha.</p>
-            <ul>
-              <li><b>Cancha:</b> ${reserva.cancha_nombre || 'N/A'}</li>
-              <li><b>Fecha:</b> ${fechaStr}</li>
-              <li><b>Inicio:</b> ${inicioTime}</li>
-              <li><b>Fin:</b> ${finTime}</li>
-              <li
-            </ul>
-            <p>Si necesitas más información, contacta con el proveedor o con soporte.</p>
-          `,
-        });
+        (async () => {
+          try {
+            await enviarCorreo({
+              to: cliente.cliente_email,
+              subject: `Reserva cancelada por el proveedor - ${reserva.cancha_nombre || ''}`,
+              html: `
+                <h3>Hola ${cliente.cliente_nombre || 'cliente'}</h3>
+                <p>Tu reserva ha sido cancelada por el proveedor de la cancha.</p>
+                <ul>
+                  <li><b>Cancha:</b> ${reserva.cancha_nombre || 'N/A'}</li>
+                  <li><b>Fecha:</b> ${fechaStr}</li>
+                  <li><b>Inicio:</b> ${inicioTime}</li>
+                  <li><b>Fin:</b> ${finTime}</li>
+                </ul>
+                <p>Si necesitas más información, contacta con el proveedor o con soporte.</p>
+              `,
+            });
+            console.log("Correo al cliente sobre cancelación por provider enviado a", cliente.cliente_email);
+          } catch (mailErr) {
+            console.error("❌ Error enviando correo al cliente sobre cancelación del provider (no bloqueante):", mailErr);
+          }
+        })();
       }
     } catch (mailErr) {
       console.error("❌ Error enviando correo al cliente sobre cancelación del provider:", mailErr);
@@ -487,22 +476,27 @@ async function ProviderMarkCompleted(req, res) {
       const userRes = await db.query(userQ, [reserva.usuario_id]);
       const cliente = userRes.rows[0];
       if (cliente && cliente.cliente_email) {
-        await transporter.verify();
-        await transporter.sendMail({
-          from: `"Sistema de Canchas" <${EMAIL_USER}>`,
-          to: cliente.cliente_email,
-          subject: `Reserva completada - ${reserva.cancha_nombre || ''}`,
-          html: `
-            <h3>Hola ${cliente.cliente_nombre || 'cliente'}</h3>
-            <p>Tu reserva ha sido marcada como completada por el proveedor.</p>
-            <ul>
-              <li><b>Cancha:</b> ${reserva.cancha_nombre || 'N/A'}</li>
-              <li><b>Fecha:</b> ${fechaStr}</li>
-              <li><b>Inicio:</b> ${inicioTime}</li>
-              <li><b>Fin:</b> ${finTime}</li>
-            </ul>
-          `,
-        });
+        (async () => {
+          try {
+            await enviarCorreo({
+              to: cliente.cliente_email,
+              subject: `Reserva completada - ${reserva.cancha_nombre || ''}`,
+              html: `
+                <h3>Hola ${cliente.cliente_nombre || 'cliente'}</h3>
+                <p>Tu reserva ha sido marcada como completada por el proveedor.</p>
+                <ul>
+                  <li><b>Cancha:</b> ${reserva.cancha_nombre || 'N/A'}</li>
+                  <li><b>Fecha:</b> ${fechaStr}</li>
+                  <li><b>Inicio:</b> ${inicioTime}</li>
+                  <li><b>Fin:</b> ${finTime}</li>
+                </ul>
+              `,
+            });
+            console.log("Correo al cliente sobre reserva completada enviado a", cliente.cliente_email);
+          } catch (mailErr) {
+            console.error("❌ Error enviando correo al cliente sobre completado (no bloqueante):", mailErr);
+          }
+        })();
       }
     } catch (mailErr) {
       console.error("❌ Error enviando correo al cliente sobre completado:", mailErr);
@@ -554,23 +548,28 @@ async function ProviderMarkNoShow(req, res) {
       const userRes = await db.query(userQ, [reserva.usuario_id]);
       const cliente = userRes.rows[0];
       if (cliente && cliente.cliente_email) {
-        await transporter.verify();
-        await transporter.sendMail({
-          from: `"Sistema de Canchas" <${EMAIL_USER}>`,
-          to: cliente.cliente_email,
-          subject: `Reserva marcada como cancelada (no-show) - ${reserva.cancha_nombre || ''}`,
-          html: `
-            <h3>Hola ${cliente.cliente_nombre || 'cliente'}</h3>
-            <p>La reserva fue marcada como cancelada por el proveedor por inasistencia.</p>
-            <ul>
-              <li><b>Cancha:</b> ${reserva.cancha_nombre || 'N/A'}</li>
-              <li><b>Fecha:</b> ${fechaStr}</li>
-              <li><b>Inicio:</b> ${inicioTime}</li>
-              <li><b>Fin:</b> ${finTime}</li>
-            </ul>
-            <p>Si crees que hay un error, contacta con el proveedor o con soporte.</p>
-          `,
-        });
+        (async () => {
+          try {
+            await enviarCorreo({
+              to: cliente.cliente_email,
+              subject: `Reserva marcada como cancelada (no-show) - ${reserva.cancha_nombre || ''}`,
+              html: `
+                <h3>Hola ${cliente.cliente_nombre || 'cliente'}</h3>
+                <p>La reserva fue marcada como cancelada por el proveedor por inasistencia.</p>
+                <ul>
+                  <li><b>Cancha:</b> ${reserva.cancha_nombre || 'N/A'}</li>
+                  <li><b>Fecha:</b> ${fechaStr}</li>
+                  <li><b>Inicio:</b> ${inicioTime}</li>
+                  <li><b>Fin:</b> ${finTime}</li>
+                </ul>
+                <p>Si crees que hay un error, contacta con el proveedor o con soporte.</p>
+              `,
+            });
+            console.log("Correo al cliente sobre no-show enviado a", cliente.cliente_email);
+          } catch (mailErr) {
+            console.error("❌ Error enviando correo al cliente sobre no-show (no bloqueante):", mailErr);
+          }
+        })();
       }
     } catch (mailErr) {
       console.error("❌ Error enviando correo al cliente sobre no-show:", mailErr);

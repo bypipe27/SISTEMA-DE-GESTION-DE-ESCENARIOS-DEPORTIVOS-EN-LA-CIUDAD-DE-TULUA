@@ -1,6 +1,5 @@
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-const nodemailer = require("nodemailer");
 const crypto = require("crypto");
 const dbModule = require("../db.js");
 const {
@@ -12,13 +11,9 @@ const {
 } = require("../models/passwordResetModel");
 
 const pool = dbModule.pool || dbModule.default || dbModule;
-const transporter = nodemailer.createTransport({
-  service: "gmail",
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-});
+
+// Usar el helper centralizado para enviar correos (Brevo / API HTTP)
+const { enviarCorreo } = require("../utils/mailer");
 
 const RESET_MINUTOS_EXPIRA = 15;
 const MAX_INTENTOS = 3;
@@ -55,32 +50,44 @@ async function solicitarResetPassword(req, res) {
       expira_en,
     });
 
-    // Enviar email con enlace
+    // Enviar email con enlace (no bloqueante)
     const resetLink = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/reset-password?token=${token}&email=${encodeURIComponent(email)}`;
-    
-    await transporter.sendMail({
-      from: `"Sistema de Canchas" <${process.env.EMAIL_USER}>`,
-      to: email,
-      subject: "Restablecer tu contraseña",
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2 style="color: #16a34a;">Hola ${usuario.rows[0].nombre},</h2>
-          <p>Recibimos una solicitud para restablecer tu contraseña.</p>
-          <p>Haz clic en el siguiente enlace para crear una nueva contraseña:</p>
-          <div style="text-align: center; margin: 30px 0;">
-            <a href="${resetLink}" 
-               style="background-color: #16a34a; color: white; padding: 12px 24px; 
-                      text-decoration: none; border-radius: 8px; font-weight: bold;">
-               Restablecer Contraseña
-            </a>
-          </div>
-          <p style="color: #6b7280; font-size: 14px;">
-            Este enlace expirará en ${RESET_MINUTOS_EXPIRA} minutos.<br>
-            Si no solicitaste este cambio, puedes ignorar este mensaje.
-          </p>
+
+    const emailHtml = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #16a34a;">Hola ${usuario.rows[0].nombre},</h2>
+        <p>Recibimos una solicitud para restablecer tu contraseña.</p>
+        <p>Haz clic en el siguiente enlace para crear una nueva contraseña:</p>
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="${resetLink}" 
+             style="background-color: #16a34a; color: white; padding: 12px 24px; 
+                    text-decoration: none; border-radius: 8px; font-weight: bold;">
+             Restablecer Contraseña
+          </a>
         </div>
-      `,
-    });
+        <p style="color: #6b7280; font-size: 14px;">
+          Este enlace expirará en ${RESET_MINUTOS_EXPIRA} minutos.<br>
+          Si no solicitaste este cambio, puedes ignorar este mensaje.
+        </p>
+      </div>
+    `;
+
+    if (process.env.DISABLE_EMAILS === "true") {
+      console.log("Envío de emails deshabilitado (DISABLE_EMAILS=true)");
+    } else {
+      (async () => {
+        try {
+          await enviarCorreo({
+            to: email,
+            subject: "Restablecer tu contraseña",
+            html: emailHtml,
+          });
+          console.log("✅ Email de reset enviado a", email);
+        } catch (emailErr) {
+          console.error("No se pudo enviar reset email (no bloqueante):", emailErr);
+        }
+      })();
+    }
 
     return res.json({
       mensaje: "Si el email existe, recibirás un enlace para resetear tu contraseña.",
