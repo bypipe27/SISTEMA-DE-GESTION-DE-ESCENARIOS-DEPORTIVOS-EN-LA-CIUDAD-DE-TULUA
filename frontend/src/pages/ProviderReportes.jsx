@@ -77,7 +77,7 @@ function ProviderReportes() {
     `}</style>
 
       <NavBarProvider />
-      <div className="pr-container p-6 pt-28">
+      <div className="p-6 pd-container" style={{ paddingTop: '6.5rem' }}>
         <div className="mb-6 pr-header">
           <div>
             <h1 className="text-2xl font-semibold pr-title">Reportes (Proveedor)</h1>

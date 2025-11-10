@@ -2,11 +2,27 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useLocation, Link, useNavigate } from "react-router-dom";
 import { FaArrowLeft, FaMapMarkerAlt, FaClock, FaCalendarAlt, FaUser, FaPhone, FaMoneyBillWave } from "react-icons/fa";
+import NavBarUser from "../components/NavBarUser";
 
 function ReservaPage() {
   const { id } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
+
+  // usuario desde localStorage (si hay)
+  const usuario = React.useMemo(() => {
+    try {
+      return JSON.parse(localStorage.getItem("usuario") || "null");
+    } catch {
+      return null;
+    }
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("usuario");
+    navigate("/login");
+  };
 
   // location.state puede ser { cancha, fecha } o directamente la cancha (compatibilidad)
   const locState = location.state || null;
@@ -121,8 +137,10 @@ function ReservaPage() {
   if (!cancha) return <div className="min-h-screen flex items-center justify-center">Cancha no encontrada</div>;
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <>
+      <NavBarUser usuarioProp={usuario} onLogout={handleLogout} />
       {/* estilos locales mínimos y armónicos (no tocan la lógica ni la tipografía global) */}
+      <div className="min-h-screen bg-gray-50 pt-20 p-6">
       <style>{`
         .rp-card { max-width: 820px; margin: 0 auto; background: #fff; border-radius: 14px; padding: 20px; box-shadow: 0 12px 30px rgba(2,6,23,0.06); border: 1px solid rgba(2,6,23,0.04); }
         .rp-input { width:100%; padding:10px 12px; border-radius:10px; border:1px solid rgba(15,23,42,0.06); background:#fff; }
@@ -136,7 +154,7 @@ function ReservaPage() {
         .rp-badge { display:inline-block; padding:6px 10px; border-radius:999px; background:rgba(16,185,129,0.12); color:#065f46; font-weight:600; }
       `}</style>
 
-      <div className="rp-card">
+  <div className="rp-card mt-3">
         <button
           onClick={() => navigate("/dashboard")}
           className="flex items-center gap-2 text-gray-700 mb-3"
@@ -278,6 +296,7 @@ function ReservaPage() {
         </div>
       </div>
     </div>
+    </>
   );
 }
 

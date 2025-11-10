@@ -12,7 +12,7 @@ import {
   FaTimes,
   FaExclamationTriangle
 } from "react-icons/fa";
-import NavBar from "../components/NavBar";
+import NavBarUser from "../components/NavBarUser";
 import Button from "../components/Button";
 
 function MisReservasPage() {
@@ -194,6 +194,54 @@ function MisReservasPage() {
     return `rgba(${r}, ${g}, ${b}, ${alpha})`;
   }
 
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("usuario");
+    navigate("/login");
+  };
+
+  // Determina si la reserva puede ser cancelada por el usuario
+  function canCancelReserva(reserva) {
+    const estado = (reserva.estado || "").toString().toLowerCase();
+    if (estado.includes("cancel") || estado.includes("complet")) return false;
+
+    const fechaISO = toISODate(reserva.fecha);
+    const inicio = (reserva.inicio || reserva.hora_inicio || reserva.start || "").toString().slice(0,5);
+    if (!fechaISO || !inicio) return false;
+    const fechaHoraReserva = new Date(`${fechaISO}T${inicio}`);
+    if (isNaN(fechaHoraReserva.getTime())) return false;
+    const ahora = new Date();
+    const msLeft = fechaHoraReserva - ahora;
+    const threeHoursMs = 3 * 60 * 60 * 1000;
+    return msLeft > threeHoursMs;
+  }
+
+  // Llama al endpoint de cancelar reserva (backend) y refresca lista
+  async function handleCancelarReserva(reserva) {
+    if (!reserva || !reserva.id) return alert('Reserva inválida');
+    if (!confirm(`¿Seguro que deseas cancelar la reserva para ${reserva.cancha_nombre} el ${formatearFecha(reserva.fecha)}?`)) return;
+    try {
+      setLoading(true);
+      const resp = await fetch(`${API_BASE}/api/reservas/cancelar/${reserva.id}`, { method: 'PUT' });
+      if (resp.ok) {
+        alert('Reserva cancelada correctamente. Se enviará notificación al proveedor.');
+        // recargar reservas para reflejar cambios
+        await cargarReservas();
+      } else {
+        const text = await resp.text();
+        let data = null;
+        try { data = JSON.parse(text); } catch {}
+        const msg = (data && (data.error || data.message)) || text || 'Error al cancelar la reserva';
+        alert(msg);
+      }
+    } catch (err) {
+      console.error('Error cancelando reserva:', err);
+      alert('Error conectando con el servidor al intentar cancelar.');
+    } finally {
+      setLoading(false);
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 text-gray-800">
       {/* estilos locales mínimos para aspecto minimalista (no cambia lógica) */}
@@ -204,7 +252,7 @@ function MisReservasPage() {
         .mr-card-accent { border-left-width: 4px; border-left-style: solid; }
       `}</style>
 
-      <NavBar />
+  <NavBarUser usuarioProp={usuario} onLogout={handleLogout} />
       
       <div className="container mx-auto px-4 py-8 pt-24">
         <motion.div
@@ -228,25 +276,27 @@ function MisReservasPage() {
           {/* Controles de búsqueda y filtro */}
           <div className="mr-card rounded-2xl p-6 mb-8">
             <div className="grid md:grid-cols-3 gap-4">
-              {/* Búsqueda */}
-              <div className="relative">
-                <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+              {/* Búsqueda: contenedor inline-flex para evitar solapamientos */}
+              <div className="flex items-center w-full mr-input rounded-lg">
+                <FaSearch className="text-gray-400 ml-3 flex-shrink-0" aria-hidden="true" />
                 <input
                   type="text"
+                  aria-label={usuario ? "Buscar en mis reservas" : "Ingresar nombre para buscar reservas"}
                   placeholder={usuario ? "Buscar en mis reservas..." : "Ingresa tu nombre..."}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 mr-input focus:outline-none focus:ring-2 focus:ring-green-200"
+                  className="flex-1 ml-3 pr-4 py-2 bg-transparent focus:outline-none focus:ring-2 focus:ring-green-200 placeholder-gray-400 text-gray-700"
                 />
               </div>
 
-              {/* Filtro por estado */}
-              <div className="relative">
-                <FaFilter className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+              {/* Filtro por estado: contenedor inline-flex para evitar solapamientos */}
+              <div className="flex items-center w-full mr-input rounded-lg">
+                <FaFilter className="text-gray-400 ml-3 flex-shrink-0" aria-hidden="true" />
                 <select
                   value={filterStatus}
                   onChange={(e) => setFilterStatus(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 mr-input focus:outline-none focus:ring-2 focus:ring-green-200 appearance-none bg-white"
+                  aria-label="Filtrar por estado"
+                  className="flex-1 ml-3 pr-4 py-2 bg-transparent focus:outline-none focus:ring-2 focus:ring-green-200 appearance-none text-gray-700"
                 >
                   <option value="todas">Todas las reservas</option>
                   <option value="proxima">Próximas</option>
@@ -393,18 +443,26 @@ function MisReservasPage() {
                             >
                               Ver Cancha
                             </Button>
-                            <Button 
-                              color="green" 
-                              size="sm"
-                              onClick={() => navigate(`/reserva/${reserva.cancha_id}`, {
-                                state: { 
-                                  cancha: reserva,
-                                  fecha: reserva.fecha 
-                                }
-                              })}
-                            >
-                              Reservar Otra Vez
-                            </Button>
+
+                            {/* Botón de cancelar reserva (sustituye "Reservar Otra Vez").
+                                Frontend evita cancelar si ya está completada/cancelada o faltan <= 3 horas. */}
+                            {canCancelReserva(reserva) ? (
+                              <button
+                                onClick={() => handleCancelarReserva(reserva)}
+                                className="px-4 py-2 rounded-xl bg-red-600 text-white hover:bg-red-500"
+                                title="Cancelar reserva"
+                              >
+                                Cancelar Reserva
+                              </button>
+                            ) : (
+                              <button
+                                disabled
+                                className="px-4 py-2 rounded-xl bg-gray-100 text-gray-400 cursor-not-allowed"
+                                title={((reserva.estado && String(reserva.estado).toLowerCase().includes('complet')) || (reserva.estado && String(reserva.estado).toLowerCase().includes('cancel'))) ? 'No se puede cancelar una reserva completada o ya cancelada' : 'No se puede cancelar: quedan menos de 3 horas o la hora es inválida'}
+                              >
+                                Cancelar Reserva
+                              </button>
+                            )}
                           </div>
                         </div>
                       </div>

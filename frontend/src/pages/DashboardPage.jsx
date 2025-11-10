@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { FaFutbol, FaSearch, FaSyncAlt } from "react-icons/fa";
+import { FaSyncAlt } from "react-icons/fa";
+import NavBarUser from "../components/NavBarUser";
 import { useNavigate } from "react-router-dom";
 
 function DashboardPage({
@@ -9,7 +10,6 @@ function DashboardPage({
   onCambiarPass,
   onAgregarPago,
 }) {
-  const [open, setOpen] = useState(false);
   const navigate = useNavigate();
 
   const usuario =
@@ -131,98 +131,9 @@ useEffect(() => {
       .db-list-item:hover { transform: translateY(-3px); box-shadow: 0 10px 30px rgba(2,6,23,0.06); }
     `}</style>
 
-      {/* NAVBAR (misma funcionalidad, look más limpio) */}
-      <nav className="w-full py-3 px-6 flex justify-between items-center bg-white/90 backdrop-blur-md fixed top-0 z-50 shadow-sm border-b">
-        <h1 className="text-lg md:text-xl font-semibold flex items-center gap-3 text-gray-900">
-          <FaFutbol className="text-green-600 text-2xl" />
-          <span className="hidden md:inline">
-            SISTEMA DE GESTIÓN DE ESCENARIOS DEPORTIVOS
-          </span>
-          <span className="md:hidden">Tulúa Deportes</span>
-        </h1>
+      {/* NAVBAR: componente reutilizable para usuarios */}
+      <NavBarUser usuarioProp={usuario} onLogout={handleLogout} />
 
-        <div className="flex items-center gap-3">
-          <div className="hidden sm:flex items-center gap-2 bg-gray-100 rounded-lg px-2 py-1">
-            <FaSearch className="text-gray-500" />
-            <input
-              value={q}
-              onChange={(e) => setQ(e.target.value)}
-              placeholder="Buscar nombre o tipo..."
-              className="bg-transparent outline-none text-sm"
-            />
-          </div>
-
-          <button
-            onClick={() =>
-              fetch("http://localhost:5000/api/canchas").then(() =>
-                fetch("http://localhost:5000/api/canchas")
-              )
-            }
-            className="hidden sm:inline-flex items-center gap-2 px-3 py-1 bg-white border rounded-lg text-sm text-gray-700 db-btn"
-          >
-            <FaSyncAlt /> Refrescar
-          </button>
-
-          <div className="relative">
-            <button
-              onClick={() => setOpen((v) => !v)}
-              className="flex items-center gap-2 bg-white/50 hover:bg-gray-100 px-3 py-1 rounded text-sm text-gray-800"
-            >
-              Opciones <span className="text-xs">▾</span>
-            </button>
-
-            {open && (
-              <div
-                className="absolute right-0 mt-2 w-56 bg-white text-gray-900 rounded-md shadow-lg overflow-hidden"
-                onMouseLeave={() => setOpen(false)}
-              >
-                <button
-                  className="w-full text-left px-4 py-2 hover:bg-gray-100"
-                  onClick={() => alert("Agregar medio de pago (simulado).")}
-                >
-                  ➕ Agregar medio de pago
-                </button>
-
-                <button
-                  className="w-full text-left px-4 py-2 hover:bg-gray-100"
-                  onClick={() => {
-                    setOpen(false);
-                    navigate("/mis-reservas");
-                  }}
-                >
-                  📋 Ver reservas
-                </button>
-
-                <button
-                  className="w-full text-left px-4 py-2 hover:bg-gray-100"
-                  onClick={() => {
-                    setOpen(false);
-                    navigate("/dashboard");
-                  }}
-                >
-                  🏠 Ir al Dashboard
-                </button>
-
-                <button
-                  className="w-full text-left px-4 py-2 hover:bg-gray-100"
-                  onClick={() => alert("Cambiar contraseña (simulado).")}
-                >
-                  🔒 Cambiar contraseña
-                </button>
-
-                <hr />
-
-                <button
-                  className="w-full text-left px-4 py-2 hover:bg-gray-100 text-red-600"
-                  onClick={handleLogout}
-                >
-                  Cerrar sesión
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-      </nav>
 
       {/* CONTENT */}
       <div className="max-w-6xl mx-auto px-4 pt-28 pb-12 grid grid-cols-1 md:grid-cols-12 gap-6">
@@ -291,6 +202,18 @@ useEffect(() => {
                 className="w-full bg-gray-100 text-gray-800 py-2 rounded text-sm db-btn"
               >
                 Limpiar filtros
+              </button>
+
+              <button
+                onClick={() => {
+                  fetch(`${import.meta.env.VITE_API_BASE || 'http://localhost:5000'}/api/canchas`)
+                    .then(res => res.json())
+                    .then(data => setCanchas(data))
+                    .catch(err => console.error('❌ Error refrescando canchas:', err));
+                }}
+                className="w-full mt-2 flex items-center justify-center gap-2 bg-white border text-gray-700 py-2 rounded text-sm db-btn"
+              >
+                <FaSyncAlt /> Refrescar canchas
               </button>
             </div>
           </div>

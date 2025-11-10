@@ -63,6 +63,39 @@ function CanchaDetailsPage() {
     6: "Sábado",
   };
 
+  function formatTime(t) {
+    if (!t) return "--:--";
+    // acepta 'HH:MM', 'H:MM', 'HH:MM:SS', '9', 900, etc.
+    try {
+      const s = String(t).trim();
+      if (/^\d{1,2}:\d{2}(:\d{2})?$/.test(s)) {
+        const [hh, mm] = s.split(":");
+        return `${hh.padStart(2, "0")}:${mm.slice(0,2)}`;
+      }
+      if (/^\d{3,4}$/.test(s)) {
+        // 900 -> 09:00, 1230 -> 12:30
+        const n = s.padStart(4, "0");
+        return `${n.slice(0,2)}:${n.slice(2,4)}`;
+      }
+      if (/^\d{1,2}$/.test(s)) {
+        return `${s.padStart(2, "0")}:00`;
+      }
+      return s;
+    } catch (e) {
+      return String(t);
+    }
+  }
+
+  function formatPrice(v) {
+    try {
+      const n = Number(v) || 0;
+      // formatear con separador de miles punto y sin decimales
+      return n.toLocaleString('es-CO') + ' COP';
+    } catch (e) {
+      return String(v) + ' COP';
+    }
+  }
+
   function parseHorarios(raw) {
     // acepta objeto { "0": [...], "1": [...] }, array, o JSON string
     let obj = raw ?? {};
@@ -102,28 +135,42 @@ function CanchaDetailsPage() {
     if (entries.length === 0) {
       return <span className="ml-2 text-sm text-gray-200">No hay horarios disponibles.</span>;
     }
-
+    // agrupar por día y ordenar slots por hora de inicio
     const grouped = entries.reduce((acc, e) => {
       (acc[e.dia] = acc[e.dia] || []).push(e);
       return acc;
     }, {});
     const orderedDays = Object.keys(grouped).map(Number).sort((a, b) => a - b);
 
+    // Mostrar como fila horizontal tipo horario semanal (cada día es una columna)
     return (
-      <ul className="mt-2 space-y-1">
-        {orderedDays.map((d) => (
-          <li key={d} className="text-base">
-            <strong>{dayNames[d] ?? `Día ${d}`}:</strong>{" "}
-            {grouped[d]
-              .map(s => {
-                const sStart = s.start ?? "—";
-                const sEnd = s.end ? ` - ${s.end}` : "";
-                return `${sStart}${sEnd}`;
-              })
-              .join(", ")}
-          </li>
-        ))}
-      </ul>
+      <div className="mt-2 overflow-x-auto">
+        <div className="flex gap-4 md:gap-6">
+          {orderedDays.map((d) => (
+            <div key={d} className="min-w-[140px] flex-shrink-0">
+              <div className="text-sm font-medium text-green-900 mb-2">{dayNames[d] ?? `Día ${d}`}</div>
+              <div className="flex flex-col gap-2">
+                {grouped[d]
+                  .slice()
+                  .sort((a,b) => {
+                    const ta = Number(formatTime(a.start).replace(':','')) || 0;
+                    const tb = Number(formatTime(b.start).replace(':','')) || 0;
+                    return ta - tb;
+                  })
+                  .map((s, idx) => {
+                    const start = formatTime(s.start) || "--:--";
+                    const end = s.end ? formatTime(s.end) : null;
+                    return (
+                      <div key={idx} className="px-3 py-1 rounded-md bg-white border border-green-100 text-green-900 text-sm shadow-sm">
+                        {start}{end ? ` — ${end}` : ""}
+                      </div>
+                    );
+                  })}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
     );
   }
 
@@ -137,7 +184,7 @@ function CanchaDetailsPage() {
     if (!Array.isArray(arr)) arr = [];
     const diasValidos = arr.map(n => Number(n)).filter(n => !Number.isNaN(n) && n >= 0 && n <= 6);
     if (diasValidos.length === 0) {
-      return <span className="ml-2 text-sm text-gray-200">No hay días de mantenimiento programados.</span>;
+      return <span className="ml-2 text-sm text-gray-700">No hay días de mantenimiento programados.</span>;
     }
     diasValidos.sort((a,b) => a - b);
 
@@ -173,41 +220,41 @@ function CanchaDetailsPage() {
         .cancha-iframe-container iframe { width: 100% !important; height: 100% !important; border: 0; display:block; }
       `}</style>
 
-      <div className="max-w-4xl mx-auto bg-white rounded-2xl shadow-lg p-8 relative border border-gray-100">
-        <Link to={backTo} className="absolute top-4 left-4 text-gray-600 hover:text-green-600 flex items-center gap-2 bg-white/60 backdrop-blur-sm px-3 py-1 rounded-full">
+      <div className="max-w-4xl mx-auto bg-green-50 rounded-2xl shadow-lg p-8 relative border border-green-100">
+            <Link to={backTo} className="absolute top-4 left-4 text-green-800 hover:text-green-900 flex items-center gap-2 bg-white/60 backdrop-blur-sm px-3 py-1 rounded-full">
           <FaArrowLeft /> <span className="sr-only">Volver</span>
         </Link>
 
-        <h1 className="text-3xl font-semibold text-center mb-6 text-gray-900">{cancha.nombre}</h1>
+            <h1 className="text-3xl font-semibold text-center mb-6 text-green-900">{cancha.nombre}</h1>
 
-        <div className="space-y-6 text-base text-gray-700">
-          <p className="leading-relaxed"><strong className="text-gray-900">Descripción:</strong> <span className="text-gray-700">{cancha.descripcion}</span></p>
+            <div className="space-y-6 text-base text-gray-800">
+              <p className="leading-relaxed"><strong className="text-green-900">Descripción:</strong> <span className="text-gray-800">{cancha.descripcion}</span></p>
 
-          <p className="flex items-start gap-3">
-            <FaMapMarkerAlt className="mt-1 text-green-600" />
-            <span><strong className="text-gray-900">Dirección:</strong> <span className="text-gray-700">{cancha.direccion}</span></span>
-          </p>
+              <p className="flex items-start gap-3">
+                <FaMapMarkerAlt className="mt-1 text-green-700" />
+                <span><strong className="text-green-900">Dirección:</strong> <span className="text-gray-800">{cancha.direccion}</span></span>
+              </p>
 
           <div className="flex gap-3">
-            <FaClock className="mt-1 text-green-600" />
+            <FaClock className="mt-1 text-green-700" />
             <div className="w-full">
-              <strong className="text-gray-900">Horario:</strong>
+              <strong className="text-green-900">Horario:</strong>
               {renderHorariosSection()}
             </div>
           </div>
 
           <div className="flex gap-3">
-            <FaCalendarAlt className="mt-1 text-green-600" />
+            <FaCalendarAlt className="mt-1 text-green-700" />
             <div className="w-full">
-              <strong className="text-gray-900">Días de mantenimiento:</strong>
+              <strong className="text-green-900">Días de mantenimiento:</strong>
               {renderCerradosDias()}
               {renderCerradosFechas()}
             </div>
           </div>
 
           <p className="flex items-center gap-3">
-            <FaTag className="text-green-600" />
-            <span><strong className="text-gray-900">Precio:</strong> <span className="text-gray-700">{cancha.precio}</span></span>
+            <FaTag className="text-green-700" />
+            <span><strong className="text-green-900">Precio:</strong> <span className="text-gray-800">{formatPrice(cancha.precio)}</span></span>
           </p>
         </div>
 

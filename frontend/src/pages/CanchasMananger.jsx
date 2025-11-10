@@ -406,7 +406,11 @@ function CanchasManager() {
                     <button onClick={() => abrirEdicion(c)} className="cm-btn">
                       <FaEdit /> <span>Editar</span>
                     </button>
-                    <button onClick={() => eliminar(c)} className="cm-btn" style={{ background:'#fee2e2', color:'#991b1b', borderColor:'transparent' }}>
+                    <button
+                      onClick={() => eliminar(c)}
+                      className="cm-btn text-red-600 hover:bg-red-50"
+                      title={`Eliminar ${c.nombre}`}
+                    >
                       <FaTrash /> <span>Eliminar</span>
                     </button>
                   </div>

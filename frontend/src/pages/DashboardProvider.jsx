@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaFutbol } from "react-icons/fa";
+import NavBarProvider from "../components/NavBarProvider";
 
 
 function ProviderDashboard() {
@@ -69,32 +70,9 @@ function ProviderDashboard() {
         .pd-btn.primary { background:#10B981; color:#fff; border:none; }
       `}</style>
 
-      <div className="fixed top-0 left-0 right-0 pd-topbar shadow z-40">
-        <div className="pd-container flex items-center justify-between h-16">
-          <div className="flex items-center gap-4">
-            <h2 className="text-lg sm:text-xl font-semibold text-white flex items-center gap-3">
-              <FaFutbol className="text-white text-2xl" />
-              <span className="hidden sm:inline">SISTEMA DE GESTION DE ESCENARIOS DEPORTIVOS</span>
-              <span className="sm:hidden">Tulúa Deportes</span>
-            </h2>
-          </div>
+      <NavBarProvider brand={"SISTEMA DE GESTION DE ESCENARIOS DEPORTIVOS"} className={"shadow z-40"} />
 
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => {
-                localStorage.removeItem("token");
-                localStorage.removeItem("usuario");
-                navigate("/login");
-              }}
-              className="px-3 py-2 border border-white text-white rounded-md pd-btn"
-            >
-              Cerrar sesión
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <div className="p-6 pd-container pt-24">
+  <div className="p-6 pd-container" style={{ paddingTop: '6.5rem' }}>
         <header className="flex items-center justify-between mb-6">
           <div>
             <h1 className="text-2xl sm:text-3xl font-semibold text-gray-900">Panel de proveedor</h1>
