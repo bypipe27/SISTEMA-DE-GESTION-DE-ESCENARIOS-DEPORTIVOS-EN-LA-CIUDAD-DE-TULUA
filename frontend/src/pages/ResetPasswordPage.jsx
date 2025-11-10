@@ -30,7 +30,7 @@ function ResetPasswordPage() {
       }
 
       try {
-        const res = await fetch("http://localhost:5000/api/password/verify-reset-token", {
+  const res = await fetch(`${import.meta.env.VITE_API_BASE || "http://localhost:5000"}/api/password/verify-reset-token`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ token, email }),
@@ -76,7 +76,7 @@ function ResetPasswordPage() {
     }
 
     try {
-      const res = await fetch("http://localhost:5000/api/password/reset-password", {
+  const res = await fetch(`${import.meta.env.VITE_API_BASE || "http://localhost:5000"}/api/password/reset-password`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

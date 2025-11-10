@@ -17,7 +17,7 @@ function ForgotPasswordPage() {
     setMensaje("");
 
     try {
-      const res = await fetch("http://localhost:5000/api/password/forgot-password", {
+  const res = await fetch(`${import.meta.env.VITE_API_BASE || "http://localhost:5000"}/api/password/forgot-password`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),

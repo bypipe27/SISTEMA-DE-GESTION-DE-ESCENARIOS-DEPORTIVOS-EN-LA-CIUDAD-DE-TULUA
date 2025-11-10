@@ -29,7 +29,7 @@ function ProviderDashboard() {
     const fetchCanchas = async () => {
       setLoading(true);
       try {
-        const res = await fetch("http://localhost:5000/api/canchas", { signal: controller.signal });
+  const res = await fetch(`${import.meta.env.VITE_API_BASE || "http://localhost:5000"}/api/canchas`, { signal: controller.signal });
         if (!res.ok) throw new Error("Error al cargar canchas");
         const data = await res.json();
         const mine = Array.isArray(data)

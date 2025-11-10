@@ -33,7 +33,7 @@ function RegisterProvider() {
     if (!validar()) return;
     setLoading(true);
     try {
-        const res = await fetch("http://localhost:5000/api/usuarios/register-provider", {
+  const res = await fetch(`${import.meta.env.VITE_API_BASE || "http://localhost:5000"}/api/usuarios/register-provider`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

@@ -17,7 +17,7 @@ function CanchaDetailsPage() {
     async function fetchCancha() {
       setLoading(true);
       try {
-        const apiBase = import.meta.env.VITE_API_URL || "http://localhost:5000";
+  const apiBase = import.meta.env.VITE_API_BASE || import.meta.env.VITE_API_URL || "http://localhost:5000";
         const res = await fetch(`${apiBase}/api/canchas/${id}`);
         const ct = res.headers.get("content-type") || "";
         if (!res.ok) {

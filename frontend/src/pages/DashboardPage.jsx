@@ -30,7 +30,7 @@ function DashboardPage({
   const [fecha, setFecha] = useState(""); // yyyy-mm-dd seleccionada
 
 useEffect(() => {
-  fetch("http://localhost:5000/api/canchas")
+  fetch(`${import.meta.env.VITE_API_BASE || "http://localhost:5000"}/api/canchas`)
     .then(res => res.json())
     .then(data => {
       console.log("✅ Canchas recibidas:", data);

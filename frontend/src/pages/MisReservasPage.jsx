@@ -23,7 +23,7 @@ function MisReservasPage() {
   const [filterStatus, setFilterStatus] = useState("todas");
   const [usuario, setUsuario] = useState(null);
 
-  const API_BASE = "http://localhost:5000";
+  const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:5000";
 
   // Obtener usuario del localStorage
   useEffect(() => {

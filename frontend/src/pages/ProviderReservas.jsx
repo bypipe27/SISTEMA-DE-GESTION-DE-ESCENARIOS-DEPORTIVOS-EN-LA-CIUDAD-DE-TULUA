@@ -8,7 +8,7 @@ import NavBarProvider from "../components/NavBarProvider";
   const [loading, setLoading] = useState(false);
   const [openMenu, setOpenMenu] = useState(null); // id de reserva cuyo menu está abierto
 
-  const API = import.meta.env.VITE_BACKEND_URL || import.meta.env.VITE_API_URL || "http://localhost:5000";
+  const API = import.meta.env.VITE_API_BASE || import.meta.env.VITE_BACKEND_URL || import.meta.env.VITE_API_URL || "http://localhost:5000";
 
   function formatDate(iso) {
     try {

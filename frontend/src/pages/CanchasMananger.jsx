@@ -31,7 +31,7 @@ function CanchasManager() {
     direccion: "",
     propietario_id: null
   });
-  const BACKEND = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
+  const BACKEND = import.meta.env.VITE_API_BASE || import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
   const DAY_NAMES = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
   const TODAY_STR = new Date().toISOString().split('T')[0];
   const HOUR_START = 6;

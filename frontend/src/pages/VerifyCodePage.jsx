@@ -49,10 +49,10 @@ function VerifyCodePage() {
       let body = {};
 
       if (tipo === "cancha") {
-        endpoint = "http://localhost:5000/api/canchas/verify";
+  endpoint = `${import.meta.env.VITE_API_BASE || "http://localhost:5000"}/api/canchas/verify`;
         body = { correo: email, codigo };
       } else {
-        endpoint = "http://localhost:5000/api/usuarios/verify";
+  endpoint = `${import.meta.env.VITE_API_BASE || "http://localhost:5000"}/api/usuarios/verify`;
         body = { email, codigo };
       }
 
@@ -95,10 +95,10 @@ function VerifyCodePage() {
 
       if (tipo === "cancha") {
         // si implementaste un endpoint de reenvío para canchas, usa /api/canchas/resend-code
-        endpoint = "http://localhost:5000/api/canchas/resend-code";
+  endpoint = `${import.meta.env.VITE_API_BASE || "http://localhost:5000"}/api/canchas/resend-code`;
         body = { correo: email };
       } else {
-        endpoint = "http://localhost:5000/api/usuarios/resend-code";
+  endpoint = `${import.meta.env.VITE_API_BASE || "http://localhost:5000"}/api/usuarios/resend-code`;
         body = { email };
       }
 
