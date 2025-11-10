@@ -18,12 +18,12 @@ dotenv.config();
 
 const pool = dbModule.pool || dbModule.default || dbModule;
 
-// Normalizar credenciales de correo
+// Normalizar credenciales de correo (aún disponibles si se necesitan)
 const EMAIL_USER = (process.env.EMAIL_USER || "").trim();
 const EMAIL_PASS = (process.env.EMAIL_PASS || "").replace(/\s+/g, "");
 
-// SMTP transporter centralizado
-const transporter = require("../utils/mailer");
+// Usamos Resend a través del helper `enviarCorreo` en utils/mailer.js
+const { enviarCorreo } = require("../utils/mailer");
 
 const CODIGO_MINUTOS_EXPIRA = 10;
 const MAX_INTENTOS = 5;
@@ -122,8 +122,7 @@ async function registrarUsuario(req, res) {
 
     (async () => {
       try {
-        await transporter.sendMail({
-          from: `"Sistema de Canchas" <${EMAIL_USER}>`,
+        await enviarCorreo({
           to: email,
           subject: "Tu código de verificación",
           html: `
@@ -186,8 +185,7 @@ async function verificarCodigo(req, res) {
     } else {
       (async () => {
         try {
-          await transporter.sendMail({
-            from: `"Sistema de Canchas" <${EMAIL_USER}>`,
+          await enviarCorreo({
             to: user.email,
             subject: "Cuenta confirmada - Registro exitoso",
             html: `
@@ -240,8 +238,7 @@ async function reenviarCodigo(req, res) {
 
     (async () => {
       try {
-        await transporter.sendMail({
-          from: `"Sistema de Canchas" <${EMAIL_USER}>`,
+        await enviarCorreo({
           to: email,
           subject: "Nuevo código de verificación",
           html: `
