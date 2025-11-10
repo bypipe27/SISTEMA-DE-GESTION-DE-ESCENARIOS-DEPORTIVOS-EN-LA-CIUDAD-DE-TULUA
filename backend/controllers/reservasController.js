@@ -385,6 +385,8 @@ async function ProviderCancelReserva(req, res) {
       : (new Date(reserva.fecha)).toISOString().slice(0,10);
     const inicioTime = (reserva.inicio || reserva.hora_inicio || reserva.start || "").slice(0,5);
     if (!inicioTime) return res.status(400).json({ error: "Hora de inicio inválida en la reserva" });
+    let finTime = (reserva.fin || reserva.hora_fin || reserva.end || "").slice(0,5);
+    if (!finTime) finTime = inicioTime; // fallback si no hay fin
     
     const fechaHoraReserva = parseISO(`${fechaStr}T${inicioTime}`);
     const ahora = new Date();
