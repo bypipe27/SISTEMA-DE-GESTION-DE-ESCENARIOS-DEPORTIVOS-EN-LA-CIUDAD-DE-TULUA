@@ -1,31 +1,28 @@
-// mailer.js
-const nodemailer = require("nodemailer");
+const axios = require("axios");
 
-// Configuramos el transporte SMTP de Brevo
-const transporter = nodemailer.createTransport({
-  host: "smtp-relay.brevo.com", // Host SMTP de Brevo
-  port: 587,                    // Puerto SMTP (STARTTLS)
-  secure: false,                // false porque usamos STARTTLS
-  auth: {
-    user: process.env.EMAIL_USER, // Tu correo verificado en Brevo
-    pass: process.env.EMAIL_PASS, // Tu clave SMTP generada en Brevo
-  },
-});
-
-// Función para enviar correos
+// Función para enviar correos con la API de Brevo (Sendinblue)
 async function enviarCorreo({ to, subject, html }) {
   try {
-    const info = await transporter.sendMail({
-      from: `"Soporte Reservas UV" <${process.env.EMAIL_USER}>`, // remitente (mismo dominio verificado)
-      to,        // destinatario
-      subject,   // asunto
-      html,      // contenido HTML
-    });
+    const response = await axios.post(
+      "https://api.brevo.com/v3/smtp/email",
+      {
+        sender: { name: "Reservas UV", email: process.env.EMAIL_USER },
+        to: [{ email: to }],
+        subject,
+        htmlContent: html,
+      },
+      {
+        headers: {
+          "api-key": process.env.BREVO_API_KEY,
+          "Content-Type": "application/json",
+        },
+      }
+    );
 
-    console.log("✅ Correo enviado correctamente:", info.messageId);
-    return info;
+    console.log("✅ Correo enviado correctamente:", response.data);
+    return response.data;
   } catch (err) {
-    console.error("❌ Error al enviar correo:", err);
+    console.error("❌ Error al enviar correo:", err.response?.data || err);
     throw err;
   }
 }
