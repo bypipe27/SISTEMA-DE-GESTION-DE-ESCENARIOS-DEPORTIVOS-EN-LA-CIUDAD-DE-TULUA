@@ -1,28 +1,31 @@
 // mailer.js
-const { Resend } = require("resend");
+const nodemailer = require("nodemailer");
 
-// Creamos el cliente Resend con tu API Key (la agregas en Render como variable de entorno)
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Configuramos el transporte SMTP de Brevo
+const transporter = nodemailer.createTransport({
+  host: "smtp-relay.brevo.com", // Host SMTP de Brevo
+  port: 587,                    // Puerto SMTP (STARTTLS)
+  secure: false,                // false porque usamos STARTTLS
+  auth: {
+    user: process.env.EMAIL_USER, // Tu correo verificado en Brevo
+    pass: process.env.EMAIL_PASS, // Tu clave SMTP generada en Brevo
+  },
+});
 
 // Función para enviar correos
 async function enviarCorreo({ to, subject, html }) {
   try {
-    const { data, error } = await resend.emails.send({
-      from: "Soporte <onboarding@resend.dev>", // puedes cambiar esto después por tu dominio verificado
-      to,
-      subject,
-      html,
+    const info = await transporter.sendMail({
+      from: `"Soporte Reservas UV" <${process.env.EMAIL_USER}>`, // remitente (mismo dominio verificado)
+      to,        // destinatario
+      subject,   // asunto
+      html,      // contenido HTML
     });
 
-    if (error) {
-      console.error("❌ Error al enviar correo:", error);
-      throw new Error(error.message || "Fallo al enviar correo");
-    }
-
-    console.log("✅ Correo enviado correctamente:", data);
-    return data;
+    console.log("✅ Correo enviado correctamente:", info.messageId);
+    return info;
   } catch (err) {
-    console.error("⚠️ Error general enviando correo:", err);
+    console.error("❌ Error al enviar correo:", err);
     throw err;
   }
 }
