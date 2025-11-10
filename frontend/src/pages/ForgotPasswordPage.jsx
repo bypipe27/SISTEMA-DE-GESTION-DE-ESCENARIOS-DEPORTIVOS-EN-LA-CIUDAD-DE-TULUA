@@ -39,27 +39,36 @@ function ForgotPasswordPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-600 via-green-700 to-green-900 p-6">
+    <div className="min-h-screen bg-gray-50 text-gray-800 flex items-center justify-center p-6">
+      {/* estilos locales para look minimalista; no afectan la funcionalidad */}
+      <style>{`
+        .fp-card { max-width:420px; width:100%; border-radius:16px; background: #ffffff; box-shadow: 0 10px 30px rgba(2,6,23,0.06); border: 1px solid rgba(2,6,23,0.04); }
+        .fp-legend { color: #065f46; }
+        .fp-input { background: #ffffff; border: 1px solid rgba(15,23,42,0.06); padding: 12px 14px; border-radius: 12px; }
+        .fp-note { color: #6b7280; font-size:0.9rem; }
+        footer.fp { color: #9ca3af; font-size: 0.8rem; }
+      `}</style>
+
       <NavBar />
-      
+
       <motion.div
-        className="bg-white/10 backdrop-blur-lg rounded-3xl shadow-2xl w-full max-w-md p-8 ring-1 ring-white/20"
-        initial={{ opacity: 0, y: 20 }}
+        className="fp-card p-8 ring-0"
+        initial={{ opacity: 0, y: 18 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
+        transition={{ duration: 0.45 }}
       >
         {/* Header */}
-        <div className="text-center mb-8">
-          <h2 className="text-3xl font-bold text-white mt-3">Recuperar Contraseña</h2>
-          <p className="text-green-100 text-sm mt-2">
+        <div className="text-center mb-6">
+          <h2 className="text-2xl font-semibold fp-legend mb-1">Recuperar contraseña</h2>
+          <p className="fp-note">
             Te enviaremos un enlace a tu correo para restablecer tu contraseña.
           </p>
         </div>
 
         {/* Formulario */}
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-5">
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-white mb-2">
+            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
               Correo electrónico
             </label>
             <input
@@ -68,28 +77,28 @@ function ForgotPasswordPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="tucorreo@dominio.com"
-              className="w-full rounded-xl border border-green-300 bg-white/90 px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-4 focus:ring-green-300"
+              className="w-full fp-input text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-200"
               required
             />
           </div>
 
           {/* Mensajes */}
           {mensaje && (
-            <div className="bg-green-50 border border-green-300 text-green-700 text-sm px-4 py-3 rounded-xl">
+            <div className="bg-green-50 border border-green-200 text-green-800 text-sm px-4 py-3 rounded-lg">
               {mensaje}
             </div>
           )}
 
           {error && (
-            <div className="bg-red-50 border border-red-300 text-red-700 text-sm px-4 py-3 rounded-xl">
+            <div className="bg-red-50 border border-red-200 text-red-800 text-sm px-4 py-3 rounded-lg">
               {error}
             </div>
           )}
 
           {/* Botón */}
           <Button 
-            color="white" 
-            className="w-full" 
+            color="green" 
+            className="w-full py-3 rounded-lg"
             disabled={loading}
           >
             {loading ? "Enviando..." : "Enviar enlace de recuperación"}
@@ -97,17 +106,17 @@ function ForgotPasswordPage() {
         </form>
 
         {/* Enlace de regreso */}
-        <div className="text-center mt-6">
+        <div className="text-center mt-5">
           <Link
             to="/login"
-            className="text-green-200 hover:text-white transition text-sm"
+            className="text-green-600 hover:underline fp-note"
           >
             ← Volver al inicio de sesión
           </Link>
         </div>
 
         {/* Footer */}
-        <footer className="text-center mt-8 text-xs text-green-200">
+        <footer className="text-center mt-6 fp">
           © 2025 Sistema de Gestión de Canchas — Proyecto académico
         </footer>
       </motion.div>

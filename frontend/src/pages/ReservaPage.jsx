@@ -1,7 +1,7 @@
 // ...existing code...
 import React, { useEffect, useState } from "react";
 import { useParams, useLocation, Link, useNavigate } from "react-router-dom";
-import { FaArrowLeft } from "react-icons/fa";
+import { FaArrowLeft, FaMapMarkerAlt, FaClock, FaCalendarAlt, FaUser, FaPhone, FaMoneyBillWave } from "react-icons/fa";
 
 function ReservaPage() {
   const { id } = useParams();
@@ -121,108 +121,161 @@ function ReservaPage() {
   if (!cancha) return <div className="min-h-screen flex items-center justify-center">Cancha no encontrada</div>;
 
   return (
-    <div className="min-h-screen p-6 bg-gray-100">
-      <div className="max-w-3xl mx-auto bg-white p-6 rounded shadow">
+    <div className="min-h-screen bg-gray-50 p-6">
+      {/* estilos locales mínimos y armónicos (no tocan la lógica ni la tipografía global) */}
+      <style>{`
+        .rp-card { max-width: 820px; margin: 0 auto; background: #fff; border-radius: 14px; padding: 20px; box-shadow: 0 12px 30px rgba(2,6,23,0.06); border: 1px solid rgba(2,6,23,0.04); }
+        .rp-input { width:100%; padding:10px 12px; border-radius:10px; border:1px solid rgba(15,23,42,0.06); background:#fff; }
+        .rp-select { width:100%; padding:10px 12px; border-radius:10px; border:1px solid rgba(15,23,42,0.06); background:#fff; }
+        .rp-btn { background:#10B981; color:#fff; padding:10px 14px; border-radius:10px; font-weight:600; }
+        .rp-btn[disabled] { opacity:0.6; cursor:not-allowed; transform:none; }
+        .rp-meta { color:#6b7280; font-size:0.95rem; }
+        .rp-grid { display:grid; grid-template-columns:1fr; gap:12px; }
+        @media(min-width:720px){ .rp-grid { grid-template-columns: 1fr 320px; gap:20px; } }
+        .rp-section { background: #fafafa; padding:12px; border-radius:10px; border: 1px solid rgba(2,6,23,0.03); }
+        .rp-badge { display:inline-block; padding:6px 10px; border-radius:999px; background:rgba(16,185,129,0.12); color:#065f46; font-weight:600; }
+      `}</style>
+
+      <div className="rp-card">
         <button
           onClick={() => navigate("/dashboard")}
-          className="flex items-center gap-2 text-green-700"
+          className="flex items-center gap-2 text-gray-700 mb-3"
         >
           <FaArrowLeft /> Volver
         </button>
 
-        <h2 className="text-2xl font-bold mt-4">{cancha.nombre}</h2>
-        <p className="text-sm text-gray-600">{cancha.descripcion}</p>
-
-        <div className="mt-4">
-          <label className="block text-sm">Fecha</label>
-          <input
-            type="date"
-            value={date}
-            onChange={(e) => {
-              if (!initialDate) {
-                setDate(e.target.value);
-                fetchSlots(e.target.value);
-              }
-            }}
-            readOnly={Boolean(initialDate)}
-            disabled={Boolean(initialDate)}
-            className={`border p-2 rounded w-full ${
-              initialDate ? "bg-gray-100 cursor-not-allowed" : ""
-            }`}
-            min={new Date().toISOString().split("T")[0]}
-          />
+        <div className="mb-4">
+          <h2 className="text-2xl font-semibold">{cancha.nombre}</h2>
+          <p className="rp-meta mt-1">{cancha.descripcion}</p>
         </div>
 
-        <div className="mt-4">
-            <h3 className="font-semibold">Horarios</h3>
-            <div className="mt-2">
-              {slots.length === 0 ? (
-                <div className="text-gray-500">Seleccione una fecha</div>
-              ) : (
-                <select
-                  className="w-full border p-2 rounded"
-                  value={selectedIndex ?? ""}
+        <div className="rp-grid">
+          <div>
+            <div className="mb-4">
+              <label className="block text-sm font-medium mb-2">Fecha</label>
+              <div className="flex items-center gap-2">
+                <FaCalendarAlt className="text-gray-400" />
+                <input
+                  type="date"
+                  value={date}
                   onChange={(e) => {
-                    const idx = Number(e.target.value);
-                    setSelectedIndex(idx);
-                    setSelectedSlot(slots[idx]);
+                    if (!initialDate) {
+                      setDate(e.target.value);
+                      fetchSlots(e.target.value);
+                    }
                   }}
-                >
-                  <option value="">-- Seleccione un horario --</option>
-                  {slots.map((s, idx) => (
-                    <option
-                      key={idx}
-                      value={idx}
-                      disabled={s.status !== "free"}
-                    >
-                      {s.start} - {s.end} {s.status !== "free" ? `(${s.status})` : ""}
-                    </option>
-                  ))}
-                </select>
+                  readOnly={Boolean(initialDate)}
+                  disabled={Boolean(initialDate)}
+                  className={`rp-input ${initialDate ? "bg-gray-50 cursor-not-allowed" : ""}`}
+                  min={new Date().toISOString().split("T")[0]}
+                />
+              </div>
+            </div>
+
+            <div className="mb-4">
+              <h3 className="font-semibold mb-2">Horarios</h3>
+              <div>
+                {slots.length === 0 ? (
+                  <div className="rp-section rp-meta">Seleccione una fecha</div>
+                ) : (
+                  <select
+                    className="rp-select"
+                    value={selectedIndex ?? ""}
+                    onChange={(e) => {
+                      const idx = Number(e.target.value);
+                      setSelectedIndex(idx);
+                      setSelectedSlot(slots[idx]);
+                    }}
+                  >
+                    <option value="">-- Seleccione un horario --</option>
+                    {slots.map((s, idx) => (
+                      <option
+                        key={idx}
+                        value={idx}
+                        disabled={s.status !== "free"}
+                      >
+                        {s.start} - {s.end} {s.status !== "free" ? `(${s.status})` : ""}
+                      </option>
+                    ))}
+                  </select>
+                )}
+              </div>
+
+              {selectedSlot && (
+                <div className="mt-3 rp-section">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="text-sm text-gray-600">Horario seleccionado</div>
+                      <div className="font-medium">{selectedSlot.start} — {selectedSlot.end}</div>
+                    </div>
+                    <div className="rp-badge">Libre</div>
+                  </div>
+                </div>
               )}
             </div>
+
+            <form onSubmit={handleSubmit} className="space-y-3">
+              <div>
+                <label className="block text-sm font-medium mb-1">Nombre</label>
+                <div className="flex items-center gap-2">
+                  <FaUser className="text-gray-400" />
+                  <input
+                    type="text"
+                    value={clienteNombre}
+                    onChange={(e) => setClienteNombre(e.target.value)}
+                    className="rp-input"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-1">Teléfono</label>
+                <div className="flex items-center gap-2">
+                  <FaPhone className="text-gray-400" />
+                  <input
+                    type="text"
+                    value={clienteTelefono}
+                    onChange={(e) => setClienteTelefono(e.target.value)}
+                    className="rp-input"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-1">Método de pago</label>
+                <div className="flex items-center gap-2">
+                  <FaMoneyBillWave className="text-gray-400" />
+                  <input
+                    type="text"
+                    readOnly
+                    value="Efectivo"
+                    className="rp-input bg-gray-50"
+                  />
+                </div>
+              </div>
+
+              <div className="flex justify-end mt-3">
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="rp-btn"
+                >
+                  {submitting ? "Reservando..." : "Reservar (Efectivo)"}
+                </button>
+              </div>
+            </form>
           </div>
 
-        <form onSubmit={handleSubmit} className="mt-4 space-y-3">
-          <div>
-            <label className="block text-sm">Nombre</label>
-            <input
-              type="text"
-              value={clienteNombre}
-              onChange={(e) => setClienteNombre(e.target.value)}
-              className="w-full border p-2 rounded"
-            />
-          </div>
-          <div>
-            <label className="block text-sm">Teléfono</label>
-            <input
-              type="text"
-              value={clienteTelefono}
-              onChange={(e) => setClienteTelefono(e.target.value)}
-              className="w-full border p-2 rounded"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm">Método de pago</label>
-            <input
-              type="text"
-              readOnly
-              value="Efectivo"
-              className="w-full border p-2 rounded bg-gray-50"
-            />
-          </div>
-
-          <div className="flex justify-end">
-            <button
-              type="submit"
-              disabled={submitting}
-              className="bg-green-600 text-white px-4 py-2 rounded"
-            >
-              {submitting ? "Reservando..." : "Reservar (Efectivo)"}
-            </button>
-          </div>
-        </form>
+          <aside>
+            <div className="rp-section">
+              <h4 className="font-semibold mb-2">Detalles de la cancha</h4>
+              <p className="text-sm text-gray-700 mb-2"><FaMapMarkerAlt className="inline mr-2 text-gray-400" />{cancha.direccion}</p>
+              <p className="text-sm text-gray-700 mb-2"><FaClock className="inline mr-2 text-gray-400" />Horario base: {cancha.horarios ? "Ver horarios" : "No disponible"}</p>
+              {cancha.precio && <p className="text-lg font-bold text-green-600 mt-2">${Number(cancha.precio).toLocaleString()} COP</p>}
+              <div className="mt-3 rp-meta">Por favor llega 10-15 minutos antes del inicio.</div>
+            </div>
+          </aside>
+        </div>
       </div>
     </div>
   );

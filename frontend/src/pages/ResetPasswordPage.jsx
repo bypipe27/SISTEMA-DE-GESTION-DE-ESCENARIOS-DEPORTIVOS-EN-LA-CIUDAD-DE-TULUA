@@ -103,11 +103,15 @@ function ResetPasswordPage() {
 
   if (verificando) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-600 to-green-900">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
         <NavBar />
-        <div className="text-white text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
-          <p>Verificando enlace...</p>
+        <div className="text-center">
+          <style>{`
+            .rp-loader { display:inline-block; border-radius:999px; width:56px; height:56px; border:4px solid rgba(0,0,0,0.06); border-top-color:#10B981; margin-bottom:12px; }
+            .rp-note { color:#374151; }
+          `}</style>
+          <div className="rp-loader animate-spin mx-auto mb-4" />
+          <p className="rp-note">Verificando enlace…</p>
         </div>
       </div>
     );
@@ -115,17 +119,23 @@ function ResetPasswordPage() {
 
   if (!tokenValido) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-600 to-green-900 p-6">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
         <NavBar />
         <motion.div
-          className="bg-white/10 backdrop-blur-lg rounded-3xl shadow-2xl w-full max-w-md p-8 ring-1 ring-white/20 text-center"
-          initial={{ opacity: 0, y: 20 }}
+          className="w-full max-w-md bg-white rounded-2xl shadow-lg p-6"
+          initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
         >
-          <h2 className="text-2xl font-bold text-white mb-4">Enlace Inválido</h2>
-          <p className="text-green-100 mb-6">{error}</p>
+          <style>{`
+            .rp-card { border-radius:14px; }
+            .rp-err { color:#b91c1c; }
+            .rp-sub { color:#6b7280; }
+          `}</style>
+
+          <h2 className="text-2xl font-semibold text-gray-900 mb-2">Enlace inválido</h2>
+          <p className="rp-sub mb-6">{error}</p>
           <Link to="/forgot-password">
-            <Button color="white">Solicitar nuevo enlace</Button>
+            <Button color="green">Solicitar nuevo enlace</Button>
           </Link>
         </motion.div>
       </div>
@@ -133,27 +143,33 @@ function ResetPasswordPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-600 via-green-700 to-green-900 p-6">
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
       <NavBar />
       
       <motion.div
-        className="bg-white/10 backdrop-blur-lg rounded-3xl shadow-2xl w-full max-w-md p-8 ring-1 ring-white/20"
-        initial={{ opacity: 0, y: 20 }}
+        className="w-full max-w-md bg-white rounded-2xl shadow-lg p-6"
+        initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
+        transition={{ duration: 0.45 }}
       >
+        <style>{`
+          .rp-title { color:#064e3b; font-weight:600; }
+          .rp-sub { color:#6b7280; font-size:0.95rem; }
+          .rp-input { width:100%; padding:12px 14px; border-radius:10px; border:1px solid rgba(15,23,42,0.06); background:#fff; }
+          .rp-msg-ok { background:#ecfdf5; border:1px solid #bbf7d0; color:#065f46; padding:10px; border-radius:10px; }
+          .rp-msg-err { background:#fff1f2; border:1px solid #fecaca; color:#991b1b; padding:10px; border-radius:10px; }
+        `}</style>
+
         {/* Header */}
-        <div className="text-center mb-8">
-          <h2 className="text-3xl font-bold text-white mt-3">Nueva Contraseña</h2>
-          <p className="text-green-100 text-sm mt-2">
-            Crea una nueva contraseña para tu cuenta
-          </p>
+        <div className="text-center mb-6">
+          <h2 className="text-2xl rp-title mb-1">Nueva contraseña</h2>
+          <p className="rp-sub">Crea una nueva contraseña para tu cuenta</p>
         </div>
 
         {/* Formulario */}
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label htmlFor="nuevaContrasena" className="block text-sm font-medium text-white mb-2">
+            <label htmlFor="nuevaContrasena" className="block text-sm font-medium text-gray-700 mb-2">
               Nueva contraseña
             </label>
             <input
@@ -163,13 +179,13 @@ function ResetPasswordPage() {
               value={formData.nuevaContrasena}
               onChange={handleChange}
               placeholder="Mínimo 6 caracteres"
-              className="w-full rounded-xl border border-green-300 bg-white/90 px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-4 focus:ring-green-300"
+              className="rp-input"
               required
             />
           </div>
 
           <div>
-            <label htmlFor="confirmarContrasena" className="block text-sm font-medium text-white mb-2">
+            <label htmlFor="confirmarContrasena" className="block text-sm font-medium text-gray-700 mb-2">
               Confirmar contraseña
             </label>
             <input
@@ -179,36 +195,38 @@ function ResetPasswordPage() {
               value={formData.confirmarContrasena}
               onChange={handleChange}
               placeholder="Repite la contraseña"
-              className="w-full rounded-xl border border-green-300 bg-white/90 px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-4 focus:ring-green-300"
+              className="rp-input"
               required
             />
           </div>
 
           {/* Mensajes */}
           {mensaje && (
-            <div className="bg-green-50 border border-green-300 text-green-700 text-sm px-4 py-3 rounded-xl">
+            <div className="rp-msg-ok text-sm">
               {mensaje}
             </div>
           )}
 
           {error && (
-            <div className="bg-red-50 border border-red-300 text-red-700 text-sm px-4 py-3 rounded-xl">
+            <div className="rp-msg-err text-sm">
               {error}
             </div>
           )}
 
           {/* Botón */}
-          <Button 
-            color="white" 
-            className="w-full" 
-            disabled={loading}
-          >
-            {loading ? "Actualizando..." : "Restablecer contraseña"}
-          </Button>
+          <div>
+            <Button 
+              color="green" 
+              className="w-full"
+              disabled={loading}
+            >
+              {loading ? "Actualizando..." : "Restablecer contraseña"}
+            </Button>
+          </div>
         </form>
 
         {/* Footer */}
-        <footer className="text-center mt-8 text-xs text-green-200">
+        <footer className="text-center mt-6 text-xs text-gray-400">
           © 2025 Sistema de Gestión de Canchas — Proyecto académico
         </footer>
       </motion.div>

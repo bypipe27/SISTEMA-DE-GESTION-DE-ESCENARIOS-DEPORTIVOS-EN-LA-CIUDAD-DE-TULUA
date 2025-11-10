@@ -1,8 +1,9 @@
 import React, { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import NavBarProvider from "../components/NavBarProvider"; // añadido
+// Añadidos iconos para mejorar la UI (sin cambiar lógica)
+import { FaPlus, FaSyncAlt, FaTrash, FaEdit, FaCalendarAlt } from "react-icons/fa";
 
-// ...existing code...
 function CanchasManager() {
   const navigate = useNavigate();
   const [canchas, setCanchas] = useState([]);
@@ -366,27 +367,48 @@ function CanchasManager() {
       <NavBarProvider />
 
       <div className="p-6 max-w-6xl mx-auto pt-28">
-        <header className="flex items-center justify-between mb-6">
+        {/* estilos locales mínimos y armónicos (no tocan la lógica ni la tipografía global) */}
+        <style>{`
+          .cm-card { background: linear-gradient(180deg,#ffffff,#fbfbfb); border:1px solid rgba(2,6,23,0.04); border-radius:14px; box-shadow: 0 12px 30px rgba(2,6,23,0.04); padding:1rem; }
+          .cm-header { display:flex; align-items:center; gap:12px; }
+          .cm-actions .cm-btn { display:inline-flex; align-items:center; gap:8px; padding:8px 12px; border-radius:10px; border:1px solid rgba(2,6,23,0.06); background:#fff; transition:all .12s ease; }
+          .cm-actions .cm-btn.primary { background:#10B981; color:#fff; border-color:transparent; }
+          .cm-actions .cm-btn:active { transform:translateY(1px); }
+          .cm-list-item { border-radius:10px; padding:12px; background:#fff; border:1px solid rgba(2,6,23,0.04); display:flex; justify-content:space-between; align-items:center; gap:12px; }
+          .cm-modal { max-width:980px; width:100%; border-radius:12px; background:#fff; border:1px solid rgba(2,6,23,0.04); box-shadow: 0 14px 40px rgba(2,6,23,0.06); padding:18px; max-height:80vh; overflow:auto; }
+          .cm-input, .cm-textarea, .cm-select { width:100%; padding:10px 12px; border-radius:10px; border:1px solid rgba(15,23,42,0.06); background:#fff; }
+          .cm-small { font-size:0.9rem; color:#6b7280; }
+        `}</style>
+
+        <header className="flex items-center justify-between mb-6 cm-header">
           <h1 className="text-2xl font-bold">Gestión de canchas</h1>
-          <div className="flex gap-2">
-            <button onClick={abrirNuevo} className="px-4 py-2 bg-green-600 text-white rounded">Agregar cancha</button>
-            <button onClick={() => fetchCanchas()} className="px-4 py-2 border rounded">Refrescar</button>
+          <div className="flex gap-2 cm-actions">
+            <button onClick={abrirNuevo} className="cm-btn primary">
+              <FaPlus /> <span>Agregar cancha</span>
+            </button>
+            <button onClick={() => fetchCanchas()} className="cm-btn">
+              <FaSyncAlt /> <span>Refrescar</span>
+            </button>
           </div>
         </header>
 
-        {loading ? <p>Cargando...</p> : (
+        {loading ? <p className="cm-small">Cargando...</p> : (
           <>
             {error && <p className="text-red-600">{error}</p>}
-            <ul className="space-y-4">
+            <ul className="space-y-3">
               {canchas.map(c => (
-                <li key={c.id} className="p-4 border rounded flex justify-between">
+                <li key={c.id} className="cm-list-item">
                   <div>
                     <h3 className="text-lg font-semibold">{c.nombre}</h3>
-                    <p className="text-sm text-gray-600">{c.tipo} — {c.direccion}</p>
+                    <p className="cm-small">{c.tipo} — {c.direccion}</p>
                   </div>
                   <div className="flex gap-2">
-                    <button onClick={() => abrirEdicion(c)} className="px-3 py-1 border rounded">Editar</button>
-                    <button onClick={() => eliminar(c)} className="px-3 py-1 bg-red-600 text-white rounded">Eliminar</button>
+                    <button onClick={() => abrirEdicion(c)} className="cm-btn">
+                      <FaEdit /> <span>Editar</span>
+                    </button>
+                    <button onClick={() => eliminar(c)} className="cm-btn" style={{ background:'#fee2e2', color:'#991b1b', borderColor:'transparent' }}>
+                      <FaTrash /> <span>Eliminar</span>
+                    </button>
                   </div>
                 </li>
               ))}
@@ -396,30 +418,30 @@ function CanchasManager() {
 
         {openForm && (
           <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-            <div className="bg-white p-6 rounded max-w-4xl w-full max-h-[80vh] overflow-auto shadow-lg">
+            <div className="cm-modal">
               <h2 className="text-xl font-semibold mb-3">{editing ? "Editar cancha" : "Agregar cancha"}</h2>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <input placeholder="Nombre" value={form.nombre} onChange={e => setForm({...form, nombre: e.target.value})} className="px-3 py-2 border rounded" />
-                <select value={form.tipo} onChange={e => setForm({...form, tipo: e.target.value})} className="px-3 py-2 border rounded">
+                <input placeholder="Nombre" value={form.nombre} onChange={e => setForm({...form, nombre: e.target.value})} className="cm-input" />
+                <select value={form.tipo} onChange={e => setForm({...form, tipo: e.target.value})} className="cm-select">
                   <option value="">-- Seleccionar tipo --</option>
                   {ALLOWED_TIPOS.map(t => <option key={t} value={t}>{t}</option>)}
                 </select>
-                <select value={form.capacidad || ""} onChange={e => setForm({...form, capacidad: e.target.value ? Number(e.target.value) : ""})} className="px-3 py-2 border rounded">
+                <select value={form.capacidad || ""} onChange={e => setForm({...form, capacidad: e.target.value ? Number(e.target.value) : ""})} className="cm-select">
                   <option value="">-- Capacidad --</option>
                   {ALLOWED_CAPACIDADES.map(n => <option key={n} value={n}>{n}</option>)}
                 </select>
-                <select value={form.precio || ""} onChange={e => setForm({...form, precio: e.target.value ? Number(e.target.value) : ""})} className="px-3 py-2 border rounded">
+                <select value={form.precio || ""} onChange={e => setForm({...form, precio: e.target.value ? Number(e.target.value) : ""})} className="cm-select">
                   <option value="">-- Precio --</option>
                   {PRICE_OPTIONS.map(p => <option key={p} value={p}>{p.toLocaleString('es-CO')}</option>)}
                 </select>
 
-                <input placeholder="Dirección" value={form.direccion} onChange={e => setForm({...form, direccion: e.target.value})} className="px-3 py-2 border rounded col-span-2" />
-                <textarea placeholder="Descripción" value={form.descripcion} onChange={e => setForm({...form, descripcion: e.target.value})} className="px-3 py-2 border rounded col-span-2" />
+                <input placeholder="Dirección" value={form.direccion} onChange={e => setForm({...form, direccion: e.target.value})} className="cm-input col-span-2" />
+                <textarea placeholder="Descripción" value={form.descripcion} onChange={e => setForm({...form, descripcion: e.target.value})} className="cm-textarea col-span-2" />
 
                 <label className="col-span-2 text-sm">Mapa (iframe embed)</label>
-                <textarea placeholder="Pega aquí el iframe de Google Maps" value={form.map_iframe || ""} onChange={e => setForm({...form, map_iframe: e.target.value})} className="px-3 py-2 border rounded col-span-2 h-24" />
-                <p className="text-xs text-gray-500 col-span-2">Pega el código completo del iframe. Se validará que contenga un src con https (ej: embed de Google Maps).</p>
+                <textarea placeholder="Pega aquí el iframe de Google Maps" value={form.map_iframe || ""} onChange={e => setForm({...form, map_iframe: e.target.value})} className="cm-textarea col-span-2 h-24" />
+                <p className="cm-small col-span-2">Pega el código completo del iframe. Se validará que contenga un src con https (ej: embed de Google Maps).</p>
 
                 <label className="col-span-2 text-sm font-semibold">Horarios semanales</label>
                 <div className="col-span-2 grid gap-2">
@@ -472,14 +494,14 @@ function CanchasManager() {
                       type="date"
                       value={fechaToAdd}
                       onChange={e => setFechaToAdd(e.target.value)}
-                      className="px-3 py-2 border rounded"
+                      className="cm-input"
                     />
-                    <button type="button" onClick={addFecha} className="px-3 py-2 bg-blue-600 text-white rounded">Añadir fecha</button>
+                    <button type="button" onClick={addFecha} className="cm-btn primary">Añadir fecha</button>
                   </div>
 
                   <div className="flex flex-wrap gap-2">
                     {(!form.cerrados_fechas || form.cerrados_fechas.length === 0) && (
-                      <p className="text-sm text-gray-500">Sin fechas cerradas</p>
+                      <p className="cm-small">Sin fechas cerradas</p>
                     )}
                     {(form.cerrados_fechas || []).map((f, i) => (
                       <div key={f + i} className="flex items-center gap-2 px-3 py-1 bg-gray-100 rounded">
@@ -492,8 +514,8 @@ function CanchasManager() {
               </div>
 
               <div className="mt-4 flex justify-end gap-3">
-                <button onClick={() => { setOpenForm(false); }} className="px-4 py-2 border rounded">Cancelar</button>
-                <button onClick={guardar} className="px-4 py-2 bg-green-600 text-white rounded">{editing ? "Guardar" : "Crear"}</button>
+                <button onClick={() => { setOpenForm(false); }} className="cm-btn">Cancelar</button>
+                <button onClick={guardar} className="cm-btn primary">{editing ? "Guardar" : "Crear"}</button>
               </div>
 
               {error && <p className="text-red-600 mt-3">{error}</p>}

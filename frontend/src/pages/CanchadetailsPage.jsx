@@ -1,7 +1,6 @@
-
 import React, { useEffect, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { FaArrowLeft } from "react-icons/fa";
+import { FaArrowLeft, FaMapMarkerAlt, FaClock, FaCalendarAlt, FaTag, FaInfoCircle } from "react-icons/fa";
 
 function CanchaDetailsPage() {
   const { id } = useParams();
@@ -168,44 +167,62 @@ function CanchaDetailsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-700 via-green-800 to-green-900 text-white p-6">
-      <div className="max-w-4xl mx-auto bg-white/10 backdrop-blur-lg rounded-3xl shadow-2xl p-8 relative">
-        <Link to={backTo} className="absolute top-4 left-4 text-white hover:text-green-300 flex items-center gap-2">
-          <FaArrowLeft /> Volver
+    <div className="min-h-screen bg-gray-50 text-gray-800 p-6">
+      {/* estilos locales para asegurar el iframe responsivo sin tocar la lógica */}
+      <style>{`
+        .cancha-iframe-container iframe { width: 100% !important; height: 100% !important; border: 0; display:block; }
+      `}</style>
+
+      <div className="max-w-4xl mx-auto bg-white rounded-2xl shadow-lg p-8 relative border border-gray-100">
+        <Link to={backTo} className="absolute top-4 left-4 text-gray-600 hover:text-green-600 flex items-center gap-2 bg-white/60 backdrop-blur-sm px-3 py-1 rounded-full">
+          <FaArrowLeft /> <span className="sr-only">Volver</span>
         </Link>
 
-        <h1 className="text-4xl font-bold text-center mb-6">{cancha.nombre}</h1>
+        <h1 className="text-3xl font-semibold text-center mb-6 text-gray-900">{cancha.nombre}</h1>
 
-        <div className="space-y-4 text-lg text-white">
-          <p><strong>Descripción:</strong> {cancha.descripcion}</p>
-          <p><strong>Dirección:</strong> {cancha.direccion}</p>
+        <div className="space-y-6 text-base text-gray-700">
+          <p className="leading-relaxed"><strong className="text-gray-900">Descripción:</strong> <span className="text-gray-700">{cancha.descripcion}</span></p>
 
-          <div>
-            <strong>Horario:</strong>
-            {renderHorariosSection()}
+          <p className="flex items-start gap-3">
+            <FaMapMarkerAlt className="mt-1 text-green-600" />
+            <span><strong className="text-gray-900">Dirección:</strong> <span className="text-gray-700">{cancha.direccion}</span></span>
+          </p>
+
+          <div className="flex gap-3">
+            <FaClock className="mt-1 text-green-600" />
+            <div className="w-full">
+              <strong className="text-gray-900">Horario:</strong>
+              {renderHorariosSection()}
+            </div>
           </div>
 
-          <div>
-            <strong>Días de mantenimiento:</strong>
-            {renderCerradosDias()}
-            {renderCerradosFechas()}
+          <div className="flex gap-3">
+            <FaCalendarAlt className="mt-1 text-green-600" />
+            <div className="w-full">
+              <strong className="text-gray-900">Días de mantenimiento:</strong>
+              {renderCerradosDias()}
+              {renderCerradosFechas()}
+            </div>
           </div>
 
-          <p><strong>Precio:</strong> {cancha.precio}</p>
+          <p className="flex items-center gap-3">
+            <FaTag className="text-green-600" />
+            <span><strong className="text-gray-900">Precio:</strong> <span className="text-gray-700">{cancha.precio}</span></span>
+          </p>
         </div>
 
         <div className="mt-8">
-          <h2 className="text-2xl font-semibold mb-3">Ubicación 📍</h2>
+          <h2 className="text-xl font-medium mb-3 flex items-center gap-2 text-gray-900"><FaMapMarkerAlt className="text-green-600" /> Ubicación</h2>
 
           {iframeHtml ? (
-            <div dangerouslySetInnerHTML={{ __html: iframeHtml }} />
+            <div className="cancha-iframe-container rounded-lg overflow-hidden border border-gray-100" style={{ height: 320 }} dangerouslySetInnerHTML={{ __html: iframeHtml }} />
           ) : (
-            <p className="text-sm text-gray-200">No hay iframe guardado para esta cancha.</p>
+            <p className="text-sm text-gray-500">No hay iframe guardado para esta cancha.</p>
           )}
         </div>
 
         <div className="mt-8 flex justify-center">
-          <button onClick={() => navigate(backTo)} className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-xl">Volver</button>
+          <button onClick={() => navigate(backTo)} className="border border-green-600 text-green-600 hover:bg-green-50 font-semibold py-2 px-6 rounded-lg">Volver</button>
         </div>
       </div>
     </div>
@@ -213,4 +230,3 @@ function CanchaDetailsPage() {
 }
 
 export default CanchaDetailsPage;
-// ...existing code...

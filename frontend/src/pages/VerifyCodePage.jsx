@@ -20,7 +20,6 @@ function VerifyCodePage() {
   const [loading, setLoading] = useState(false);
   const [seconds, setSeconds] = useState(RESEND_SECONDS);
 
-// ...existing code...
   useEffect(() => {
     if (!email) {
       // si no viene email en query, regresar al home
@@ -126,23 +125,34 @@ function VerifyCodePage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-600 to-green-900 text-white flex flex-col">
+    <div className="min-h-screen bg-gray-50 text-gray-800 flex flex-col">
+      {/* estilos locales mínimos para look minimalista (no afectan lógica) */}
+      <style>{`
+      .vc-container { max-width: 520px; margin: 0 auto; padding: 24px; }
+      .vc-card { background: #fff; border-radius: 14px; padding: 24px; box-shadow: 0 12px 30px rgba(2,6,23,0.06); border: 1px solid rgba(2,6,23,0.04); }
+      .vc-input { width:100%; text-align:center; letter-spacing: 0.3rem; font-size:1.6rem; padding:12px 10px; border-radius:10px; border:1px solid rgba(15,23,42,0.06); }
+      .vc-note { color:#6b7280; font-size:0.95rem; }
+      .vc-msg-error { color:#b91c1c; font-size:0.9rem; }
+      .vc-footer { text-align:center; padding:18px 0; color:#6b7280; font-size:0.85rem; }
+    `}</style>
+
       <NavBar />
 
-      <div className="flex-grow flex items-center justify-center px-4 py-10">
+      <div className="flex-grow flex items-center justify-center px-4 py-10 vc-container">
         <motion.div
-          className="w-full max-w-md bg-white/10 backdrop-blur-md rounded-2xl p-8 shadow-xl"
-          initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+          className="vc-card w-full"
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
         >
-          <h1 className="text-2xl font-bold mb-2 text-center">Verifica tu correo</h1>
-          <p className="text-center text-white/80 mb-6">
-            Ingresá el código que enviamos a <span className="font-semibold">{email}</span>
+          <h1 className="text-2xl font-semibold text-gray-900 text-center mb-2">Verifica tu correo</h1>
+          <p className="text-center vc-note mb-6">
+            Ingresa el código enviado a <span className="font-medium text-gray-900">{email}</span>
           </p>
 
           <form onSubmit={onVerify} className="space-y-4">
             <input
-              className="w-full tracking-widest text-center text-2xl px-4 py-3 rounded-xl bg-white/90 text-gray-800 placeholder-gray-500 outline-none"
-              placeholder="••••••"
+              className="vc-input bg-gray-50 text-gray-900 placeholder-gray-400 outline-none"
+              placeholder="●●●●●●"
               value={codigo}
               onChange={(e) => setCodigo(e.target.value.replace(/\D/g, "").slice(0, 6))}
               inputMode="numeric"
@@ -150,28 +160,26 @@ function VerifyCodePage() {
               required
             />
 
-            {msg && <p className="text-red-200 text-sm">{msg}</p>}
+            {msg && <p className={msg.toLowerCase().includes("error") ? "vc-msg-error" : "vc-note"}>{msg}</p>}
 
             <div className="pt-2">
-              <Button color="green" disabled={loading}>
+              <Button color="green" className="w-full" disabled={loading}>
                 {loading ? "Verificando..." : "Confirmar código"}
               </Button>
             </div>
           </form>
 
-          <div className="mt-6 text-center text-sm text-white/90">
+          <div className="mt-5 text-center text-sm">
             {seconds > 0 ? (
-              <span>¿No te llegó? Reenviar en {seconds}s</span>
+              <span className="vc-note">¿No te llegó? Reenviar en {seconds}s</span>
             ) : (
-              <button onClick={onResend} className="underline">
-                Reenviar código
-              </button>
+              <button onClick={onResend} className="text-green-600 font-medium">Reenviar código</button>
             )}
           </div>
         </motion.div>
       </div>
 
-      <footer className="text-center py-6 text-gray-200 text-sm bg-green-800/30 backdrop-blur-sm">
+      <footer className="vc-footer">
         © 2025 Sistema de Gestión de Canchas — Proyecto académico
       </footer>
     </div>
