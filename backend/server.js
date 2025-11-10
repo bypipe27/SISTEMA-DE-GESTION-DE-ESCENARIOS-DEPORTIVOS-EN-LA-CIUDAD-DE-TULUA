@@ -6,7 +6,8 @@ const app = express();
 // reemplazamos app.use(cors()) por configuración controlada:
 const FRONTEND_URL = (process.env.FRONTEND_URL || "").replace(/\/+$/, "");
 const allowedOrigins = [
-  FRONTEND_URL || null,
+  FRONTEND_URL,
+  "https://sistema-gestion-escenarios-deportivos.netlify.app",
   "http://localhost:5173",
   "http://localhost:3000"
 ].filter(Boolean);
@@ -17,11 +18,12 @@ app.use(cors({
     if (!origin) return callback(null, true);
     // permitir si está en la lista de orígenes permitidos
     if (allowedOrigins.includes(origin)) return callback(null, true);
-    // denegar en caso contrario
-    return callback(new Error(`CORS denied for origin: ${origin}`), false);
+    // denegar en caso contrario (no pasar error para que CORS no rompa el preflight)
+    console.warn(`CORS denied for origin: ${origin}`);
+    return callback(null, false);
   },
   credentials: true
-}));
+}));;
 
 app.use(express.json());
 // ...existing code...
