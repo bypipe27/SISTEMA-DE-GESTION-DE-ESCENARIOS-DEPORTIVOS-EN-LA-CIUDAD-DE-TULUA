@@ -44,9 +44,9 @@ function NavBarUser({ usuarioProp, onLogout }) {
   }, [open]);
 
   return (
-  <nav className="w-full py-4 px-10 flex justify-between items-center bg-green-900/80 backdrop-blur-md fixed top-0 z-50 shadow-lg text-white font-sans antialiased border-b border-green-800" aria-label="Barra de navegación de usuario">
+  <nav className="w-full py-4 px-10 flex justify-between items-center bg-green-900 fixed top-0 z-50 shadow-lg text-white font-sans antialiased border-b border-green-800" aria-label="Barra de navegación de usuario">
   <h1 className="text-2xl md:text-2xl font-bold flex items-center gap-3 text-white">
-  <FaFutbol className="text-green-300 text-3xl animate-pulse" aria-hidden="true" />
+  <FaFutbol className="text-white text-3xl animate-pulse" aria-hidden="true" />
     <span className="hidden md:inline">SISTEMA DE GESTIÓN DE ESCENARIOS DEPORTIVOS</span>
     <span className="md:hidden">Tulúa Deportes</span>
   </h1>
@@ -59,10 +59,11 @@ function NavBarUser({ usuarioProp, onLogout }) {
       <div className="relative">
       <button
         onClick={() => setOpen((v) => !v)}
-        className="flex items-center gap-2 bg-white/10 hover:bg-white/20 px-3 py-1 rounded text-sm text-white transition-colors"
+        className="flex items-center gap-2 bg-white/20 hover:bg-white/30 px-3 py-1 rounded text-sm text-white transition-colors"
         aria-expanded={open}
         aria-haspopup="true"
         aria-controls="user-menu"
+        aria-label="Abrir opciones de usuario"
       >
         Opciones <span className="text-xs">▾</span>
       </button>
@@ -81,7 +82,7 @@ function NavBarUser({ usuarioProp, onLogout }) {
             onClick={() => alert("Agregar medio de pago (simulado).")}
             role="menuitem"
           >
-            <span className="text-green-600">➕</span>
+            <span className="text-green-800">➕</span>
             <span>Agregar medio de pago</span>
           </button>
 
@@ -93,7 +94,7 @@ function NavBarUser({ usuarioProp, onLogout }) {
             }}
             role="menuitem"
           >
-            <span className="text-green-600">📋</span>
+            <span className="text-green-800">📋</span>
             <span>Ver reservas</span>
           </button>
 
@@ -105,10 +106,10 @@ function NavBarUser({ usuarioProp, onLogout }) {
             }}
             role="menuitem"
           >
-            <span className="text-green-600">🏠</span>
+            <span className="text-green-800">🏠</span>
             <span>Ir al Dashboard</span>
           </button>
-          <hr className="border-t border-green-100" />
+          <hr className="border-t border-green-200" />
 
           <button
             className="w-full text-left px-4 py-2 hover:bg-red-50 hover:text-red-700 flex items-center gap-2 text-red-600"
