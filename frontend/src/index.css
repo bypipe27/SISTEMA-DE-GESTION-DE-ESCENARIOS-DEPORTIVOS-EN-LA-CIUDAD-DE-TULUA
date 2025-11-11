@@ -1,2 +1,24 @@
 
 @import "tailwindcss"; 
+
+/* Skip link: oculto por defecto, visible cuando recibe focus */
+.skip-link {
+	position: absolute;
+	left: -999px;
+	top: auto;
+	width: 1px;
+	height: 1px;
+	overflow: hidden;
+	z-index: 1000;
+}
+.skip-link:focus {
+	left: 1rem;
+	top: 1rem;
+	width: auto;
+	height: auto;
+	padding: 0.5rem 0.75rem;
+	background: #ffffff;
+	color: #064e3b; /* verde oscuro */
+	border-radius: 0.375rem;
+	box-shadow: 0 2px 6px rgba(0,0,0,0.12);
+}

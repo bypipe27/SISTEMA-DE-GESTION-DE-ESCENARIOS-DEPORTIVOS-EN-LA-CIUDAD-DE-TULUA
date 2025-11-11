@@ -1,5 +1,5 @@
-import React from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import React, { useEffect } from "react";
+import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
 import HomePage from "./pages/HomePage";
 import VerifyCodePage from "./pages/VerifyCodePage"; 
 import LoginPage from "./pages/LoginPage";
@@ -18,11 +18,22 @@ import ProviderReservas from "./pages/ProviderReservas";
 import CanchasManager from "./pages/CanchasMananger";
 
 
+function FocusToMainOnNavigation() {
+  // Hook que enfoca el landmark principal cuando cambia la ruta
+  const location = useLocation();
+  useEffect(() => {
+    const main = document.getElementById("main");
+    if (main) main.focus();
+  }, [location.pathname]);
+  return null;
+}
+
 function App() {
   return (
     <Router>
       {/* Landmark principal para lectores de pantalla y Lighthouse */}
-      <main id="main" role="main" aria-label="Contenido principal">
+      <main id="main" role="main" aria-label="Contenido principal" tabIndex={-1}>
+        <FocusToMainOnNavigation />
         <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/login" element={<LoginPage />} />
