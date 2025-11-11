@@ -234,36 +234,49 @@ function ReservaPage() {
 
             <form onSubmit={handleSubmit} className="space-y-3">
               <div>
-                <label className="block text-sm font-medium mb-1">Nombre</label>
+                <label htmlFor="nombre" className="block text-sm font-medium mb-1">Nombre</label>
                 <div className="flex items-center gap-2">
-                  <FaUser className="text-gray-400" />
+                  <FaUser className="text-gray-400" aria-hidden="true" />
                   <input
+                    id="nombre"
                     type="text"
                     value={clienteNombre}
                     onChange={(e) => setClienteNombre(e.target.value)}
                     className="rp-input"
+                    aria-invalid={!clienteNombre ? "true" : undefined}
+                    aria-describedby={!clienteNombre ? "nombre-error" : undefined}
                   />
                 </div>
+                {!clienteNombre && (
+                  <span id="nombre-error" className="text-red-600 text-xs">El nombre es requerido.</span>
+                )}
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-1">Teléfono</label>
+                <label htmlFor="telefono" className="block text-sm font-medium mb-1">Teléfono</label>
                 <div className="flex items-center gap-2">
-                  <FaPhone className="text-gray-400" />
+                  <FaPhone className="text-gray-400" aria-hidden="true" />
                   <input
+                    id="telefono"
                     type="text"
                     value={clienteTelefono}
                     onChange={(e) => setClienteTelefono(e.target.value)}
                     className="rp-input"
+                    aria-invalid={!clienteTelefono ? "true" : undefined}
+                    aria-describedby={!clienteTelefono ? "telefono-error" : undefined}
                   />
                 </div>
+                {!clienteTelefono && (
+                  <span id="telefono-error" className="text-red-600 text-xs">El teléfono es requerido.</span>
+                )}
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-1">Método de pago</label>
+                <label htmlFor="metodo" className="block text-sm font-medium mb-1">Método de pago</label>
                 <div className="flex items-center gap-2">
-                  <FaMoneyBillWave className="text-gray-400" />
+                  <FaMoneyBillWave className="text-gray-400" aria-hidden="true" />
                   <input
+                    id="metodo"
                     type="text"
                     readOnly
                     value="Efectivo"

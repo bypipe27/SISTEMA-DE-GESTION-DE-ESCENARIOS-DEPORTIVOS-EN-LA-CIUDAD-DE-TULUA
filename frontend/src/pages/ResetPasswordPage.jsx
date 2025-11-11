@@ -181,7 +181,12 @@ function ResetPasswordPage() {
               placeholder="Mínimo 6 caracteres"
               className="rp-input"
               required
+              aria-invalid={error && (error.includes('contraseña') || error.includes('caracteres')) ? "true" : undefined}
+              aria-describedby={error && (error.includes('contraseña') || error.includes('caracteres')) ? "nuevaContrasena-error" : undefined}
             />
+            {error && (error.includes('contraseña') || error.includes('caracteres')) && (
+              <span id="nuevaContrasena-error" className="text-red-600 text-xs">{error}</span>
+            )}
           </div>
 
           <div>
@@ -197,7 +202,12 @@ function ResetPasswordPage() {
               placeholder="Repite la contraseña"
               className="rp-input"
               required
+              aria-invalid={error && error.includes('coinciden') ? "true" : undefined}
+              aria-describedby={error && error.includes('coinciden') ? "confirmarContrasena-error" : undefined}
             />
+            {error && error.includes('coinciden') && (
+              <span id="confirmarContrasena-error" className="text-red-600 text-xs">{error}</span>
+            )}
           </div>
 
           {/* Mensajes */}

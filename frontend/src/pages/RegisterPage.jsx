@@ -88,10 +88,11 @@ function RegisterPage() {
         <form onSubmit={handleSubmit} className="space-y-5">
           {/* Nombre */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="nombre" className="block text-sm font-medium text-gray-700 mb-2">
               Nombre completo
             </label>
             <input
+              id="nombre"
               type="text"
               name="nombre"
               value={formData.nombre}
@@ -99,15 +100,21 @@ function RegisterPage() {
               placeholder="Ingresa tu nombre"
               className="w-full rp-input text-gray-800 focus:outline-none focus:ring-2 focus:ring-green-200"
               required
+              aria-invalid={error && !formData.nombre ? "true" : undefined}
+              aria-describedby={error && !formData.nombre ? "nombre-error" : undefined}
             />
+            {error && !formData.nombre && (
+              <span id="nombre-error" className="text-red-600 text-xs">El nombre es requerido.</span>
+            )}
           </div>
 
           {/* Correo */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
               Correo electrónico
             </label>
             <input
+              id="email"
               type="email"
               name="email"
               value={formData.email}
@@ -115,15 +122,21 @@ function RegisterPage() {
               placeholder="correo@ejemplo.com"
               className="w-full rp-input text-gray-800 focus:outline-none focus:ring-2 focus:ring-green-200"
               required
+              aria-invalid={error && !formData.email ? "true" : undefined}
+              aria-describedby={error && !formData.email ? "email-error" : undefined}
             />
+            {error && !formData.email && (
+              <span id="email-error" className="text-red-600 text-xs">El correo es requerido.</span>
+            )}
           </div>
 
           {/* Teléfono */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="telefono" className="block text-sm font-medium text-gray-700 mb-2">
               Teléfono
             </label>
             <input
+              id="telefono"
               type="tel"
               name="telefono"
               value={formData.telefono}
@@ -135,10 +148,11 @@ function RegisterPage() {
 
           {/* Contraseña */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="contrasena" className="block text-sm font-medium text-gray-700 mb-2">
               Contraseña
             </label>
             <input
+              id="contrasena"
               type="password"
               name="contrasena"
               value={formData.contrasena}
@@ -146,15 +160,21 @@ function RegisterPage() {
               placeholder="Crea una contraseña"
               className="w-full rp-input text-gray-800 focus:outline-none focus:ring-2 focus:ring-green-200"
               required
+              aria-invalid={error && !formData.contrasena ? "true" : undefined}
+              aria-describedby={error && !formData.contrasena ? "contrasena-error" : undefined}
             />
+            {error && !formData.contrasena && (
+              <span id="contrasena-error" className="text-red-600 text-xs">La contraseña es requerida.</span>
+            )}
           </div>
 
           {/* Confirmar contraseña */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="confirmarContrasena" className="block text-sm font-medium text-gray-700 mb-2">
               Confirmar contraseña
             </label>
             <input
+              id="confirmarContrasena"
               type="password"
               name="confirmarContrasena"
               value={formData.confirmarContrasena}
@@ -162,7 +182,12 @@ function RegisterPage() {
               placeholder="Repite la contraseña"
               className="w-full rp-input text-gray-800 focus:outline-none focus:ring-2 focus:ring-green-200"
               required
+              aria-invalid={error && formData.contrasena !== formData.confirmarContrasena ? "true" : undefined}
+              aria-describedby={error && formData.contrasena !== formData.confirmarContrasena ? "confirmar-error" : undefined}
             />
+            {error && formData.contrasena !== formData.confirmarContrasena && (
+              <span id="confirmar-error" className="text-red-600 text-xs">Las contraseñas no coinciden.</span>
+            )}
           </div>
 
           {/* Errores o mensajes */}

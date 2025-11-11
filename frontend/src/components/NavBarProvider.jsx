@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { FaFutbol } from "react-icons/fa";
 
@@ -10,6 +10,7 @@ export default function NavBarProvider({
 }) {
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
+  const firstMenuBtnRef = useRef(null);
 
   const defaultItems = [
     { to: "/dashboard-provider", label: "Panel", end: false },
@@ -39,10 +40,28 @@ export default function NavBarProvider({
     navigate("/login");
   };
 
+  // Enfocar el primer botón del menú al abrir y permitir cerrar con Escape
+  useEffect(() => {
+    if (open && firstMenuBtnRef.current) {
+      firstMenuBtnRef.current.focus();
+    }
+    function handleKeyDown(e) {
+      if (e.key === "Escape" && open) {
+        setOpen(false);
+      }
+    }
+    if (open) {
+      document.addEventListener("keydown", handleKeyDown);
+    }
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [open]);
+
   return (
     <nav className={`w-full py-4 px-6 flex justify-between items-center bg-green-900/80 backdrop-blur-md fixed top-0 z-50 shadow-lg text-white ${className}`} aria-label="Barra de navegación de proveedor">
       <div className="flex items-center gap-3">
-        <FaFutbol className="text-green-300 text-3xl" />
+  <FaFutbol className="text-green-300 text-3xl" aria-hidden="true" />
         <span className="text-lg font-bold">{brand}</span>
       </div>
 
@@ -66,10 +85,12 @@ export default function NavBarProvider({
               className="absolute right-0 mt-2 w-56 bg-white text-gray-900 rounded-md shadow-lg overflow-hidden"
               onMouseLeave={() => setOpen(false)}
               role="menu"
+              tabIndex={-1}
             >
-              {navItems.map((it) => (
+              {navItems.map((it, idx) => (
                 <button
                   key={it.to}
+                  ref={idx === 0 ? firstMenuBtnRef : null}
                   className="w-full text-left px-4 py-2 hover:bg-green-50 hover:text-green-800 flex items-center gap-2"
                   onClick={() => {
                     setOpen(false);

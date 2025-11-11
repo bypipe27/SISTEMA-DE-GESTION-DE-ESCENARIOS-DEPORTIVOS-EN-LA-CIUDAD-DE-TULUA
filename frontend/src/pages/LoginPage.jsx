@@ -92,6 +92,8 @@ function LoginPage() {
               onChange={onChange}
               placeholder="tucorreo@dominio.com"
               className="lp-input"
+              required
+              aria-required="true"
             />
           </div>
 
@@ -107,12 +109,14 @@ function LoginPage() {
                 onChange={onChange}
                 placeholder="••••••••"
                 className="lp-input pr-12"
+                required
+                aria-required="true"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
-                aria-label="Mostrar contraseña"
+                aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
               >
                 {showPassword ? "🙈" : "👁️"}
               </button>
@@ -136,7 +140,11 @@ function LoginPage() {
 
           {/* Error */}
           {error && (
-            <div className="bg-red-50 border border-red-300 text-red-700 text-sm px-4 py-2 rounded">
+            <div 
+              className="bg-red-50 border border-red-300 text-red-700 text-sm px-4 py-2 rounded"
+              role="alert"
+              aria-live="polite"
+            >
               {error}
             </div>
           )}

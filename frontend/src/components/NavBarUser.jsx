@@ -1,9 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaFutbol } from "react-icons/fa";
 
 function NavBarUser({ usuarioProp, onLogout }) {
   const [open, setOpen] = useState(false);
+  const firstMenuBtnRef = useRef(null);
   const navigate = useNavigate();
 
   const usuario =
@@ -23,10 +24,29 @@ function NavBarUser({ usuarioProp, onLogout }) {
     navigate("/login");
   };
 
+
+  // Enfocar el primer botón del menú al abrir y permitir cerrar con Escape
+  useEffect(() => {
+    if (open && firstMenuBtnRef.current) {
+      firstMenuBtnRef.current.focus();
+    }
+    function handleKeyDown(e) {
+      if (e.key === "Escape" && open) {
+        setOpen(false);
+      }
+    }
+    if (open) {
+      document.addEventListener("keydown", handleKeyDown);
+    }
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [open]);
+
   return (
   <nav className="w-full py-4 px-10 flex justify-between items-center bg-green-900/80 backdrop-blur-md fixed top-0 z-50 shadow-lg text-white font-sans antialiased border-b border-green-800" aria-label="Barra de navegación de usuario">
   <h1 className="text-2xl md:text-2xl font-bold flex items-center gap-3 text-white">
-    <FaFutbol className="text-green-300 text-3xl animate-pulse" />
+  <FaFutbol className="text-green-300 text-3xl animate-pulse" aria-hidden="true" />
     <span className="hidden md:inline">SISTEMA DE GESTIÓN DE ESCENARIOS DEPORTIVOS</span>
     <span className="md:hidden">Tulúa Deportes</span>
   </h1>
@@ -53,8 +73,10 @@ function NavBarUser({ usuarioProp, onLogout }) {
           className="absolute right-0 mt-2 w-56 bg-white text-gray-900 rounded-md shadow-lg overflow-hidden"
           onMouseLeave={() => setOpen(false)}
           role="menu"
+          tabIndex={-1}
         >
           <button
+            ref={firstMenuBtnRef}
             className="w-full text-left px-4 py-2 hover:bg-green-50 hover:text-green-800 flex items-center gap-2"
             onClick={() => alert("Agregar medio de pago (simulado).")}
             role="menuitem"
@@ -100,8 +122,7 @@ function NavBarUser({ usuarioProp, onLogout }) {
       )}
     </div>
   </div>
-</nav>
-
+  </nav>
   );
 }
 

@@ -79,18 +79,27 @@ function ForgotPasswordPage() {
               placeholder="tucorreo@dominio.com"
               className="w-full fp-input text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-200"
               required
+              aria-required="true"
             />
           </div>
 
           {/* Mensajes */}
           {mensaje && (
-            <div className="bg-green-50 border border-green-200 text-green-800 text-sm px-4 py-3 rounded-lg">
+            <div 
+              className="bg-green-50 border border-green-200 text-green-800 text-sm px-4 py-3 rounded-lg"
+              role="alert"
+              aria-live="polite"
+            >
               {mensaje}
             </div>
           )}
 
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-800 text-sm px-4 py-3 rounded-lg">
+            <div 
+              className="bg-red-50 border border-red-200 text-red-800 text-sm px-4 py-3 rounded-lg"
+              role="alert"
+              aria-live="polite"
+            >
               {error}
             </div>
           )}

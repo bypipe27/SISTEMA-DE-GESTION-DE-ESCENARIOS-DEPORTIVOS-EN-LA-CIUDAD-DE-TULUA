@@ -101,9 +101,9 @@ return (
       `}</style>
 
       {/* Barra de navegación: estilo coherente con Dashboard (tonos verdes y accesible) */}
-      <nav className="w-full py-3 px-6 flex justify-between items-center bg-green-700 text-white backdrop-blur-md fixed top-0 z-50 shadow-sm border-b border-green-800">
+      <nav className="w-full py-3 px-6 flex justify-between items-center bg-green-700 text-white backdrop-blur-md fixed top-0 z-50 shadow-sm border-b border-green-800" aria-label="Barra de navegación de confirmación">
         <h1 className="text-xl md:text-3xl font-bold flex items-center gap-3 text-white">
-          <FaFutbol className="text-green-300 text-2xl md:text-3xl transform transition-transform duration-150 hover:scale-110" />
+          <FaFutbol className="text-green-300 text-2xl md:text-3xl transform transition-transform duration-150 hover:scale-110" aria-hidden="true" />
           <span className="hidden md:inline">SISTEMA DE GESTIÓN DE ESCENARIOS DEPORTIVOS</span>
           <span className="md:hidden">Tulúa Deportes</span>
         </h1>
@@ -115,18 +115,25 @@ return (
             <button
               onClick={() => setOpen((v) => !v)}
               className="flex items-center gap-2 bg-white/10 hover:bg-white/20 px-3 py-1 rounded text-sm text-white"
+              aria-expanded={open}
+              aria-haspopup="true"
+              aria-controls="confirm-menu"
             >
               Opciones <span className="text-xs">▾</span>
             </button>
 
             {open && (
               <div
+                id="confirm-menu"
                 className="absolute right-0 mt-2 w-56 bg-white text-gray-900 rounded-md shadow-lg overflow-hidden"
                 onMouseLeave={() => setOpen(false)}
+                role="menu"
+                tabIndex={-1}
               >
                 <button
                   className="w-full text-left px-4 py-2 hover:bg-gray-100"
                   onClick={() => alert("Agregar medio de pago (simulado).")}
+                  role="menuitem"
                 >
                   ➕ Agregar medio de pago
                 </button>
@@ -137,6 +144,7 @@ return (
                     setOpen(false);
                     navigate("/mis-reservas");
                   }}
+                  role="menuitem"
                 >
                   📋 Ver reservas
                 </button>
@@ -147,6 +155,7 @@ return (
                     setOpen(false);
                     navigate("/dashboard");
                   }}
+                  role="menuitem"
                 >
                   🏠 Ir al Dashboard
                 </button>
@@ -154,6 +163,7 @@ return (
                 <button
                   className="w-full text-left px-4 py-2 hover:bg-gray-100"
                   onClick={() => alert("Cambiar contraseña (simulado).")}
+                  role="menuitem"
                 >
                   🔒 Cambiar contraseña
                 </button>
@@ -163,6 +173,7 @@ return (
                 <button
                   className="w-full text-left px-4 py-2 hover:bg-gray-100 text-red-600"
                   onClick={handleLogout}
+                  role="menuitem"
                 >
                   Cerrar sesión
                 </button>
@@ -193,7 +204,7 @@ return (
             <div className="p-6">
               {/* Información de la cancha */}
               <div className="flex items-start gap-4 mb-6 p-4 bg-transparent rounded-xl">
-                <FaFutbol className="text-3xl text-green-600 mt-1" />
+                <FaFutbol className="text-3xl text-green-600 mt-1" aria-hidden="true" />
                 <div>
                   <h2 className="text-lg font-semibold text-gray-900">{cancha.nombre}</h2>
                   <p className="text-gray-600">{cancha.descripcion}</p>

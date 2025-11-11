@@ -150,7 +150,9 @@ function VerifyCodePage() {
           </p>
 
           <form onSubmit={onVerify} className="space-y-4">
+            <label htmlFor="codigo" className="sr-only">Código de verificación</label>
             <input
+              id="codigo"
               className="vc-input bg-gray-50 text-gray-900 placeholder-gray-400 outline-none"
               placeholder="●●●●●●"
               value={codigo}
@@ -158,9 +160,13 @@ function VerifyCodePage() {
               inputMode="numeric"
               maxLength={6}
               required
+              aria-invalid={msg && msg.toLowerCase().includes("error") ? "true" : undefined}
+              aria-describedby={msg && msg.toLowerCase().includes("error") ? "codigo-error" : undefined}
             />
 
-            {msg && <p className={msg.toLowerCase().includes("error") ? "vc-msg-error" : "vc-note"}>{msg}</p>}
+            {msg && (
+              <p id={msg.toLowerCase().includes("error") ? "codigo-error" : undefined} className={msg.toLowerCase().includes("error") ? "vc-msg-error" : "vc-note"}>{msg}</p>
+            )}
 
             <div className="pt-2">
               <Button color="green" className="w-full" disabled={loading}>
