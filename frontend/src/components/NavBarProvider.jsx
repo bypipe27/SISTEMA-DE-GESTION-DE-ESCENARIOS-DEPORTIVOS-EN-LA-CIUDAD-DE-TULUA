@@ -40,7 +40,7 @@ export default function NavBarProvider({
   };
 
   return (
-    <nav className={`w-full py-4 px-6 flex justify-between items-center bg-green-900/80 backdrop-blur-md fixed top-0 z-50 shadow-lg text-white ${className}`}>
+    <nav className={`w-full py-4 px-6 flex justify-between items-center bg-green-900/80 backdrop-blur-md fixed top-0 z-50 shadow-lg text-white ${className}`} aria-label="Barra de navegación de proveedor">
       <div className="flex items-center gap-3">
         <FaFutbol className="text-green-300 text-3xl" />
         <span className="text-lg font-bold">{brand}</span>
@@ -55,12 +55,14 @@ export default function NavBarProvider({
             className="flex items-center gap-2 bg-white/10 hover:bg-white/20 px-3 py-1 rounded text-sm text-white transition-colors"
             aria-expanded={open}
             aria-haspopup="true"
+            aria-controls="provider-menu"
           >
             Opciones <span className="text-xs">▾</span>
           </button>
 
           {open && (
             <div
+              id="provider-menu"
               className="absolute right-0 mt-2 w-56 bg-white text-gray-900 rounded-md shadow-lg overflow-hidden"
               onMouseLeave={() => setOpen(false)}
               role="menu"

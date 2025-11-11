@@ -21,7 +21,9 @@ import CanchasManager from "./pages/CanchasMananger";
 function App() {
   return (
     <Router>
-      <Routes>
+      {/* Landmark principal para lectores de pantalla y Lighthouse */}
+      <main id="main" role="main" aria-label="Contenido principal">
+        <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
@@ -38,7 +40,8 @@ function App() {
         <Route path="/reportes-provider" element={<ProviderReportes />} />
         <Route path="/reservas-provider" element={<ProviderReservas />} />
         <Route path="/canchas-manager" element={<CanchasManager />} />
-      </Routes>
+        </Routes>
+      </main>
     </Router>
   );
 }

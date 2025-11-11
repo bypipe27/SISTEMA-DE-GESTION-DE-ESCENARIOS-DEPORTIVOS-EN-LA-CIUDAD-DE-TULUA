@@ -219,8 +219,8 @@ useEffect(() => {
           </div>
         </aside>
 
-        {/* MAIN */}
-        <main className="md:col-span-9">
+  {/* MAIN (usamos div porque el landmark principal se provee en App.jsx) */}
+  <div className="md:col-span-9">
           <div className="db-card p-6 min-h-[60vh]">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-2xl font-semibold text-gray-900">Canchas</h2>
@@ -309,7 +309,7 @@ useEffect(() => {
               )}
             </div>
           </div>
-        </main>
+  </div>
       </div>
     </div>
   );

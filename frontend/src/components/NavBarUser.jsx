@@ -24,7 +24,7 @@ function NavBarUser({ usuarioProp, onLogout }) {
   };
 
   return (
-    <nav className="w-full py-4 px-10 flex justify-between items-center bg-green-900/80 backdrop-blur-md fixed top-0 z-50 shadow-lg text-white font-sans antialiased border-b border-green-800">
+  <nav className="w-full py-4 px-10 flex justify-between items-center bg-green-900/80 backdrop-blur-md fixed top-0 z-50 shadow-lg text-white font-sans antialiased border-b border-green-800" aria-label="Barra de navegación de usuario">
   <h1 className="text-2xl md:text-2xl font-bold flex items-center gap-3 text-white">
     <FaFutbol className="text-green-300 text-3xl animate-pulse" />
     <span className="hidden md:inline">SISTEMA DE GESTIÓN DE ESCENARIOS DEPORTIVOS</span>
@@ -36,18 +36,20 @@ function NavBarUser({ usuarioProp, onLogout }) {
       Hola,&nbsp; <span className="font-medium text-white">{usuario?.nombre || "Usuario"}</span>
     </span>
 
-    <div className="relative">
+      <div className="relative">
       <button
         onClick={() => setOpen((v) => !v)}
         className="flex items-center gap-2 bg-white/10 hover:bg-white/20 px-3 py-1 rounded text-sm text-white transition-colors"
         aria-expanded={open}
         aria-haspopup="true"
+        aria-controls="user-menu"
       >
         Opciones <span className="text-xs">▾</span>
       </button>
 
       {open && (
         <div
+          id="user-menu"
           className="absolute right-0 mt-2 w-56 bg-white text-gray-900 rounded-md shadow-lg overflow-hidden"
           onMouseLeave={() => setOpen(false)}
           role="menu"

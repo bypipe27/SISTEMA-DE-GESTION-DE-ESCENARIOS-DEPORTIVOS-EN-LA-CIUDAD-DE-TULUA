@@ -4,7 +4,7 @@ import { FaFutbol } from "react-icons/fa";
 
 function NavBar() {
   return (
-    <nav className="w-full py-4 px-10 flex justify-between items-center bg-green-900/80 backdrop-blur-md fixed top-0 z-50 shadow-lg text-white">
+    <nav className="w-full py-4 px-10 flex justify-between items-center bg-green-900/80 backdrop-blur-md fixed top-0 z-50 shadow-lg text-white" aria-label="Barra de navegación principal">
       <h1 className="text-2xl font-bold flex items-center gap-2">
         <FaFutbol className="text-green-300 text-3xl animate-pulse" />
         <span>SISTEMA DE GESTION DE ESCENARIOS DEPORTIVOS</span>
