@@ -141,18 +141,20 @@ useEffect(() => {
         <aside className="md:col-span-3">
           <div className="db-aside">
             <div className="db-card p-4 db-aside">
-              <h4 className="font-semibold mb-3 text-gray-900">Filtros</h4>
+              <h3 className="font-semibold mb-3 text-gray-900">Filtros</h3>
 
-              <label className="block text-sm mb-1">Buscar</label>
+              <label htmlFor="q" className="block text-sm mb-1">Buscar</label>
               <input
+                id="q"
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
                 placeholder="Nombre o tipo..."
                 className="w-full border rounded px-3 py-2 mb-3 text-sm bg-white"
               />
 
-              <label className="block text-sm mb-1">Tipo</label>
+              <label htmlFor="tipoFiltro" className="block text-sm mb-1">Tipo</label>
               <select
+                id="tipoFiltro"
                 value={tipoFiltro}
                 onChange={(e) => setTipoFiltro(e.target.value)}
                 className="w-full border rounded px-3 py-2 mb-3 text-sm bg-white"
@@ -165,10 +167,11 @@ useEffect(() => {
                 ))}
               </select>
 
-              <label className="block text-sm mb-1">Fecha</label>
+              <label htmlFor="fecha" className="block text-sm mb-1">Fecha</label>
               <input
                 type="date"
                 value={fecha}
+                id="fecha"
                 onChange={(e) => setFecha(e.target.value)}
                 min={(() => {
                   const hoy = new Date();
@@ -261,7 +264,7 @@ useEffect(() => {
                           <span className="font-medium">{fecha}</span>:{" "}
                           <span
                             className={
-                              disponibleHoy ? "text-green-600" : "text-red-600"
+                              disponibleHoy ? "text-green-800" : "text-red-600"
                             }
                           >
                             {disponibleHoy ? "Disponible" : "Ocupada"}
@@ -273,7 +276,7 @@ useEffect(() => {
                     <div className="mt-4 flex justify-between items-center">
                       <span
                         className={`text-sm ${
-                          disponibleHoy ? "text-green-600" : "text-red-600"
+                          disponibleHoy ? "text-green-800" : "text-red-600"
                         }`}
                       >
                         {disponibleHoy ? "Disponible" : "No disponible"}
@@ -284,7 +287,7 @@ useEffect(() => {
                           onClick={() => handleReservar(c)}
                           className={`px-3 py-1 rounded-lg db-btn ${
                             disponibleHoy
-                              ? "bg-green-600 text-white"
+                              ? "bg-green-800 text-white"
                               : "bg-gray-200 text-gray-400 cursor-not-allowed"
                           }`}
                         >
