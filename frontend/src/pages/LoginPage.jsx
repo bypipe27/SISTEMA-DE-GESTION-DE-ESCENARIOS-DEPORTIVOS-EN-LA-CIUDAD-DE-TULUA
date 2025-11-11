@@ -59,14 +59,25 @@ function LoginPage() {
     <div className="min-h-screen bg-gray-50 text-gray-800 flex items-center justify-center p-6">
       {/* estilos locales para look minimalista (no afectan la lógica) */}
       <style>{`
-        .lp-card { width:100%; max-width:520px; border-radius:14px; background:#fff; box-shadow:0 12px 30px rgba(2,6,23,0.06); border:1px solid rgba(2,6,23,0.04); padding:20px; }
-        .lp-legend { color:#064e3b; font-weight:600; }
-        .lp-sub { color:#6b7280; font-size:0.95rem; }
-        .lp-input { width:100%; padding:12px 14px; border-radius:12px; border:1px solid rgba(15,23,42,0.06); background:#fff; }
-        .lp-small { font-size:0.9rem; color:#6b7280; }
+        /* Tarjeta */
+        .lp-card { width:100%; max-width:520px; border-radius:14px; background:#ffffff; box-shadow:0 12px 30px rgba(2,6,23,0.06); border:1px solid rgba(2,6,23,0.04); padding:20px; }
+        /* Títulos: color accesible (contraste alto) */
+        .lp-legend { color:#053f34; font-weight:700; }
+        /* Subtítulos y textos secundarios: más oscuros para mejorar contraste */
+        .lp-sub { color:#374151; font-size:0.95rem; }
+        .lp-small { font-size:0.9rem; color:#374151; }
+
+        /* Inputs */
+        .lp-input { width:100%; padding:12px 14px; border-radius:12px; border:1px solid rgba(15,23,42,0.06); background:#fff; color:#0f172a; }
+
+        /* Enlaces con buen contraste */
+        .lp-link { color:#053f34; text-decoration: none; }
+        .lp-link:hover, .lp-link:focus { text-decoration: underline; color:#022823; }
+
+        /* Acciones/layout */
         .lp-actions { display:flex; flex-direction:column; gap:12px; align-items:center; }
         .lp-divider { display:flex; align-items:center; gap:12px; width:100%; }
-        .lp-divider > div { flex:1; height:1px; background:rgba(16,185,129,0.12); }
+        .lp-divider > div { flex:1; height:1px; background:rgba(6,95,70,0.08); }
         @media(min-width:640px){ .lp-actions { flex-direction:row; } }
       `}</style>
 
@@ -135,7 +146,7 @@ function LoginPage() {
               />
               Recordarme
             </label>
-            <Link to="/forgot-password" className="text-green-600 hover:underline text-sm">¿Olvidaste tu contraseña?</Link>
+            <Link to="/forgot-password" className="lp-link lp-small">¿Olvidaste tu contraseña?</Link>
           </div>
 
           {/* Error */}
