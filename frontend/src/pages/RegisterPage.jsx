@@ -68,9 +68,13 @@ function RegisterPage() {
       {/* estilos locales para look minimalista (no tocan la tipografía global ni la lógica) */}
       <style>{`
         .rp-card { width:100%; max-width:520px; border-radius:16px; background: #fff; box-shadow: 0 12px 30px rgba(2,6,23,0.06); border: 1px solid rgba(2,6,23,0.04); }
-        .rp-legend { color: #065f46; }
-        .rp-input { background: #fff; border: 1px solid rgba(15,23,42,0.06); padding: 12px 14px; border-radius: 12px; }
-        .rp-note { color: #6b7280; font-size:0.95rem; }
+        /* Encabezado con mayor contraste */
+        .rp-legend { color: #053f34; }
+        /* Inputs con texto oscuro para legibilidad */
+        .rp-input { background: #fff; border: 1px solid rgba(15,23,42,0.06); padding: 12px 14px; border-radius: 12px; color: #0f172a; }
+        /* Notas y textos secundarios con contraste aumentado */
+        .rp-note { color: #374151; font-size:0.95rem; }
+        /* Botones: usar sombra, y el color específico se aplica en la clase del botón para mayor control */
         .rp-btn { border-radius: 12px; padding: 12px 14px; box-shadow: 0 6px 18px rgba(2,6,23,0.06); transition: transform .08s ease; }
         .rp-btn:active { transform: translateY(1px); }
       `}</style>
@@ -205,15 +209,15 @@ function RegisterPage() {
           {/* Botón */}
           <button
             type="submit"
-            className="w-full bg-green-600 text-white font-semibold rp-btn hover:bg-green-700"
+            className="w-full bg-green-800 text-white font-semibold rp-btn hover:bg-green-900 focus:outline-none focus:ring-2 focus:ring-green-300"
           >
             Registrarse
           </button>
         </form>
 
-        <p className="text-center text-gray-600 mt-6">
+        <p className="text-center text-gray-800 mt-6">
           ¿Ya tienes una cuenta?{" "}
-          <a href="/login" className="text-green-600 font-medium hover:underline">
+          <a href="/login" className="text-green-800 font-medium hover:underline focus:outline-none focus:ring-2 focus:ring-green-300">
             Inicia sesión
           </a>
         </p>

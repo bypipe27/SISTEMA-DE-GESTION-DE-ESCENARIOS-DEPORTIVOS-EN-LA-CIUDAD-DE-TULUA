@@ -68,7 +68,29 @@ function LoginPage() {
         .lp-small { font-size:0.9rem; color:#374151; }
 
         /* Inputs */
-        .lp-input { width:100%; padding:12px 14px; border-radius:12px; border:1px solid rgba(15,23,42,0.06); background:#fff; color:#0f172a; }
+        /* Aumentamos padding-right para dejar espacio al botón "mostrar contraseña" */
+        .lp-input { width:100%; padding:12px 48px 12px 14px; border-radius:12px; border:1px solid rgba(15,23,42,0.06); background:#fff; color:#0f172a; }
+
+        /* Botón mostrar/ocultar contraseña: área táctil mínima 44x44px */
+        .lp-show-pass {
+          position: absolute;
+          right: 8px;
+          top: 50%;
+          transform: translateY(-50%);
+          width: 44px;
+          height: 44px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: 8px;
+          background: transparent;
+          border: none;
+          padding: 0;
+          cursor: pointer;
+          color: #6b7280;
+        }
+        .lp-show-pass:hover { color: #374151; }
+        .lp-show-pass:focus { outline: 3px solid rgba(5,63,52,0.12); outline-offset: 3px; }
 
         /* Enlaces con buen contraste */
         .lp-link { color:#053f34; text-decoration: none; }
@@ -119,15 +141,16 @@ function LoginPage() {
                 value={form.password}
                 onChange={onChange}
                 placeholder="••••••••"
-                className="lp-input pr-12"
+                className="lp-input"
                 required
                 aria-required="true"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                className="lp-show-pass"
                 aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                title={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
               >
                 {showPassword ? "🙈" : "👁️"}
               </button>
@@ -142,7 +165,8 @@ function LoginPage() {
                 name="remember"
                 checked={form.remember}
                 onChange={onChange}
-                className="h-4 w-4 rounded border-gray-300 text-green-600"
+                className="h-5 w-5 rounded border-gray-300 text-green-600"
+                aria-label="Recordarme"
               />
               Recordarme
             </label>

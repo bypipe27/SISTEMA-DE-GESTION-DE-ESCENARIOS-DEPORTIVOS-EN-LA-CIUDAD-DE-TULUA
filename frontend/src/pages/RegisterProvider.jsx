@@ -9,6 +9,7 @@ function RegisterProvider() {
     email: "",
     telefono: "",
     contrasena: "",
+    confirmContrasena: "",
   });
   const [error, setError] = useState("");
   const [mensaje, setMensaje] = useState("");
@@ -23,6 +24,10 @@ function RegisterProvider() {
   const validar = () => {
     if (!form.nombre || !form.email || !form.contrasena) {
       setError("Complete los campos obligatorios: nombre, email y contraseña.");
+      return false;
+    }
+    if (form.contrasena !== form.confirmContrasena) {
+      setError("Las contraseñas no coinciden.");
       return false;
     }
     return true;
@@ -66,9 +71,11 @@ function RegisterProvider() {
       {/* estilos locales visuales (no afectan la lógica) */}
       <style>{`
         .rp-card { width:100%; max-width:560px; border-radius:14px; background:#fff; border:1px solid rgba(2,6,23,0.04); box-shadow:0 10px 30px rgba(2,6,23,0.06); }
-        .rp-header { color:#065f46; }
-        .rp-input { width:100%; padding:10px 12px; border-radius:10px; border:1px solid rgba(15,23,42,0.06); background:#fff; }
-        .rp-note { color:#6b7280; font-size:0.95rem; }
+        /* Encabezado más oscuro para buen contraste */
+        .rp-header { color:#053f34; }
+        .rp-input { width:100%; padding:10px 12px; border-radius:10px; border:1px solid rgba(15,23,42,0.06); background:#fff; color:#0f172a; }
+        /* Nota más oscura */
+        .rp-note { color:#374151; font-size:0.95rem; }
         .rp-actions { display:flex; justify-end; gap:12px; }
         .rp-btn { border-radius:10px; padding:10px 14px; transition:transform .08s ease; }
         .rp-btn:active { transform:translateY(1px); }
@@ -82,31 +89,36 @@ function RegisterProvider() {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Nombre o negocio</label>
+            <label htmlFor="nombre" className="block text-sm font-medium text-gray-700 mb-1">Nombre o negocio</label>
             <input
+              id="nombre"
               name="nombre"
               value={form.nombre}
               onChange={handleChange}
               className="rp-input text-gray-800 focus:outline-none focus:ring-2 focus:ring-green-200"
               required
+              aria-required="true"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Correo</label>
+            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">Correo</label>
             <input
+              id="email"
               name="email"
               type="email"
               value={form.email}
               onChange={handleChange}
               className="rp-input text-gray-800 focus:outline-none focus:ring-2 focus:ring-green-200"
               required
+              aria-required="true"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Teléfono (opcional)</label>
+            <label htmlFor="telefono" className="block text-sm font-medium text-gray-700 mb-1">Teléfono (opcional)</label>
             <input
+              id="telefono"
               name="telefono"
               value={form.telefono}
               onChange={handleChange}
@@ -115,23 +127,39 @@ function RegisterProvider() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Contraseña</label>
+            <label htmlFor="contrasena" className="block text-sm font-medium text-gray-700 mb-1">Contraseña</label>
             <input
+              id="contrasena"
               name="contrasena"
               type="password"
               value={form.contrasena}
               onChange={handleChange}
               className="rp-input text-gray-800 focus:outline-none focus:ring-2 focus:ring-green-200"
               required
+              aria-required="true"
             />
           </div>
 
-          {error && <p className="text-sm text-red-600">{error}</p>}
-          {mensaje && <p className="text-sm text-green-600">{mensaje}</p>}
+          <div>
+            <label htmlFor="confirmContrasena" className="block text-sm font-medium text-gray-700 mb-1">Confirmar contraseña</label>
+            <input
+              id="confirmContrasena"
+              name="confirmContrasena"
+              type="password"
+              value={form.confirmContrasena}
+              onChange={handleChange}
+              className="rp-input text-gray-800 focus:outline-none focus:ring-2 focus:ring-green-200"
+              required
+              aria-required="true"
+            />
+          </div>
+
+          {error && <p className="text-sm text-red-600" role="alert" aria-live="assertive">{error}</p>}
+          {mensaje && <p className="text-sm text-green-600" role="status">{mensaje}</p>}
 
           <div className="flex justify-end gap-3">
             <button type="button" onClick={() => navigate(-1)} className="px-4 py-2 border rounded-md rp-btn">Cancelar</button>
-            <button type="submit" disabled={loading} className="px-6 py-2 bg-green-600 text-white rounded-md rp-btn">
+            <button type="submit" disabled={loading} className="px-6 py-2 bg-green-800 text-white rounded-md rp-btn focus:outline-none focus:ring-2 focus:ring-green-300">
               {loading ? "Enviando..." : "Registrar proveedor"}
             </button>
           </div>
