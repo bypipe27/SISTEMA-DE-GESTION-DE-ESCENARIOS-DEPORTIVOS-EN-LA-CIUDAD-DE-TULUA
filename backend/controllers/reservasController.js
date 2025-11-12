@@ -584,76 +584,90 @@ async function ProviderMarkNoShow(req, res) {
   }
 }
 // ...existing code...
+// backend/controllers/reservasController.js
+
 async function ProviderReportes(req, res) {
   try {
     const providerId = req.user?.id;
     if (!providerId) return res.status(401).json({ error: "No autorizado" });
 
-    // 1) Totales generales
+    // 3️⃣ Rango del mes (ahora dinámico)
+    const today = new Date();
+    // Recibe 'year' y 'month' (1-12) desde la query, o usa el mes actual
+    const year = parseInt(req.query.year) || today.getFullYear();
+    const month = req.query.month ? parseInt(req.query.month) - 1 : today.getMonth(); // JS month (0-11)
+
+    const startDate = new Date(year, month, 1);
+    const endDate = new Date(year, month + 1, 0);
+
+    const startStr = startDate.toISOString().slice(0, 10);
+    const endStr = endDate.toISOString().slice(0, 10);
+    const daysInMonth = endDate.getDate();
+
+    // 1️⃣ Totales generales (filtrados por el rango de fechas)
     const totalsQ = `
       SELECT 
         COALESCE(SUM(CASE WHEN r.estado = 'completada' THEN COALESCE(r.total,0)::numeric ELSE 0 END),0) AS total_ingresos,
         COUNT(*) AS total_reservas
       FROM reservas r
       JOIN canchas c ON c.id = r.cancha_id
-      WHERE c.propietario_id = $1
+      WHERE c.propietario_id = $1 AND r.fecha BETWEEN $2 AND $3
     `;
-    const totalsRes = await db.query(totalsQ, [providerId]);
+    const totalsRes = await db.query(totalsQ, [providerId, startStr, endStr]);
     const totals = totalsRes.rows[0] || { total_ingresos: 0, total_reservas: 0 };
 
-    // 2) Conteo por estado
+    // 2️⃣ Conteo por estado (filtrado por el rango de fechas)
     const byStateQ = `
       SELECT COALESCE(r.estado,'activa') AS estado, COUNT(*)::int AS cantidad
       FROM reservas r
       JOIN canchas c ON c.id = r.cancha_id
-      WHERE c.propietario_id = $1
+      WHERE c.propietario_id = $1 AND r.fecha BETWEEN $2 AND $3
       GROUP BY COALESCE(r.estado,'activa')
     `;
-    const byStateRes = await db.query(byStateQ, [providerId]);
+    const byStateRes = await db.query(byStateQ, [providerId, startStr, endStr]);
     const por_estado = {};
     byStateRes.rows.forEach(r => { por_estado[r.estado] = Number(r.cantidad); });
+    ['completada','cancelada','activa'].forEach(e => { if (!por_estado[e]) por_estado[e] = 0; });
 
-    // Asegurar claves comunes
-    const estados = ['completada','cancelada','activa'];
-    estados.forEach(e => { if (!por_estado[e]) por_estado[e] = 0; });
-
-    // 3) Series últimos 30 días (llenar días faltantes)
-    const days = 30;
+    // Consulta para la serie de datos diarios (ya usaba el rango)
     const seriesQ = `
-      SELECT fecha::date AS dia,
-             COUNT(*) FILTER (WHERE r.estado = 'completada') AS completadas,
-             COALESCE(SUM(CASE WHEN r.estado = 'completada' THEN r.total ELSE 0 END),0) AS ingresos
-      FROM reservas r
-      JOIN canchas c ON c.id = r.cancha_id
-      WHERE c.propietario_id = $1
-        AND fecha >= (CURRENT_DATE - ($2::int - 1) * INTERVAL '1 day')::date
-      GROUP BY dia
-      ORDER BY dia
+        SELECT 
+          DATE(r.fecha) AS dia,
+          COUNT(*) FILTER (WHERE r.estado = 'completada')::int AS completadas,
+          COALESCE(SUM(CASE WHEN r.estado = 'completada' THEN r.total ELSE 0 END), 0) AS ingresos
+        FROM reservas r
+        JOIN canchas c ON c.id = r.cancha_id
+        WHERE c.propietario_id = $1
+          AND DATE(r.fecha) BETWEEN $2::date AND $3::date
+        GROUP BY DATE(r.fecha)
+        ORDER BY DATE(r.fecha);
     `;
-    const seriesRes = await db.query(seriesQ, [providerId, days]);
-    // construir array de dias desde (hoy - days +1) hasta hoy
-    const labels = [];
-    const ingresosArr = [];
-    const completadasArr = [];
-    for (let i = days - 1; i >= 0; i--) {
-      const d = new Date();
-      d.setDate(d.getDate() - i);
-      const yyyy = d.getFullYear();
-      const mm = String(d.getMonth() + 1).padStart(2, "0");
-      const dd = String(d.getDate()).padStart(2, "0");
-      const dayStr = `${yyyy}-${mm}-${dd}`;
-      labels.push(dayStr);
-      const found = seriesRes.rows.find(r => String(r.dia) === dayStr);
-      ingresosArr.push(found ? Number(found.ingresos) : 0);
-      completadasArr.push(found ? Number(found.completadas) : 0);
+    const seriesRes = await db.query(seriesQ, [providerId, startStr, endStr]);
+
+    // Mapeo resultados a un diccionario {fecha: {ingresos, completadas}}
+    const dataMap = {};
+    seriesRes.rows.forEach(r => {
+      const key = new Date(r.dia).toISOString().slice(0, 10);
+      dataMap[key] = { ingresos: Number(r.ingresos), completadas: Number(r.completadas) };
+    });
+
+    const series = [];
+    // El bucle ahora usa el año, mes y días del mes seleccionados
+    for (let d = 1; d <= daysInMonth; d++) {
+      const fecha = `${year}-${String(month + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+      const ingresos = dataMap[fecha]?.ingresos || 0;
+      const completadas = dataMap[fecha]?.completadas || 0;
+
+      series.push({ fecha, ingresos, completadas });
     }
 
     return res.json({
       total_ingresos: Number(totals.total_ingresos) || 0,
       total_reservas: Number(totals.total_reservas) || 0,
       por_estado,
-      series: { labels, ingresos: ingresosArr, completadas: completadasArr }
+      series
     });
+
   } catch (err) {
     console.error("ProviderReportes error:", err);
     return res.status(500).json({ error: "Error obteniendo reportes del provider" });
