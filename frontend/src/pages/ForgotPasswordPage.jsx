@@ -1,42 +1,12 @@
-import React, { useState } from "react";
+import React from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import NavBar from "../components/NavBar";
 import Button from "../components/Button";
+import { useForgotPassword } from "../hooks/usePasswordRecovery";
 
 function ForgotPasswordPage() {
-  const [email, setEmail] = useState("");
-  const [mensaje, setMensaje] = useState("");
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setError("");
-    setMensaje("");
-
-    try {
-  const res = await fetch(`${import.meta.env.VITE_API_BASE || "http://localhost:5000"}/api/password/forgot-password`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
-      });
-
-      const data = await res.json();
-
-      if (res.ok) {
-        setMensaje(data.mensaje);
-        setEmail("");
-      } else {
-        setError(data.error || "Ocurrió un error.");
-      }
-    } catch (err) {
-      setError("No se pudo conectar con el servidor.");
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { email, setEmail, mensaje, error, loading, handleSubmit } = useForgotPassword();
 
   return (
     <div className="min-h-screen bg-gray-50 text-gray-800 flex items-center justify-center p-6">

@@ -13,8 +13,8 @@ async function listarCanchas() {
 async function crearCancha(data) {
   const q = `
     INSERT INTO canchas
-      (propietario_id, nombre, tipo, capacidad, precio, descripcion, disponible, map_iframe, cerrados_dias, cerrados_fechas, horarios, direccion)
-    VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
+      (propietario_id, nombre, tipo, capacidad, precio, descripcion, disponible, map_iframe, cerrados_dias, cerrados_fechas, horarios, direccion, imagen_url)
+    VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)
     RETURNING *;
   `;
   const vals = [
@@ -30,6 +30,7 @@ async function crearCancha(data) {
     data.cerrados_fechas || null,
     data.horarios ? JSON.stringify(data.horarios) : null,
     data.direccion || null,
+    data.imagen_url || null,
   ];
   const r = await pool.query(q, vals);
   return r.rows[0];
@@ -49,7 +50,7 @@ async function obtenerCanchaPorIdProvider(id) {
  * Construcción dinámica segura (mapear sólo campos permitidos)
  */
 async function actualizarCancha(id, fields = {}) {
-  const allowed = ["nombre","tipo","capacidad","precio","descripcion","disponible","map_iframe","cerrados_dias","cerrados_fechas","horarios","direccion","propietario_id"];
+  const allowed = ["nombre","tipo","capacidad","precio","descripcion","disponible","map_iframe","cerrados_dias","cerrados_fechas","horarios","direccion","propietario_id","imagen_url"];
   const sets = [];
   const vals = [];
   let idx = 1;

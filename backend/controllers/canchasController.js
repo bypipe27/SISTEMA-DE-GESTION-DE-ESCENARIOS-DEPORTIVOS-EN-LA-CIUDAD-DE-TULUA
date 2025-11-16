@@ -47,7 +47,6 @@ async function obtenerCanchaPorId(req, res) {
 
     return res.json(cancha);
   } catch (err) {
-    console.error("obtenerCanchaPorId error:", err);
     return res.status(500).json({ error: "Error obteniendo cancha" });
   }
 }
@@ -71,10 +70,8 @@ async function obtenerCanchas(req, res) {
       };
     });
 
-    console.log("✅ Canchas consultadas (controller):", filas.length);
     res.json(filas);
   } catch (error) {
-    console.error("❌ Error al obtener canchas (controller):", error);
     res.status(500).json({ error: "Error al obtener las canchas" });
   }
 }
@@ -82,7 +79,6 @@ async function obtenerCanchas(req, res) {
 
 async function ProviderListCanchas(req, res) {
   try {
-    console.log("ProviderListCanchas -> headers:", req.headers.authorization);
     const userId = req.user?.id;
     if (!userId) return res.status(401).json({ error: "No autorizado" });
 
@@ -94,10 +90,8 @@ async function ProviderListCanchas(req, res) {
       cerrados_dias: r.cerrados_dias || [],
       cerrados_fechas: r.cerrados_fechas || [],
     }));
-    console.log(`ProviderListCanchas -> provider ${userId} filas:`, out.length);
     return res.json(out);
   } catch (err) {
-    console.error("ProviderListCanchas error:", err);
     return res.status(500).json({ error: "Error listando canchas" });
   }
 }
@@ -112,13 +106,13 @@ async function ProviderCreateCancha(req, res) {
 
     // forzar propietario desde el token
     payload.propietario_id = userId;
+    
     // insertar usando crearCancha (modelo) o consulta directa
     const created = await crearCancha(payload);
     created.horarios = created.horarios ? (typeof created.horarios === "string" ? JSON.parse(created.horarios) : created.horarios) : {};
     return res.status(201).json({ cancha: created });
   } catch (err) {
-    console.error("ProviderCreateCancha:", err);
-    return res.status(500).json({ error: "Error creando cancha" });
+    return res.status(500).json({ error: "Error creando cancha: " + err.message });
   }
 }
 
@@ -141,7 +135,6 @@ async function ProviderUpdateCancha(req, res) {
     updated.horarios = updated.horarios ? (typeof updated.horarios === "string" ? JSON.parse(updated.horarios) : updated.horarios) : {};
     return res.json({ cancha: updated });
   } catch (err) {
-    console.error("ProviderUpdateCancha:", err);
     return res.status(500).json({ error: "Error actualizando cancha" });
   }
 }
@@ -168,7 +161,6 @@ async function ProviderDeleteCancha(req, res) {
     if (!ok) return res.status(404).json({ error: "No se pudo eliminar" });
     return res.json({ mensaje: "Cancha eliminada" });
   } catch (err) {
-    console.error("ProviderDeleteCancha:", err);
     return res.status(500).json({ error: "Error eliminando cancha" });
   }
 }

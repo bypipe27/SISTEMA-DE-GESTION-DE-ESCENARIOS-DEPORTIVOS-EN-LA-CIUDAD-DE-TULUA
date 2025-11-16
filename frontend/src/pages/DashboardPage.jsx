@@ -1,7 +1,9 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import { FaSyncAlt } from "react-icons/fa";
-import NavBarUser from "../components/NavBarUser";
+import SideNavBar from "../components/SideNavBar";
 import { useNavigate } from "react-router-dom";
+import { useCanchas } from "../hooks/useCanchas";
+import * as canchaService from "../services/canchaService";
 
 function DashboardPage({
   usuarioProp,
@@ -26,83 +28,29 @@ function DashboardPage({
   const [q, setQ] = useState("");
   const [tipoFiltro, setTipoFiltro] = useState("");
   const [soloDisponibles, setSoloDisponibles] = useState(false);
-  const [canchas, setCanchas] = useState([]);
-  const [fecha, setFecha] = useState(""); // yyyy-mm-dd seleccionada
+  const [fecha, setFecha] = useState(() => {
+    // Establecer la fecha de hoy por defecto
+    const hoy = new Date();
+    const yyyy = hoy.getFullYear();
+    const mm = String(hoy.getMonth() + 1).padStart(2, "0");
+    const dd = String(hoy.getDate()).padStart(2, "0");
+    return `${yyyy}-${mm}-${dd}`;
+  }); // yyyy-mm-dd seleccionada
 
-useEffect(() => {
-  fetch(`${import.meta.env.VITE_API_BASE || "http://localhost:5000"}/api/canchas`)
-    .then(res => res.json())
-    .then(data => {
-      console.log("✅ Canchas recibidas:", data);
-      setCanchas(data);
-    })
-    .catch(err => console.error("❌ Error al cargar canchas:", err));
-}, []);
+  // Hook de canchas con filtros
+  const { canchas: resultados, tipos, loading, refetch } = useCanchas({
+    searchTerm: q,
+    tipo: tipoFiltro,
+    soloDisponibles,
+    fecha,
+  });
 
-  const tipos = useMemo(() => {
-    return Array.from(new Set(canchas.map((c) => c.tipo)));
-  }, [canchas]);
-
-  // const estaDisponibleEnFecha = (c, fechaIso) => {
-  //   if (!fechaIso) return Boolean(c.disponible);
-
-  //   try {
-  //     const fechaObj = new Date(fechaIso + "T00:00:00");
-  //     const dow = fechaObj.getDay(); // 0 = domingo, 1 = lunes, ..., 6 = sábado
-
-  //     // Verifica si el día está cerrado
-  //     if ((c.cerrados_dias || []).includes(dow)) return false;
-
-  //     // Verifica si la fecha exacta está cerrada
-  //     if ((c.cerrados_fechas || []).includes(fechaIso)) return false;
-
-  //     return Boolean(c.disponible);
-  //   } catch (err) {
-  //     console.error("Error evaluando disponibilidad:", err);
-  //     return Boolean(c.disponible);
-  //   }
-  // };
+  // Helper para verificar disponibilidad (delegado al servicio)
   const estaDisponibleEnFecha = (c, fechaIso) => {
-    if (!fechaIso) return Boolean(c.disponible);
-
-    try {
-      // Divide la fecha yyyy-mm-dd y crea el objeto Date en local
-      const [year, month, day] = fechaIso.split("-");
-      const fechaObj = new Date(Number(year), Number(month) - 1, Number(day));
-      const dow = fechaObj.getDay(); // 0 = domingo, 1 = lunes, ..., 6 = sábado
-
-      // Verifica si el día está cerrado
-      if ((c.cerrados_dias || []).includes(dow)) return false;
-
-      // Verifica si la fecha exacta está cerrada
-      if ((c.cerrados_fechas || []).includes(fechaIso)) return false;
-
-      return Boolean(c.disponible);
-    } catch (err) {
-      console.error("Error evaluando disponibilidad:", err);
-      return Boolean(c.disponible);
-    }
+    return canchaService.isCanchaAvailable(c, fechaIso);
   };
 
-  // NUEVA: lista filtrada de resultados usada en el render
-  const resultados = useMemo(() => {
-    return canchas.filter((c) => {
-      if (soloDisponibles && !estaDisponibleEnFecha(c, fecha)) return false;
-      if (tipoFiltro && c.tipo !== tipoFiltro) return false;
-      if (!q) return true;
-      const term = q.toLowerCase();
-      return (
-        (c.nombre || "").toLowerCase().includes(term) ||
-        (c.tipo || "").toLowerCase().includes(term)
-      );
-    });
-  }, [canchas, q, tipoFiltro, soloDisponibles, fecha]);
-
   const handleReservar = (cancha) => {
-    if (!fecha) {
-      alert("Seleccione una fecha antes de reservar.");
-      return;
-    }
     // navega a /reservar/:id y pasa la cancha + fecha en state
     navigate(`/reservar/${cancha.id}`, { state: { cancha, fecha } });
   };
@@ -120,200 +68,236 @@ useEffect(() => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-800">
-      {/* estilos locales mínimos para look minimalista y armónico */}
-      <style>{`
-      .db-card { background: linear-gradient(180deg, #ffffff, #fbfbfb); border: 1px solid rgba(15,23,42,0.04); border-radius: 12px; box-shadow: 0 8px 30px rgba(2,6,23,0.04); }
-      .db-aside { position: sticky; top: 28px; }
-      .db-btn { transition: all .12s ease; }
-      .db-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(2,6,23,0.04); }
-      .db-list-item { transition: transform .08s ease, box-shadow .12s ease; }
-      .db-list-item:hover { transform: translateY(-3px); box-shadow: 0 10px 30px rgba(2,6,23,0.06); }
-    `}</style>
-
-      {/* NAVBAR: componente reutilizable para usuarios */}
-      <NavBarUser usuarioProp={usuario} onLogout={handleLogout} />
-
+    <div className="min-h-screen bg-slate-50 text-slate-800 flex">
+      {/* SIDEBAR */}
+      <SideNavBar usuarioProp={usuario} onLogout={handleLogout} />
 
       {/* CONTENT */}
-      <div className="max-w-6xl mx-auto px-4 pt-28 pb-12 grid grid-cols-1 md:grid-cols-12 gap-6">
-        {/* SIDEBAR FILTROS */}
-        <aside className="md:col-span-3">
-          <div className="db-aside">
-            <div className="db-card p-4 db-aside">
-              <h3 className="font-semibold mb-3 text-gray-900">Filtros</h3>
-
-              <label htmlFor="q" className="block text-sm mb-1">Buscar</label>
-              <input
-                id="q"
-                value={q}
-                onChange={(e) => setQ(e.target.value)}
-                placeholder="Nombre o tipo..."
-                className="w-full border rounded px-3 py-2 mb-3 text-sm bg-white"
-              />
-
-              <label htmlFor="tipoFiltro" className="block text-sm mb-1">Tipo</label>
-              <select
-                id="tipoFiltro"
-                value={tipoFiltro}
-                onChange={(e) => setTipoFiltro(e.target.value)}
-                className="w-full border rounded px-3 py-2 mb-3 text-sm bg-white"
-              >
-                <option value="">Todos</option>
-                {tipos.map((t) => (
-                  <option key={t} value={t}>
-                    {t}
-                  </option>
-                ))}
-              </select>
-
-              <label htmlFor="fecha" className="block text-sm mb-1">Fecha</label>
-              <input
-                type="date"
-                value={fecha}
-                id="fecha"
-                onChange={(e) => setFecha(e.target.value)}
-                min={(() => {
-                  const hoy = new Date();
-                  const yyyy = hoy.getFullYear();
-                  const mm = String(hoy.getMonth() + 1).padStart(2, "0");
-                  const dd = String(hoy.getDate()).padStart(2, "0");
-                  return `${yyyy}-${mm}-${dd}`;
-                })()} // ✅ Fecha mínima local
-                className="w-full border rounded px-3 py-2 mb-3 text-sm bg-white"
-              />
-
-              <div className="flex items-center gap-2 mb-3">
-                <input
-                  id="disp"
-                  type="checkbox"
-                  checked={soloDisponibles}
-                  onChange={() => setSoloDisponibles((v) => !v)}
-                />
-                <label htmlFor="disp" className="text-sm">
-                  Solo disponibles
-                </label>
-              </div>
-
-              <button
-                onClick={() => {
-                  setQ("");
-                  setTipoFiltro("");
-                  setSoloDisponibles(false);
-                  setFecha("");
-                }}
-                className="w-full bg-gray-100 text-gray-800 py-2 rounded text-sm db-btn"
-              >
-                Limpiar filtros
-              </button>
-
-              <button
-                onClick={() => {
-                  fetch(`${import.meta.env.VITE_API_BASE || 'http://localhost:5000'}/api/canchas`)
-                    .then(res => res.json())
-                    .then(data => setCanchas(data))
-                    .catch(err => console.error('❌ Error refrescando canchas:', err));
-                }}
-                className="w-full mt-2 flex items-center justify-center gap-2 bg-white border text-gray-700 py-2 rounded text-sm db-btn"
-              >
-                <FaSyncAlt /> Refrescar canchas
-              </button>
-            </div>
-          </div>
-        </aside>
-
-  {/* MAIN (usamos div porque el landmark principal se provee en App.jsx) */}
-  <div className="md:col-span-9">
-          <div className="db-card p-6 min-h-[60vh]">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-2xl font-semibold text-gray-900">Canchas</h2>
-              <div className="text-sm text-gray-500">
-                {resultados.length} resultado
-                {resultados.length !== 1 ? "s" : ""}
-              </div>
+      <div className="flex-1 ml-64">
+        <div className="w-full mx-auto px-8 sm:px-10 lg:px-12 py-12">
+          <div className="flex gap-12">
+          {/* MAIN SECTION - Canchas */}
+          <section className="flex-1">
+            <div className="flex items-center justify-between mb-8">
+              <h2 className="text-3xl font-extrabold text-slate-900">Canchas Disponibles</h2>
+              <span className="text-sm font-medium text-slate-500">
+                {resultados.length} resultado{resultados.length !== 1 ? "s" : ""}
+              </span>
             </div>
 
-            <div className="grid grid-cols-1 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               {resultados.map((c) => {
                 const disponibleHoy = estaDisponibleEnFecha(c, fecha);
                 return (
                   <div
                     key={c.id}
-                    className="border rounded-lg p-4 flex flex-col justify-between w-full bg-white db-list-item"
+                    className="bg-white rounded-xl shadow-sm overflow-hidden flex flex-col group transform hover:-translate-y-1 transition-transform duration-300"
                   >
-                    <div>
-                      <h3 className="font-semibold text-lg text-gray-900">
-                        {c.nombre}
-                      </h3>
-                      <p className="text-sm text-gray-600">
-                        {c.tipo} • Capacidad: {c.capacidad}
-                      </p>
-                      <p className="mt-2 text-gray-700">
-                        Precio:{" "}
-                        <span className="font-medium">
-                          COP {c.precio.toLocaleString()}
-                        </span>
-                      </p>
-                      <p className="text-sm mt-2 text-gray-600">
+                    {/* Imagen con overlay */}
+                    <div className="relative">
+                      {c.imagen_url ? (
+                        <img
+                          alt={`Cancha ${c.nombre}`}
+                          className="w-full h-48 object-cover"
+                          src={c.imagen_url}
+                        />
+                      ) : (
+                        <div className="w-full h-48 bg-gradient-to-br from-green-400 to-green-600"></div>
+                      )}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+                      
+                      {/* Badge de disponibilidad */}
+                      <div
+                        className={`absolute top-3 right-3 text-xs font-bold px-2 py-1 rounded-full ${
+                          disponibleHoy
+                            ? "bg-green-100 text-green-800"
+                            : "bg-red-100 text-red-800"
+                        }`}
+                      >
+                        {disponibleHoy ? "Disponible" : "No Disponible"}
+                      </div>
+
+                      {/* Info sobre la imagen */}
+                      <div className="absolute bottom-4 left-4">
+                        <h3 className="text-xl font-bold text-white">{c.nombre}</h3>
+                        <p className="text-sm text-white/90">
+                          {c.tipo} • Capacidad: {c.capacidad}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Contenido de la tarjeta */}
+                    <div className="p-5 flex-grow flex flex-col">
+                      <p className="text-sm text-slate-600 flex-grow mb-4">
                         {c.descripcion}
                       </p>
 
-                      {fecha && (
-                        <p className="mt-1 text-sm">
-                          Estado para{" "}
-                          <span className="font-medium">{fecha}</span>:{" "}
-                          <span
-                            className={
-                              disponibleHoy ? "text-green-800" : "text-red-600"
-                            }
-                          >
-                            {disponibleHoy ? "Disponible" : "Ocupada"}
-                          </span>
+                      <div className="flex items-center justify-between mb-4">
+                        <p className="text-lg font-bold text-slate-800">
+                          COP {c.precio.toLocaleString()}
                         </p>
-                      )}
-                    </div>
+                      </div>
 
-                    <div className="mt-4 flex justify-between items-center">
-                      <span
-                        className={`text-sm ${
-                          disponibleHoy ? "text-green-800" : "text-red-600"
-                        }`}
-                      >
-                        {disponibleHoy ? "Disponible" : "No disponible"}
-                      </span>
-                      <div className="flex gap-2">
+                      {/* Botones de acción */}
+                      <div className="mt-auto grid grid-cols-2 gap-3">
+                        <button
+                          onClick={() => handleVerDetalles(c)}
+                          className="w-full py-2.5 px-4 border border-slate-300 text-slate-700 font-semibold rounded-lg hover:bg-slate-100 transition-colors text-sm"
+                        >
+                          Ver detalles
+                        </button>
                         <button
                           disabled={!disponibleHoy}
                           onClick={() => handleReservar(c)}
-                          className={`px-3 py-1 rounded-lg db-btn ${
+                          className={`w-full py-2.5 px-4 font-semibold rounded-lg transition-colors text-sm ${
                             disponibleHoy
-                              ? "bg-green-800 text-white"
-                              : "bg-gray-200 text-gray-400 cursor-not-allowed"
+                              ? "bg-green-600 text-white hover:bg-green-700"
+                              : "bg-slate-300 text-slate-500 cursor-not-allowed"
                           }`}
                         >
                           Reservar
-                        </button>
-
-                        <button
-                          onClick={() => handleVerDetalles(c)}
-                          className="px-3 py-1 rounded-lg bg-gray-100 text-gray-800 hover:bg-gray-200"
-                        >
-                          Ver detalles
                         </button>
                       </div>
                     </div>
                   </div>
                 );
               })}
+              
               {resultados.length === 0 && (
-                <div className="text-center text-gray-500 py-8">
+                <div className="col-span-full text-center text-slate-500 py-8">
                   No se encontraron canchas que coincidan con los filtros.
                 </div>
               )}
             </div>
-          </div>
-  </div>
+          </section>
+
+          {/* SIDEBAR FILTROS */}
+          <aside className="w-64 flex-shrink-0">
+            <div className="bg-white p-5 rounded-xl shadow-sm sticky top-6">
+              <h2 className="text-2xl font-bold mb-8 text-slate-900">Filtros</h2>
+              
+              <form className="space-y-6" onSubmit={(e) => e.preventDefault()}>
+                {/* Buscar */}
+                <div>
+                  <label
+                    className="block text-sm font-semibold text-slate-700 mb-2"
+                    htmlFor="search"
+                  >
+                    Buscar
+                  </label>
+                  <div className="relative">
+                    <input
+                      className="w-full pl-10 pr-4 py-2.5 border border-slate-300 bg-slate-50 rounded-lg focus:ring-green-600 focus:border-green-600 transition-colors text-sm"
+                      id="search"
+                      value={q}
+                      onChange={(e) => setQ(e.target.value)}
+                      placeholder="Nombre o tipo..."
+                      type="text"
+                    />
+                  </div>
+                </div>
+
+                {/* Tipo */}
+                <div>
+                  <label
+                    className="block text-sm font-semibold text-slate-700 mb-2"
+                    htmlFor="type"
+                  >
+                    Tipo
+                  </label>
+                  <select
+                    className="w-full py-2.5 px-3 border border-slate-300 bg-slate-50 rounded-lg focus:ring-green-600 focus:border-green-600 transition-colors text-sm"
+                    id="type"
+                    value={tipoFiltro}
+                    onChange={(e) => setTipoFiltro(e.target.value)}
+                  >
+                    <option value="">Todos</option>
+                    {tipos.map((t) => (
+                      <option key={t} value={t}>
+                        {t}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Fecha */}
+                <div>
+                  <label
+                    className="block text-sm font-semibold text-slate-700 mb-2"
+                    htmlFor="date"
+                  >
+                    Fecha
+                  </label>
+                  <div className="relative">
+                    <input
+                      className="w-full px-3 py-2.5 border border-slate-300 bg-slate-50 rounded-lg focus:ring-green-600 focus:border-green-600 transition-colors text-sm"
+                      id="date"
+                      type="date"
+                      value={fecha}
+                      onChange={(e) => setFecha(e.target.value)}
+                      min={(() => {
+                        const hoy = new Date();
+                        const yyyy = hoy.getFullYear();
+                        const mm = String(hoy.getMonth() + 1).padStart(2, "0");
+                        const dd = String(hoy.getDate()).padStart(2, "0");
+                        return `${yyyy}-${mm}-${dd}`;
+                      })()}
+                    />
+                  </div>
+                </div>
+
+                {/* Solo disponibles */}
+                <div className="flex items-center justify-between pt-2">
+                  <label
+                    className="text-sm font-semibold text-slate-700"
+                    htmlFor="available"
+                  >
+                    Solo disponibles
+                  </label>
+                  <label
+                    className="relative inline-flex items-center cursor-pointer"
+                    htmlFor="available"
+                  >
+                    <input
+                      className="sr-only peer"
+                      id="available"
+                      type="checkbox"
+                      checked={soloDisponibles}
+                      onChange={() => setSoloDisponibles((v) => !v)}
+                    />
+                    <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-green-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
+                  </label>
+                </div>
+
+                {/* Botones */}
+                <div className="pt-6 space-y-4">
+                  <button
+                    className="w-full flex items-center justify-center py-2.5 px-4 border border-slate-300 text-slate-700 font-semibold rounded-lg hover:bg-slate-100 transition-colors"
+                    type="button"
+                    onClick={() => {
+                      setQ("");
+                      setTipoFiltro("");
+                      setSoloDisponibles(false);
+                      setFecha("");
+                    }}
+                  >
+                    Limpiar filtros
+                  </button>
+                  <button
+                    className="w-full flex items-center justify-center py-2.5 px-4 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition-colors"
+                    type="button"
+                    onClick={refetch}
+                  >
+                    <FaSyncAlt className="mr-2" />
+                    Refrescar canchas
+                  </button>
+                </div>
+              </form>
+            </div>
+          </aside>
+        </div>
       </div>
+    </div>
     </div>
   );
 }

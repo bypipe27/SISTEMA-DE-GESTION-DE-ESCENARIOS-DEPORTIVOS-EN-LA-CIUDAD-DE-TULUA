@@ -1,104 +1,24 @@
-// ...existing code...
-import React, { useEffect, useState } from "react";
-import NavBarProvider from "../components/NavBarProvider";
+import React from "react";
+import SideNavProvider from "../components/SideNavProvider";
+import { useProviderReservasManager } from "../hooks/useProviderReservasManager";
+import Reserva from "../models/Reserva";
 
- function ProviderReservas() {
-  const [reservas, setReservas] = useState([]);
-  const [filters, setFilters] = useState({ from: "", to: "", usuario: "" });
-  const [loading, setLoading] = useState(false);
-  const [openMenu, setOpenMenu] = useState(null); // id de reserva cuyo menu está abierto
+function ProviderReservas() {
+  const {
+    reservas,
+    filters,
+    setFilters,
+    loading,
+    openMenu,
+    setOpenMenu,
+    getCancelInfo,
+    getCompleteInfo,
+    cancelarReserva,
+    completarReserva,
+    marcarNoShow
+  } = useProviderReservasManager();
 
-  const API = import.meta.env.VITE_API_BASE || import.meta.env.VITE_BACKEND_URL || import.meta.env.VITE_API_URL || "http://localhost:5000";
-
-  function formatDate(iso) {
-    try {
-      const d = new Date(iso);
-      if (isNaN(d)) return String(iso);
-      return d.toLocaleDateString("es-CO");
-    } catch (e) { return String(iso); }
-  }
-  function parseDateTime(reserva, timeField) {
-  // fecha viene como DATE en Postgres (YYYY-MM-DD) o como Date
-  let dateStr = "";
-  if (typeof reserva.fecha === "string") {
-    dateStr = reserva.fecha.slice(0, 10);
-  } else if (reserva.fecha && typeof reserva.fecha.toISOString === 'function') {
-    dateStr = reserva.fecha.toISOString().slice(0, 10);
-  } else if (reserva.fecha) {
-    try { dateStr = new Date(reserva.fecha).toISOString().slice(0,10); } catch { dateStr = String(reserva.fecha).slice(0,10); }
-  }
-
-  // buscar varios candidatos posibles para la hora
-  const timeCandidates = [
-    reserva[timeField],
-    reserva.hora_inicio,
-    reserva.hora_fin,
-    reserva.inicio,
-    reserva.fin,
-    reserva.start,
-    reserva.end,
-    reserva.start_time,
-    reserva.time,
-  ];
-  const rawTime = String(timeCandidates.find(t => t !== undefined && t !== null && String(t).trim() !== "") || "");
-  // aceptar formatos como '20:00:00' o '20:00'
-  const m = rawTime.match(/(\d{2}:\d{2})/);
-  const time = m ? m[1] : rawTime.slice(0,5);
-
-  if (!dateStr || !time || time.length < 4) return null;
-  // crear Date en zona local: YYYY-MM-DDTHH:MM:00
-  return new Date(`${dateStr}T${time}:00`);
-  }
-
-  function canProviderCancel(reserva) {
-    const inicio = parseDateTime(reserva, 'inicio');
-    if (!inicio) return false;
-    // bloquear si quedan 3 horas o menos: permitir sólo si queda > 3 horas
-    const msLeft = inicio - new Date();
-    const threeHoursMs = 3 * 60 * 60 * 1000;
-    return msLeft > threeHoursMs && (!reserva.estado || reserva.estado !== 'cancelada');
-  }
-
-  function canProviderCompleteOrNoShow(reserva) {
-    const fin = parseDateTime(reserva, 'fin') || parseDateTime(reserva, 'end');
-    if (!fin) return false;
-    return new Date() >= fin && reserva.estado !== 'cancelada' && reserva.estado !== 'completada';
-  }
-
-  function getCancelInfo(reserva) {
-    const inicio = parseDateTime(reserva, 'inicio');
-    if (!inicio) return { allowed: false, reason: 'Fecha u hora inválida' };
-    const now = new Date();
-    const diffMs = inicio - now;
-    const diffMins = Math.max(0, Math.floor(diffMs / (1000 * 60)));
-    if (reserva.estado === 'cancelada') return { allowed: false, reason: 'La reserva ya está cancelada' };
-    if (diffMs <= 0) return { allowed: false, reason: 'La reserva ya finalizó o está en curso' };
-
-    const hours = Math.floor(diffMins / 60);
-    const mins = diffMins % 60;
-    const threeHoursMs = 3 * 60 * 60 * 1000;
-
-    if (diffMs > threeHoursMs) {
-      return { allowed: true, reason: `Cancelación permitida — queda ${hours}h ${mins}m hasta el inicio` };
-    }
-
-    // Si queda 3 horas o menos, bloquear y explicar claramente
-    return { allowed: false, reason: `Cancelación deshabilitada: queda menos de 3 horas para el inicio (falta ${hours}h ${mins}m)` };
-  }
-
-  function getCompleteInfo(reserva) {
-    const fin = parseDateTime(reserva, 'fin') || parseDateTime(reserva, 'end');
-    if (!fin) return { allowed: false, reason: 'Fecha u hora inválida' };
-    if (reserva.estado === 'cancelada') return { allowed: false, reason: 'Reserva cancelada' };
-    if (reserva.estado === 'completada') return { allowed: false, reason: 'Ya marcada como completada' };
-    if (new Date() >= fin) return { allowed: true, reason: 'La reserva ya finalizó' };
-    const diffMs = fin - new Date();
-    const diffMins = Math.ceil(diffMs / (1000 * 60));
-    const hours = Math.floor(diffMins / 60);
-    const mins = diffMins % 60;
-    return { allowed: false, reason: `Sólo después del fin (falta ${hours}h ${mins}m)` };
-  }
-
+  // Funciones auxiliares de formato
   function formatTime(t) {
     if (!t) return "";
     if (typeof t === 'string') {
@@ -113,118 +33,109 @@ import NavBarProvider from "../components/NavBarProvider";
     return String(t);
   }
 
-  async function fetchReservas() {
-    setLoading(true);
-    try {
-      const token = localStorage.getItem("token");
-      const headers = token ? { Authorization: `Bearer ${token}` } : {};
-
-      const res = await fetch(`${API}/api/reservas/provider`, { headers });
-      const ct = res.headers.get("content-type") || "";
-
-      if (!res.ok) {
-        const txt = await res.text();
-        console.error("API error:", res.status, txt);
-        setReservas([]);
-        return;
-      }
-
-      if (!ct.includes("application/json")) {
-        const txt = await res.text();
-        console.error("Respuesta no JSON:", txt);
-        setReservas([]);
-        return;
-      }
-
-      const data = await res.json();
-      const arr = Array.isArray(data) ? data : [];
-      arr.sort((a,b) => new Date(a.fecha) - new Date(b.fecha));
-      setReservas(arr);
-    } catch (err) {
-      console.error(err);
-      setReservas([]);
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  useEffect(() => { fetchReservas(); }, []);
-
-  async function cancelarReserva(id) {
-    if (!confirm("Confirmar cancelación de la reserva?")) return;
-    try {
-      const token = localStorage.getItem("token");
-      const res = await fetch(`${API}/api/reservas/provider/cancelar/${id}`, { method: "PUT", headers: { Authorization: token ? `Bearer ${token}` : "", "Content-Type": "application/json" } });
-      const txt = await res.text();
-      if (!res.ok) {
-        console.error('Error cancelando reserva:', res.status, txt);
-        alert('No se pudo cancelar la reserva. ' + (txt || ''));
-        return;
-      }
-      // En lugar de eliminarla del listado, sólo actualizar su estado a 'cancelada'
-      setReservas(prev => prev.map(r => r.id === id ? { ...r, estado: 'cancelada' } : r));
-      setOpenMenu(null);
-    } catch (err) {
-      console.error(err);
-      alert("No se pudo cancelar la reserva.");
-    }
-  }
-    async function completarReserva(id) {
-    if (!confirm("Marcar reserva como completada?")) return;
-    try {
-      const token = localStorage.getItem("token");
-      const res = await fetch(`${API}/api/reservas/provider/completar/${id}`, { method: "PUT", headers: { Authorization: token ? `Bearer ${token}` : "", "Content-Type": "application/json" } });
-      const data = await res.json();
-      if (!res.ok) {
-        alert(data.error || "No se pudo marcar completada");
-        return;
-      }
-      setReservas(prev => prev.map(r => r.id === id ? { ...r, estado: 'completada' } : r));
-    } catch (err) {
-      console.error(err);
-      alert("Error marcando completada.");
-    }
-  }
-
-  async function marcarNoShow(id) {
-    if (!confirm("Marcar reserva como cancelada por no-show?")) return;
-    try {
-      const token = localStorage.getItem("token");
-      const res = await fetch(`${API}/api/reservas/provider/no-show/${id}`, { method: "PUT", headers: { Authorization: token ? `Bearer ${token}` : "", "Content-Type": "application/json" } });
-      const data = await res.json();
-      if (!res.ok) {
-        alert(data.error || "No se pudo marcar no-show");
-        return;
-      }
-      setReservas(prev => prev.map(r => r.id === id ? { ...r, estado: 'cancelada' } : r));
-    } catch (err) {
-      console.error(err);
-      alert("Error marcando no-show.");
-    }
-  }
-
   return (
-    <div>
-      {/* NavBarProvider: aparece en la parte superior (fixed) */}
-      <NavBarProvider />
+    <div className="relative flex min-h-screen w-full bg-gray-100 font-sans">
+      <SideNavProvider />
 
-      {/* Contenido con padding-top para no quedar oculto por la navbar fija */}
-      <div className="p-6 max-w-6xl mx-auto pt-28">
+      {/* Main content */}
+      <main className="flex-1 flex-col min-w-0">
+        <div className="p-8 max-w-7xl mx-auto">
         {/* estilos locales mínimos para aspecto limpio (sin tocar tipografía global) */}
         <style>{`
-          .pr-card { background: #fff; border-radius: 12px; border: 1px solid rgba(2,6,23,0.04); box-shadow: 0 10px 28px rgba(2,6,23,0.04); overflow: hidden; }
+          .pr-card { background: #fff; border-radius: 12px; border: 1px solid rgba(2,6,23,0.04); box-shadow: 0 10px 28px rgba(2,6,23,0.04); overflow: visible; position: relative; }
           .pr-table th { text-align:left; padding: 14px; color:#374151; font-weight:600; background:#fafafa; }
           .pr-table td { padding: 14px; vertical-align: middle; color:#374151; }
           .pr-row + .pr-row { border-top: 1px solid rgba(2,6,23,0.04); }
           .pr-badge { display:inline-block; padding:6px 10px; border-radius:999px; font-weight:600; font-size:0.85rem; }
           .pr-actions-btn { padding:8px 12px; border-radius:8px; background:#f3f4f6; border:1px solid rgba(2,6,23,0.04); cursor:pointer; }
-          .pr-dropdown { min-width:220px; border-radius:10px; overflow:hidden; box-shadow:0 8px 24px rgba(2,6,23,0.08); }
+          .pr-dropdown { min-width:220px; border-radius:10px; overflow:hidden; box-shadow:0 8px 24px rgba(2,6,23,0.08); z-index: 50; }
           .pr-note { font-size:0.875rem; color:#6b7280; }
         `}</style>
 
-        <h1 className="text-2xl font-bold mb-4">Reservas</h1>
+          {/* Header */}
+          <div className="flex flex-wrap justify-between items-center gap-4 mb-6">
+            <div className="flex flex-col gap-1">
+              <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Gestión de Reservas</h1>
+              <p className="text-gray-500">Consulta, filtra y gestiona tus reservas</p>
+            </div>
+          </div>
 
-        {loading ? <p className="pr-note">Cargando...</p> :
+          {/* Filtros inspirados en el diseño propuesto (sin botón de nueva reserva) */}
+          <div className="flex flex-wrap gap-3 items-end mb-6">
+            <div className="relative">
+              {/* Reemplazo del icono para evitar texto 'search' superpuesto */}
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400"
+                aria-hidden="true"
+              >
+                <circle cx="11" cy="11" r="7"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+              </svg>
+              <input
+                type="text"
+                value={filters.usuario}
+                onChange={(e) => setFilters(prev => ({ ...prev, usuario: e.target.value }))}
+                placeholder="Buscar por usuario o cancha..."
+                className="pl-10 pr-4 py-2 w-72 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-slate-700"
+              />
+            </div>
+            <div>
+              <label className="block text-sm text-gray-600 mb-1">Desde</label>
+              <input
+                type="date"
+                value={filters.from}
+                max={filters.to || undefined}
+                onChange={(e)=>{
+                  const from = e.target.value;
+                  setFilters(prev => {
+                    let to = prev.to;
+                    if (to && from && to < from) {
+                      to = from; // forzar que 'hasta' nunca sea menor que 'desde'
+                    }
+                    return { ...prev, from, to };
+                  });
+                }}
+                className="bg-white border border-slate-300 rounded-lg py-2 px-3 focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                aria-label="Filtrar desde fecha"
+              />
+            </div>
+            <div>
+              <label className="block text-sm text-gray-600 mb-1">Hasta</label>
+              <input
+                type="date"
+                value={filters.to}
+                min={filters.from || undefined}
+                onChange={(e)=>{
+                  const to = e.target.value;
+                  setFilters(prev => {
+                    let newTo = to;
+                    if (prev.from && newTo && newTo < prev.from) {
+                      newTo = prev.from; // corregir entradas manuales inválidas
+                    }
+                    return { ...prev, to: newTo };
+                  });
+                }}
+                className="bg-white border border-slate-300 rounded-lg py-2 px-3 focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                aria-label="Filtrar hasta fecha"
+              />
+            </div>
+            <div>
+              <label className="block text-sm text-gray-600 mb-1">Estado</label>
+              <select value={filters.estado} onChange={(e)=>setFilters(prev=>({...prev, estado: e.target.value }))} className="bg-white border border-slate-300 rounded-lg py-2 px-3 focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
+                <option value="">Todos</option>
+                <option value="completada">Completada</option>
+                <option value="cancelada">Cancelada</option>
+                <option value="programada">Pendiente/Programada</option>
+              </select>
+            </div>
+          </div>
+
+          {loading ? <p className="pr-note">Cargando...</p> :
           <div className="pr-card">
             <table className="w-full table-auto pr-table">
               <thead>
@@ -248,7 +159,7 @@ import NavBarProvider from "../components/NavBarProvider";
                       <div className="font-medium">{r.cliente_nombre || r.usuario_email || '-'}</div>
                       {r.cliente_telefono && <div className="pr-note">{r.cliente_telefono}</div>}
                     </td>
-                    <td className="py-2 pr-note">{formatDate(r.fecha)}</td>
+                    <td className="py-2 pr-note">{Reserva.formatearFecha(r.fecha)}</td>
                     <td className="py-2 pr-note">{formatTime(r.inicio)} — {formatTime(r.fin)}</td>
                     <td className="py-2">
                       <span
@@ -284,11 +195,7 @@ import NavBarProvider from "../components/NavBarProvider";
                               <div className="px-3 py-2 border-b">
                                 <button
                                   disabled={!info.allowed}
-                                  onClick={async () => {
-                                    if (!info.allowed) return;
-                                    await cancelarReserva(r.id);
-                                    setOpenMenu(null);
-                                  }}
+                                  onClick={() => info.allowed && cancelarReserva(r.id)}
                                   className={`w-full text-left ${info.allowed ? 'text-red-600' : 'text-gray-400 cursor-not-allowed'}`}
                                 >Cancelar reserva</button>
                                 {!info.allowed && <div className="text-xs text-gray-500 mt-1">{info.reason}</div>}
@@ -303,11 +210,7 @@ import NavBarProvider from "../components/NavBarProvider";
                               <div className="px-3 py-2 border-b">
                                 <button
                                   disabled={!info.allowed}
-                                  onClick={async () => {
-                                    if (!info.allowed) return;
-                                    await completarReserva(r.id);
-                                    setOpenMenu(null);
-                                  }}
+                                  onClick={() => info.allowed && completarReserva(r.id)}
                                   className={`w-full text-left ${info.allowed ? 'text-green-600' : 'text-gray-400 cursor-not-allowed'}`}
                                 >Marcar como completada</button>
                                 {!info.allowed && <div className="text-xs text-gray-500 mt-1">{info.reason}</div>}
@@ -322,11 +225,7 @@ import NavBarProvider from "../components/NavBarProvider";
                               <div className="px-3 py-2">
                                 <button
                                   disabled={!info.allowed}
-                                  onClick={async () => {
-                                    if (!info.allowed) return;
-                                    await marcarNoShow(r.id);
-                                    setOpenMenu(null);
-                                  }}
+                                  onClick={() => info.allowed && marcarNoShow(r.id)}
                                   className={`w-full text-left ${info.allowed ? 'text-yellow-600' : 'text-gray-400 cursor-not-allowed'}`}
                                 >Marcar no se presenta Cliente (no-show)</button>
                                 {!info.allowed && <div className="text-xs text-gray-500 mt-1">{info.reason}</div>}
@@ -342,7 +241,8 @@ import NavBarProvider from "../components/NavBarProvider";
             </table>
           </div>
         }
-      </div>
+        </div>
+      </main>
     </div>
   );
 }

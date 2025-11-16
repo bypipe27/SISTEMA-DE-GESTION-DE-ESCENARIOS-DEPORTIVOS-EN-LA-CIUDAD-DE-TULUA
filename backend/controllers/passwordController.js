@@ -73,7 +73,6 @@ async function solicitarResetPassword(req, res) {
     `;
 
     if (process.env.DISABLE_EMAILS === "true") {
-      console.log("Envío de emails deshabilitado (DISABLE_EMAILS=true)");
     } else {
       (async () => {
         try {
@@ -82,9 +81,7 @@ async function solicitarResetPassword(req, res) {
             subject: "Restablecer tu contraseña",
             html: emailHtml,
           });
-          console.log("✅ Email de reset enviado a", email);
         } catch (emailErr) {
-          console.error("No se pudo enviar reset email (no bloqueante):", emailErr);
         }
       })();
     }
@@ -93,7 +90,6 @@ async function solicitarResetPassword(req, res) {
       mensaje: "Si el email existe, recibirás un enlace para resetear tu contraseña.",
     });
   } catch (error) {
-    console.error("❌ Error en solicitarResetPassword:", error);
     return res.status(500).json({ error: "Error en el servidor." });
   }
 }
@@ -138,7 +134,6 @@ async function verificarTokenReset(req, res) {
 
     return res.json({ valido: true });
   } catch (error) {
-    console.error("❌ Error en verificarTokenReset:", error);
     return res.status(500).json({ error: "Error en el servidor." });
   }
 }
@@ -192,7 +187,6 @@ async function resetearPassword(req, res) {
       mensaje: "Contraseña actualizada exitosamente. Ya puedes iniciar sesión.",
     });
   } catch (error) {
-    console.error("❌ Error en resetearPassword:", error);
     if (solicitudValida) {
       await incrementarIntentos(solicitudValida.token_hash);
     }

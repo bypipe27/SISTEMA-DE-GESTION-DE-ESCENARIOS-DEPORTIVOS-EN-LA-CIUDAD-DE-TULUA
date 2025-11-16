@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import NavBar from "../components/NavBar";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../hooks/useAuth";
 
 function RegisterProvider() {
   const navigate = useNavigate();
@@ -11,58 +12,25 @@ function RegisterProvider() {
     contrasena: "",
     confirmContrasena: "",
   });
-  const [error, setError] = useState("");
   const [mensaje, setMensaje] = useState("");
-  const [loading, setLoading] = useState(false);
+  const { loading, error, handleRegisterProvider, clearError } = useAuth();
 
   const handleChange = (e) => {
     setForm((s) => ({ ...s, [e.target.name]: e.target.value }));
-    setError("");
+    clearError();
     setMensaje("");
-  };
-
-  const validar = () => {
-    if (!form.nombre || !form.email || !form.contrasena) {
-      setError("Complete los campos obligatorios: nombre, email y contraseña.");
-      return false;
-    }
-    if (form.contrasena !== form.confirmContrasena) {
-      setError("Las contraseñas no coinciden.");
-      return false;
-    }
-    return true;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!validar()) return;
-    setLoading(true);
-    try {
-  const res = await fetch(`${import.meta.env.VITE_API_BASE || "http://localhost:5000"}/api/usuarios/register-provider`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          nombre: form.nombre,
-          email: form.email,
-          telefono: form.telefono || null,
-          contrasena: form.contrasena
-        }),
-      });
 
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        setError(data.error || `Error ${res.status} al registrar proveedor.`);
-        setLoading(false);
-        return;
-      }
+    const result = await handleRegisterProvider(form);
 
-      setMensaje(data.mensaje || "Se envió código al correo para verificar la cuenta.");
-      setTimeout(() => navigate(`/verify?email=${encodeURIComponent(form.email)}&type=user`), 700);
-    } catch (err) {
-      console.error(err);
-      setError("No se pudo conectar con el servidor.");
-    } finally {
-      setLoading(false);
+    if (result.success) {
+      setMensaje(result.message);
+      setTimeout(() => {
+        navigate(`/verify?email=${encodeURIComponent(result.email)}&type=user`);
+      }, 700);
     }
   };
 

@@ -44,7 +44,6 @@ async function autenticarUsuarioPorCredenciales(email, contrasena) {
     // Soportar nombres de columna distintos; la BD tiene el hash en 'contrasena'
     const hash = user.contrasena || user.contrasena_hash || user.password || user.hash;
     if (!hash) {
-      console.error("No se encontró hash de contraseña para el usuario:", { id: user.id, email: user.email });
       throw new Error("Hash de contraseña no encontrado en la base de datos");
     }
 
@@ -57,7 +56,6 @@ async function autenticarUsuarioPorCredenciales(email, contrasena) {
 
     return { usuario: user, token };
   } catch (err) {
-    console.error("Error en autenticarUsuarioPorCredenciales:", err);
     throw err;
   }
 }
@@ -71,7 +69,6 @@ async function iniciarSesion(req, res) {
     const { usuario, token } = await autenticarUsuarioPorCredenciales(email, contrasena);
     return res.json({ usuario, token });
   } catch (error) {
-    console.error("❌ Error login:", error);
     const status = error.message === "Usuario no encontrado" || error.message === "Contraseña incorrecta" ? 401 : 500;
     return res.status(status).json({ error: error.message || "Error en el servidor." });
   }
@@ -116,7 +113,6 @@ async function registrarUsuario(req, res) {
 
     // Enviar correo de forma asíncrona (no bloquear la respuesta)
     if (process.env.DISABLE_EMAILS === "true") {
-      console.log("Envío de emails deshabilitado (DISABLE_EMAILS=true)");
       return;
     }
 
@@ -132,14 +128,11 @@ async function registrarUsuario(req, res) {
             <p>Caduca en <b>${CODIGO_MINUTOS_EXPIRA} minutos</b>.</p>
           `,
         });
-        console.log("Código de verificación enviado a", email);
       } catch (mailErr) {
-        console.error("No se pudo enviar código por email (no bloqueante):", mailErr);
       }
     })();
     return;
   } catch (error) {
-    console.error("❌ Error al registrar:", error);
     return res.status(500).json({ error: "Error en el servidor." });
   }
 }
@@ -181,7 +174,6 @@ async function verificarCodigo(req, res) {
 
     // Enviar correo de confirmación de registro de forma asíncrona (no bloquear si falla)
     if (process.env.DISABLE_EMAILS === "true") {
-      console.log("Envío de emails deshabilitado (DISABLE_EMAILS=true)");
     } else {
       (async () => {
         try {
@@ -196,9 +188,7 @@ async function verificarCodigo(req, res) {
               <p>Si no reconoces esta acción, por favor contacta con el soporte.</p>
             `,
           });
-          console.log("Email de confirmación enviado a", user.email);
         } catch (mailErr) {
-          console.error("❌ Error enviando correo de confirmación (no bloqueante):", mailErr);
         }
       })();
     }
@@ -209,7 +199,6 @@ async function verificarCodigo(req, res) {
       token,
     });
   } catch (err) {
-    console.error("❌ Error verificarCodigo:", err);
     return res.status(500).json({ error: "Error en el servidor." });
   }
 }
@@ -232,7 +221,6 @@ async function reenviarCodigo(req, res) {
     res.json({ mensaje: "Nuevo código enviado." });
 
     if (process.env.DISABLE_EMAILS === "true") {
-      console.log("Envío de emails deshabilitado (DISABLE_EMAILS=true)");
       return;
     }
 
@@ -247,14 +235,11 @@ async function reenviarCodigo(req, res) {
             <p>Caduca en <b>${CODIGO_MINUTOS_EXPIRA} minutos</b>.</p>
           `,
         });
-        console.log("Nuevo código enviado a", email);
       } catch (mailErr) {
-        console.error("No se pudo enviar nuevo código por email (no bloqueante):", mailErr);
       }
     })();
     return;
   } catch (error) {
-    console.error("❌ Error al reenviar código:", error);
     return res.status(500).json({ error: "Error en el servidor." });
   }
 }
@@ -265,7 +250,6 @@ async function registrarUsuarioProvider(req, res) {
     req.body.role = "provider";
     return await registrarUsuario(req, res);
   } catch (err) {
-    console.error("❌ Error registrarUsuarioProvider:", err);
     return res.status(500).json({ error: "Error en el servidor." });
   }
 }

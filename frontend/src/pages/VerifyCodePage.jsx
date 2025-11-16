@@ -1,127 +1,50 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import NavBar from "../components/NavBar";
 import Button from "../components/Button";
+import { useVerification } from "../hooks/useVerification";
 
 function useQuery() {
   const { search } = useLocation();
   return useMemo(() => new URLSearchParams(search), [search]);
 }
 
-const RESEND_SECONDS = 40;
-
 function VerifyCodePage() {
   const q = useQuery();
   const navigate = useNavigate();
   const email = q.get("email") || "";
-  const [codigo, setCodigo] = useState("");
-  const [msg, setMsg] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [seconds, setSeconds] = useState(RESEND_SECONDS);
+  const tipo = q.get("type") || "user";
+
+  const {
+    codigo,
+    setCodigo,
+    msg,
+    loading,
+    seconds,
+    onVerify,
+    onResend
+  } = useVerification(email, tipo, 40);
 
   useEffect(() => {
     if (!email) {
-      // si no viene email en query, regresar al home
       navigate("/", { replace: true });
     }
   }, [email, navigate]);
 
-  useEffect(() => {
-    const t = setInterval(() => setSeconds((s) => (s > 0 ? s - 1 : 0)), 1000);
-    return () => clearInterval(t);
-  }, []);
-
-  const onVerify = async (e) => {
+  const handleVerify = async (e) => {
     e.preventDefault();
-    if (!codigo) {
-      setMsg("Ingrese el código recibido.");
-      return;
-    }
-
-    setLoading(true);
-    setMsg("");
-
-    const tipo = q.get("type") || "user"; // 'cancha' o 'user'
-    try {
-      let endpoint = "";
-      let body = {};
-
-      if (tipo === "cancha") {
-  endpoint = `${import.meta.env.VITE_API_BASE || "http://localhost:5000"}/api/canchas/verify`;
-        body = { correo: email, codigo };
-      } else {
-  endpoint = `${import.meta.env.VITE_API_BASE || "http://localhost:5000"}/api/usuarios/verify`;
-        body = { email, codigo };
-      }
-
-      const res = await fetch(endpoint, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
-
-      const data = await res.json().catch(() => ({}));
-
-      if (!res.ok) {
-        setMsg(data.error || `Error ${res.status} verificando código.`);
-        setLoading(false);
-        return;
-      }
-
-      // éxito: si era verificación de CANCHA, dirigir a login; si user, también a login
-      setMsg(data.mensaje || "Verificación correcta.");
+    const result = await onVerify(e);
+    
+    if (result.success) {
       setTimeout(() => {
         navigate("/login");
       }, 800);
-    } catch (err) {
-      console.error(err);
-      setMsg("No se pudo conectar con el servidor.");
-    } finally {
-      setLoading(false);
     }
   };
 
-  const onResend = async () => {
-    // reenvío: intenta llamar al endpoint de reenvío según type.
-    const tipo = q.get("type") || "user";
-    setMsg("");
-    setLoading(true);
-
-    try {
-      let endpoint = "";
-      let body = {};
-
-      if (tipo === "cancha") {
-        // si implementaste un endpoint de reenvío para canchas, usa /api/canchas/resend-code
-  endpoint = `${import.meta.env.VITE_API_BASE || "http://localhost:5000"}/api/canchas/resend-code`;
-        body = { correo: email };
-      } else {
-  endpoint = `${import.meta.env.VITE_API_BASE || "http://localhost:5000"}/api/usuarios/resend-code`;
-        body = { email };
-      }
-
-      const res = await fetch(endpoint, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
-
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        setMsg(data.error || `Error ${res.status} al reenviar código.`);
-        setLoading(false);
-        return;
-      }
-
-      setMsg(data.mensaje || "Se reenvió el código al correo.");
-      setSeconds(RESEND_SECONDS);
-    } catch (err) {
-      console.error(err);
-      setMsg("No se pudo conectar con el servidor.");
-    } finally {
-      setLoading(false);
-    }
+  const handleResend = async () => {
+    await onResend();
   };
 
   return (
@@ -149,7 +72,7 @@ function VerifyCodePage() {
             Ingresa el código enviado a <span className="font-medium text-gray-900">{email}</span>
           </p>
 
-          <form onSubmit={onVerify} className="space-y-4">
+          <form onSubmit={handleVerify} className="space-y-4">
             <label htmlFor="codigo" className="sr-only">Código de verificación</label>
             <input
               id="codigo"
@@ -179,7 +102,7 @@ function VerifyCodePage() {
             {seconds > 0 ? (
               <span className="vc-note">¿No te llegó? Reenviar en {seconds}s</span>
             ) : (
-              <button onClick={onResend} className="text-green-600 font-medium">Reenviar código</button>
+              <button onClick={handleResend} className="text-green-600 font-medium">Reenviar código</button>
             )}
           </div>
         </motion.div>

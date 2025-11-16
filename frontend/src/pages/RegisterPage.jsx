@@ -1,7 +1,10 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import NavBar from "../components/NavBar";
+import { useAuth } from "../hooks/useAuth";
 
 function RegisterPage() {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     nombre: "",
     email: "",
@@ -10,56 +13,26 @@ function RegisterPage() {
     confirmarContrasena: "",
   });
 
-  const [error, setError] = useState("");
   const [mensaje, setMensaje] = useState("");
+  const { loading, error, handleRegister, clearError } = useAuth();
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
-    if (error) setError("");
+    clearError();
     if (mensaje) setMensaje("");
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // ✅ Validación de contraseñas
-    if (formData.contrasena !== formData.confirmarContrasena) {
-      setError("Las contraseñas no coinciden.");
-      return;
-    }
+    const result = await handleRegister(formData);
 
-    // 🔹 Datos a enviar (sin el campo confirmarContrasena)
-    const { confirmarContrasena, ...usuario } = formData;
-
-    try {
-  const res = await fetch(`${import.meta.env.VITE_API_BASE || "http://localhost:5000"}/api/usuarios/register`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(usuario),
-      });
-
-      const data = await res.json();
-
-      if (res.ok) {
-        setMensaje(data.mensaje || "Registro exitoso. Revisa tu correo para confirmar tu cuenta.");
-
-        // 🔹 CAMBIO: redirigir a la página de verificación con el email
-        window.location.href = `/verify?email=${encodeURIComponent(formData.email)}`;
-
-        // (el reseteo ya no es necesario porque redirigimos, pero lo dejo tal cual pediste)
-        setFormData({
-          nombre: "",
-          email: "",
-          telefono: "",
-          contrasena: "",
-          confirmarContrasena: "",
-        });
-      } else {
-        setError(data.error || "Ocurrió un error durante el registro.");
-      }
-    } catch (err) {
-      console.error("❌ Error:", err);
-      setError("No se pudo conectar con el servidor.");
+    if (result.success) {
+      setMensaje(result.message);
+      // Redirigir a verificación
+      setTimeout(() => {
+        navigate(`/verify?email=${encodeURIComponent(result.email)}`);
+      }, 500);
     }
   };
 
@@ -209,9 +182,10 @@ function RegisterPage() {
           {/* Botón */}
           <button
             type="submit"
-            className="w-full bg-green-800 text-white font-semibold rp-btn hover:bg-green-900 focus:outline-none focus:ring-2 focus:ring-green-300"
+            disabled={loading}
+            className="w-full bg-green-800 text-white font-semibold rp-btn hover:bg-green-900 focus:outline-none focus:ring-2 focus:ring-green-300 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Registrarse
+            {loading ? "Registrando..." : "Registrarse"}
           </button>
         </form>
 

@@ -1,180 +1,44 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
+import { useMisReservas } from "../hooks/useMisReservas";
+import Reserva from "../models/Reserva";
 import { 
   FaFutbol, 
   FaCalendarAlt, 
   FaClock, 
-  FaMapMarkerAlt, 
+  FaUser, 
   FaMoneyBillWave,
   FaSearch,
   FaFilter,
   FaTimes,
-  FaExclamationTriangle
+  FaExclamationTriangle,
+  FaEye,
+  FaReceipt,
+  FaRedo
 } from "react-icons/fa";
-import NavBarUser from "../components/NavBarUser";
+import SideNavBar from "../components/SideNavBar";
 import Button from "../components/Button";
 
 function MisReservasPage() {
   const navigate = useNavigate();
-  const [reservas, setReservas] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [filterStatus, setFilterStatus] = useState("todas");
-  const [usuario, setUsuario] = useState(null);
+  const {
+    reservas,
+    loading,
+    searchTerm,
+    setSearchTerm,
+    filterStatus,
+    setFilterStatus,
+    usuario,
+    cargarReservas,
+    getEstadoReserva,
+    canCancelReserva,
+    handleCancelarReserva,
+    estadisticas
+  } = useMisReservas();
 
-  const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:5000";
+  // Funciones auxiliares de UI
 
-  // Obtener usuario del localStorage
-  useEffect(() => {
-      const usuarioStorage = localStorage.getItem("usuario");
-    if (usuarioStorage) {
-      try {
-        setUsuario(JSON.parse(usuarioStorage));
-      } catch (error) {
-        console.error("Error parsing usuario:", error);
-      }
-    }
-  }, []);
-
-  useEffect(() => {
-    // Solo cargar automáticamente si hay usuario en localStorage
-   if (usuario) {
-      cargarReservas();
-   } else {
-     // si no hay usuario, quitar loading inicial hasta que el usuario busque
-      setLoading(false);
-    }
-  }, [usuario]);
-
-  const cargarReservas = async () => {
-    try {
-      setLoading(true);
-
-      // Si hay usuario logueado pedimos por usuario_id (ruta: /api/reservas/usuario/:id)
-      if (usuario && usuario.id) {
-        const res = await fetch(`${API_BASE}/api/reservas/usuario/${usuario.id}`);
-        if (res.ok) {
-          const data = await res.json();
-          // El backend puede devolver un array o { reservas: [...] }
-          if (Array.isArray(data)) setReservas(data);
-          else setReservas(data.reservas || []);
-        } else {
-          console.error("Error cargando reservas por usuario:", res.status, res.statusText);
-          setReservas([]);
-        }
-        return;
-      }
-
-      // Si no hay usuario, usar búsqueda manual por nombre/email (fallback)
-      if (!searchTerm) {
-        setReservas([]);
-        return;
-      }
-
-      const res = await fetch(
-        `${API_BASE}/api/reservas/mis-reservas?email=${encodeURIComponent(searchTerm)}`
-      );
-      if (res.ok) {
-        const data = await res.json();
-        if (Array.isArray(data)) setReservas(data);
-        else setReservas(data.reservas || []);
-      } else {
-        console.error("Error cargando reservas por búsqueda:", res.status, res.statusText);
-        setReservas([]);
-      }
-    } catch (error) {
-      console.error("Error cargando reservas:", error);
-      setReservas([]);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Helpers para normalizar y formatear fechas (evita Invalid Date)
-  function toISODate(fechaInput) {
-    if (!fechaInput && fechaInput !== 0) return "";
-    if (typeof fechaInput === "string") {
-      // Si ya viene como YYYY-MM-DD o YYYY-MM-DDTHH:mm:ss
-      const m = fechaInput.match(/^(\d{4}-\d{2}-\d{2})/);
-      if (m) return m[1];
-      // intentar parsear como fecha y extraer YYYY-MM-DD
-      const d = new Date(fechaInput);
-      if (!isNaN(d.getTime())) return d.toISOString().slice(0, 10);
-      return fechaInput;
-    }
-    if (fechaInput instanceof Date) return fechaInput.toISOString().slice(0, 10);
-    try {
-      return new Date(fechaInput).toISOString().slice(0, 10);
-    } catch {
-      return String(fechaInput).slice(0, 10);
-    }
-  }
-
-  // Formatear fecha (recibe string o Date)
-  const formatearFecha = (fechaInput) => {
-    const fechaStr = toISODate(fechaInput);
-    if (!fechaStr) return "";
-    try {
-      const fecha = new Date(fechaStr + "T00:00:00");
-      const formateada = fecha.toLocaleDateString("es-ES", {
-        weekday: "long",
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-      });
-      return formateada.charAt(0).toUpperCase() + formateada.slice(1);
-    } catch (error) {
-      return fechaStr;
-    }
-  };
-
-  // Determinar estado de la reserva
-  const getEstadoReserva = (reserva) => {
-    // Priorizar estado explícito si viene en la API
-    const estadoBD = (reserva.estado || "").toString().toLowerCase();
-    if (estadoBD === "cancelada" || estadoBD === "cancelado")
-      return { texto: "Cancelada", color: "red", tipo: "cancelada" };
-    if (estadoBD === "completada" || estadoBD === "completado")
-      return { texto: "Completada", color: "gray", tipo: "completada" };
-
-    // intentar inferir por fecha y hora
-    const ahora = new Date();
-    const fechaISO = toISODate(reserva.fecha);
-    // buscar hora de fin en campos conocidos
-    const finTime = (reserva.fin || reserva.hora_fin || reserva.end || "").toString().slice(0, 5);
-
-    if (!fechaISO || !finTime) {
-      return { texto: "Programada", color: "blue", tipo: "programada" };
-    }
-    const fechaReserva = new Date(`${fechaISO}T${finTime}`);
-    if (isNaN(fechaReserva.getTime())) return { texto: "Programada", color: "blue", tipo: "programada" };
-
-    if (fechaReserva < ahora) return { texto: "Completada", color: "gray", tipo: "completada" };
-    const horas = (fechaReserva - ahora) / (1000 * 60 * 60);
-    if (horas < 24) return { texto: "Próxima", color: "green", tipo: "proxima" };
-    return { texto: "Programada", color: "blue", tipo: "programada" };
-  };
-
-  // Filtrar reservas
-  const reservasFiltradas = reservas.filter(reserva => {
-    const estado = getEstadoReserva(reserva);
-    
-    // Filtro por estado
-    if (filterStatus !== "todas" && estado.tipo !== filterStatus) {
-      return false;
-    }
-    
-    // Filtro por búsqueda
-    if (searchTerm && !usuario) {
-      return reserva.cliente_nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-             reserva.cancha_nombre.toLowerCase().includes(searchTerm.toLowerCase());
-    }
-    
-    return true;
-  });
-
-  // Mapa visual de colores (solo para estilo)
   const colorMap = {
     green: "#10B981",
     blue: "#3B82F6",
@@ -200,320 +64,255 @@ function MisReservasPage() {
     navigate("/login");
   };
 
-  // Determina si la reserva puede ser cancelada por el usuario
-  function canCancelReserva(reserva) {
-    const estado = (reserva.estado || "").toString().toLowerCase();
-    if (estado.includes("cancel") || estado.includes("complet")) return false;
-
-    const fechaISO = toISODate(reserva.fecha);
-    const inicio = (reserva.inicio || reserva.hora_inicio || reserva.start || "").toString().slice(0,5);
-    if (!fechaISO || !inicio) return false;
-    const fechaHoraReserva = new Date(`${fechaISO}T${inicio}`);
-    if (isNaN(fechaHoraReserva.getTime())) return false;
-    const ahora = new Date();
-    const msLeft = fechaHoraReserva - ahora;
-    const threeHoursMs = 3 * 60 * 60 * 1000;
-    return msLeft > threeHoursMs;
-  }
-
-  // Llama al endpoint de cancelar reserva (backend) y refresca lista
-  async function handleCancelarReserva(reserva) {
-    if (!reserva || !reserva.id) return alert('Reserva inválida');
-    if (!confirm(`¿Seguro que deseas cancelar la reserva para ${reserva.cancha_nombre} el ${formatearFecha(reserva.fecha)}?`)) return;
-    try {
-      setLoading(true);
-      const resp = await fetch(`${API_BASE}/api/reservas/cancelar/${reserva.id}`, { method: 'PUT' });
-      if (resp.ok) {
-        alert('Reserva cancelada correctamente. Se enviará notificación al proveedor.');
-        // recargar reservas para reflejar cambios
-        await cargarReservas();
-      } else {
-        const text = await resp.text();
-        let data = null;
-        try { data = JSON.parse(text); } catch {}
-        const msg = (data && (data.error || data.message)) || text || 'Error al cancelar la reserva';
-        alert(msg);
-      }
-    } catch (err) {
-      console.error('Error cancelando reserva:', err);
-      alert('Error conectando con el servidor al intentar cancelar.');
-    } finally {
-      setLoading(false);
-    }
-  }
+  // Función para formatear hora sin ceros extras (17:00:00 -> 17:00)
+  const formatearHora = (hora) => {
+    if (!hora) return "";
+    // Si tiene formato HH:MM:SS, quitar los segundos
+    return hora.split(":").slice(0, 2).join(":");
+  };
 
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-800">
-      {/* estilos locales mínimos para aspecto minimalista (no cambia lógica) */}
-      <style>{`
-        .mr-card { border-radius: 14px; background: #fff; border: 1px solid rgba(2,6,23,0.04); box-shadow: 0 10px 30px rgba(2,6,23,0.04); }
-        .mr-input { border: 1px solid rgba(2,6,23,0.06); border-radius: 12px; padding: 12px; }
-        .mr-badge { padding: 6px 10px; border-radius: 999px; font-weight:600; font-size:0.85rem; }
-        .mr-card-accent { border-left-width: 4px; border-left-style: solid; }
-      `}</style>
-
-  <NavBarUser usuarioProp={usuario} onLogout={handleLogout} />
+    <div className="min-h-screen bg-slate-50 flex">
+      {/* SIDEBAR */}
+      <SideNavBar usuarioProp={usuario} onLogout={handleLogout} />
       
-      <div className="container mx-auto px-4 py-8 pt-24">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="max-w-6xl mx-auto"
-        >
-          {/* Header */}
-          <div className="text-center mb-8">
-            <h1 className="text-4xl font-bold text-gray-800 mb-4">
-              Mis Reservas
-            </h1>
-            <p className="text-gray-600 text-lg max-w-2xl mx-auto">
-              {usuario 
-                ? `Hola ${usuario.nombre}, aquí puedes gestionar todas tus reservas`
-                : "Consulta el estado de tus reservas ingresando tu nombre"
-              }
-            </p>
-          </div>
-
-          {/* Controles de búsqueda y filtro */}
-          <div className="mr-card rounded-2xl p-6 mb-8">
-            <div className="grid md:grid-cols-3 gap-4">
-              {/* Búsqueda: contenedor inline-flex para evitar solapamientos */}
-              <div className="flex items-center w-full mr-input rounded-lg">
-                <FaSearch className="text-gray-400 ml-3 flex-shrink-0" aria-hidden="true" />
-                <input
-                  type="text"
-                  aria-label={usuario ? "Buscar en mis reservas" : "Ingresar nombre para buscar reservas"}
-                  placeholder={usuario ? "Buscar en mis reservas..." : "Ingresa tu nombre..."}
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="flex-1 ml-3 pr-4 py-2 bg-transparent focus:outline-none focus:ring-2 focus:ring-green-200 placeholder-gray-400 text-gray-700"
-                />
-              </div>
-
-              {/* Filtro por estado: contenedor inline-flex para evitar solapamientos */}
-              <div className="flex items-center w-full mr-input rounded-lg">
-                <FaFilter className="text-gray-400 ml-3 flex-shrink-0" aria-hidden="true" />
-                <select
-                  value={filterStatus}
-                  onChange={(e) => setFilterStatus(e.target.value)}
-                  aria-label="Filtrar por estado"
-                  className="flex-1 ml-3 pr-4 py-2 bg-transparent focus:outline-none focus:ring-2 focus:ring-green-200 appearance-none text-gray-700"
-                >
-                  <option value="todas">Todas las reservas</option>
-                  <option value="proxima">Próximas</option>
-                  <option value="programada">Programadas</option>
-                  <option value="completada">Completadas</option>
-                  <option value="cancelada">Canceladas</option>
-                </select>
-              </div>
-
-              {/* Botón de búsqueda */}
-              <Button 
-                color="green" 
-                onClick={cargarReservas}
-                className="w-full h-full"
-              >
-                <FaSearch className="inline mr-2" />
-                Buscar Reservas
-              </Button>
-            </div>
-          </div>
-
-          {/* Contenido */}
-          {loading ? (
-            <div className="text-center py-12">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto"></div>
-              <p className="text-gray-600 mt-4">Cargando tus reservas...</p>
-            </div>
-          ) : reservasFiltradas.length === 0 ? (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="text-center py-12 mr-card"
-            >
-              <FaExclamationTriangle className="text-6xl text-gray-400 mx-auto mb-4" />
-              <h3 className="text-xl font-semibold text-gray-700 mb-2">
-                No se encontraron reservas
-              </h3>
-              <p className="text-gray-500 mb-6">
-                {searchTerm || usuario 
-                  ? "No hay reservas que coincidan con tu búsqueda"
-                  : "Ingresa tu nombre para buscar tus reservas"
+      {/* MAIN CONTENT */}
+      <div className="flex-1 ml-64">
+        <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+          <div className="max-w-7xl mx-auto">
+            {/* Header */}
+            <div className="mb-8">
+              <h2 className="text-3xl sm:text-4xl font-bold text-slate-900">Mis Reservas</h2>
+              <p className="mt-2 text-slate-600">
+                {usuario 
+                  ? `Hola ${usuario.nombre}, aquí puedes gestionar todas tus reservas activas y pasadas`
+                  : "Aquí puedes gestionar todas tus reservas activas y pasadas"
                 }
               </p>
-              <Button 
-                color="green" 
-                onClick={() => navigate("/dashboard")}
-              >
-                Ir a Reservar Canchas
-              </Button>
-            </motion.div>
-          ) : (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="grid gap-6"
-            >
-              {reservasFiltradas.map((reserva, index) => {
-                const estado = getEstadoReserva(reserva);
-                const precioNum = Number(reserva.total ?? reserva.precio ?? reserva.total_final ?? 0) || 0;
-                const borderColor = colorMap[estado.color] || colorMap.green;
-                const badgeBg = hexToRgba(colorMap[estado.color] || colorMap.green, 0.12);
-                const badgeColor = colorMap[estado.color] || colorMap.green;
-                
-                return (
-                  <motion.div
-                    key={reserva.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.1 }}
-                    className="mr-card overflow-hidden mr-card-accent"
-                    style={{ borderLeftColor: borderColor }}
+            </div>
+
+            {/* Controles de búsqueda y filtro */}
+            <div className="bg-white p-4 sm:p-6 rounded-lg shadow-md mb-8">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {/* Búsqueda */}
+                <div className="relative col-span-1 md:col-span-1">
+                  <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <input
+                    type="text"
+                    placeholder={usuario ? "Buscar en mis reservas..." : "Ingresa tu nombre..."}
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2.5 border border-slate-300 rounded-lg bg-slate-50 focus:ring-2 focus:ring-green-600 focus:border-green-600 transition-colors"
+                  />
+                </div>
+
+                {/* Filtro por estado */}
+                <div className="relative col-span-1 md:col-span-1">
+                  <FaFilter className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <select
+                    value={filterStatus}
+                    onChange={(e) => setFilterStatus(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2.5 border border-slate-300 rounded-lg bg-slate-50 focus:ring-2 focus:ring-green-600 focus:border-green-600 transition-colors appearance-none"
                   >
-                    <div className="p-6">
-                      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-                        {/* Información principal */}
-                        <div className="flex-1">
-                          <div className="flex items-start gap-4 mb-3">
-                            <div className="bg-green-100 p-3 rounded-xl">
-                              <FaFutbol className="text-2xl text-green-600" />
-                            </div>
-                            <div className="flex-1">
-                              <div className="flex flex-wrap items-center gap-2 mb-2">
-                                <h3 className="text-xl font-bold text-gray-800">
-                                  {reserva.cancha_nombre}
-                                </h3>
-                                <span 
-                                  className="mr-badge"
-                                  style={{ backgroundColor: badgeBg, color: badgeColor }}
-                                >
-                                  {estado.texto}
-                                </span>
-                              </div>
-                              <p className="text-gray-600 text-sm mb-3">
-                                {reserva.descripcion}
-                              </p>
-                              
-                              {/* Detalles en grid */}
-                              <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                                <div className="flex items-center gap-2 text-sm">
-                                  <FaCalendarAlt className="text-blue-500" />
-                                  <span className="font-medium text-gray-700">
-                                    {formatearFecha(reserva.fecha)}
-                                  </span>
-                                </div>
-                                
-                                <div className="flex items-center gap-2 text-sm">
-                                  <FaClock className="text-purple-500" />
-                                  <span className="font-medium text-gray-700">
-                                    {reserva.inicio} - {reserva.fin}
-                                  </span>
-                                </div>
-                                
-                                <div className="flex items-center gap-2 text-sm">
-                                  <FaMapMarkerAlt className="text-red-500" />
-                                  <span className="text-gray-600">
-                                    {reserva.direccion}
-                                  </span>
-                                </div>
-                                
-                                <div className="flex items-center gap-2 text-sm">
-                                  <FaMoneyBillWave className="text-green-500" />
-                                  <span className="font-bold text-green-600">
-                                    ${precioNum.toLocaleString()} COP
-                                  </span>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
+                    <option value="todas">Todas las reservas</option>
+                    <option value="proxima">Próximas</option>
+                    <option value="programada">Programadas</option>
+                    <option value="completada">Completadas</option>
+                    <option value="cancelada">Canceladas</option>
+                  </select>
+                </div>
 
-                        {/* Información del cliente y acciones */}
-                        <div className="lg:text-right">
-                          <div className="mb-3">
-                            <p className="text-sm text-gray-600">Reservado a nombre de</p>
-                            <p className="font-semibold text-gray-800">{reserva.cliente_nombre}</p>
-                            <p className="text-sm text-gray-500">{reserva.cliente_telefono}</p>
-                          </div>
-                          
-                          <div className="flex lg:flex-col gap-2">
-                            <Button 
-                              color="white" 
-                              size="sm"
-                              onClick={() => navigate(`/cancha/${reserva.cancha_id}`)}
-                            >
-                              Ver Cancha
-                            </Button>
-
-                            {/* Botón de cancelar reserva (sustituye "Reservar Otra Vez").
-                                Frontend evita cancelar si ya está completada/cancelada o faltan <= 3 horas. */}
-                            {canCancelReserva(reserva) ? (
-                              <button
-                                onClick={() => handleCancelarReserva(reserva)}
-                                className="px-4 py-2 rounded-xl bg-red-600 text-white hover:bg-red-500"
-                                title="Cancelar reserva"
-                              >
-                                Cancelar Reserva
-                              </button>
-                            ) : (
-                              <button
-                                disabled
-                                className="px-4 py-2 rounded-xl bg-gray-100 text-gray-400 cursor-not-allowed"
-                                title={((reserva.estado && String(reserva.estado).toLowerCase().includes('complet')) || (reserva.estado && String(reserva.estado).toLowerCase().includes('cancel'))) ? 'No se puede cancelar una reserva completada o ya cancelada' : 'No se puede cancelar: quedan menos de 3 horas o la hora es inválida'}
-                              >
-                                Cancelar Reserva
-                              </button>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </motion.div>
-                );
-              })}
-            </motion.div>
-          )}
-
-          {/* Estadísticas */}
-          {reservasFiltradas.length > 0 && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.5 }}
-              className="mt-8 bg-white rounded-2xl shadow-lg p-6"
-            >
-              <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-center">
-                <div>
-                  <p className="text-2xl font-bold text-green-600">{reservas.length}</p>
-                  <p className="text-sm text-gray-600">Total Reservas</p>
-                </div>
-                <div>
-                  <p className="text-2xl font-bold text-blue-600">
-                    {reservas.filter(r => getEstadoReserva(r).tipo === 'proxima').length}
-                  </p>
-                  <p className="text-sm text-gray-600">Próximas</p>
-                </div>
-                <div>
-                  <p className="text-2xl font-bold text-green-600">
-                    {reservas.filter(r => getEstadoReserva(r).tipo === 'programada').length}
-                  </p>
-                  <p className="text-sm text-gray-600">Programadas</p>
-                </div>
-                <div>
-                  <p className="text-2xl font-bold text-gray-600">
-                    {reservas.filter(r => getEstadoReserva(r).tipo === 'completada').length}
-                  </p>
-                  <p className="text-sm text-gray-600">Completadas</p>
-                </div>
-                <div>
-                  <p className="text-2xl font-bold text-red-600">
-                    {reservas.filter(r => getEstadoReserva(r).tipo === 'cancelada').length}
-                  </p>
-                  <p className="text-sm text-gray-600">Canceladas</p>
+                {/* Botón de búsqueda */}
+                <div className="col-span-1 md:col-span-1">
+                  <button
+                    onClick={cargarReservas}
+                    className="w-full bg-green-600 text-white font-semibold py-2.5 px-4 rounded-lg flex items-center justify-center gap-2 hover:bg-green-700 transition-colors"
+                  >
+                    <FaSearch />
+                    <span>Buscar Reservas</span>
+                  </button>
                 </div>
               </div>
-            </motion.div>
-          )}
-        </motion.div>
+            </div>
+
+            {/* Contenido */}
+            {loading ? (
+              <div className="text-center py-12">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto"></div>
+                <p className="text-slate-600 mt-4">Cargando tus reservas...</p>
+              </div>
+            ) : reservas.length === 0 ? (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="text-center py-12 bg-white rounded-lg shadow-md"
+              >
+                <FaExclamationTriangle className="text-6xl text-slate-400 mx-auto mb-4" />
+                <h3 className="text-xl font-semibold text-slate-700 mb-2">
+                  No se encontraron reservas
+                </h3>
+                <p className="text-slate-500 mb-6">
+                  {searchTerm || usuario 
+                    ? "No hay reservas que coincidan con tu búsqueda"
+                    : "Ingresa tu nombre para buscar tus reservas"
+                  }
+                </p>
+                <Button 
+                  color="green" 
+                  onClick={() => navigate("/dashboard")}
+                >
+                  Ir a Reservar Canchas
+                </Button>
+              </motion.div>
+            ) : (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {reservas.map((reserva, index) => {
+                  const estado = getEstadoReserva(reserva);
+                  const precioNum = Number(reserva.total ?? reserva.precio ?? reserva.total_final ?? 0) || 0;
+                  
+                  // Colores de badge según estado
+                  const badgeClasses = {
+                    green: "bg-green-100 text-green-800",
+                    blue: "bg-blue-100 text-blue-800",
+                    gray: "bg-slate-200 text-slate-600",
+                    red: "bg-red-100 text-red-800",
+                    purple: "bg-purple-100 text-purple-800",
+                    yellow: "bg-yellow-100 text-yellow-800",
+                  };
+                  
+                  const opacityClass = estado.color === 'gray' || estado.texto.toLowerCase().includes('cancelad') 
+                    ? 'opacity-70' 
+                    : '';
+                  
+                  return (
+                    <motion.div
+                      key={reserva.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.1 }}
+                      className={`bg-white rounded-lg shadow-md overflow-hidden transition-transform duration-300 hover:scale-[1.02] hover:shadow-xl ${opacityClass}`}
+                    >
+                      <div className="p-6">
+                        {/* Header con nombre y badge */}
+                        <div className="flex justify-between items-start mb-4">
+                          <div>
+                            <h3 className="text-xl font-bold text-slate-900">
+                              {reserva.cancha_nombre}
+                            </h3>
+                            <p className="text-slate-500">{reserva.descripcion || `${reserva.tipo} - Cancha deportiva`}</p>
+                          </div>
+                          <span 
+                            className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${badgeClasses[estado.color] || badgeClasses.green}`}
+                          >
+                            {estado.texto}
+                          </span>
+                        </div>
+
+                        <div className="border-t border-slate-200 my-4"></div>
+
+                        {/* Detalles en grid */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+                          <div className="flex items-center gap-3">
+                            <FaCalendarAlt className="text-green-600 text-xl" />
+                            <div>
+                              <p className="font-semibold">{Reserva.formatearFecha(reserva.fecha)}</p>
+                            </div>
+                          </div>
+                          
+                          <div className="flex items-center gap-3">
+                            <FaClock className="text-green-600 text-xl" />
+                            <div>
+                              <p className="font-semibold">{formatearHora(reserva.inicio)} - {formatearHora(reserva.fin)}</p>
+                            </div>
+                          </div>
+                          
+                          <div className="flex items-center gap-3">
+                            <FaUser className="text-green-600 text-xl" />
+                            <div>
+                              <p className="text-slate-500">Reservado por:</p>
+                              <p className="font-semibold">{reserva.cliente_nombre}</p>
+                            </div>
+                          </div>
+                          
+                          <div className="flex items-center gap-3">
+                            <FaMoneyBillWave className="text-green-600 text-xl" />
+                            <div>
+                              <p className="text-slate-500">Precio:</p>
+                              <p className="font-semibold text-lg">${precioNum.toLocaleString()} COP</p>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="border-t border-slate-200 my-4"></div>
+
+                        {/* Botones de acción */}
+                        <div className="flex flex-col sm:flex-row gap-3">
+                          {canCancelReserva(reserva) ? (
+                            <button
+                              onClick={() => handleCancelarReserva(reserva, Reserva.formatearFecha)}
+                              className="w-full bg-red-500 text-white font-semibold py-2.5 px-4 rounded-lg flex items-center justify-center gap-2 hover:bg-red-600 transition-colors"
+                            >
+                              <FaTimes className="text-base" />
+                              <span>Cancelar Reserva</span>
+                            </button>
+                          ) : (
+                            <button
+                              disabled
+                              className="w-full bg-slate-200 text-slate-400 font-semibold py-2.5 px-4 rounded-lg flex items-center justify-center gap-2 cursor-not-allowed"
+                            >
+                              <span>No Cancelable</span>
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </motion.div>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* Estadísticas */}
+            {reservas.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.5 }}
+                className="mt-8 bg-white rounded-lg shadow-md p-6"
+              >
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-center">
+                  <div>
+                    <p className="text-2xl font-bold text-green-600">{estadisticas.total}</p>
+                    <p className="text-sm text-slate-600">Total Reservas</p>
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold text-blue-600">
+                      {estadisticas.proximas}
+                    </p>
+                    <p className="text-sm text-slate-600">Próximas</p>
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold text-green-600">
+                      {estadisticas.programadas}
+                    </p>
+                    <p className="text-sm text-slate-600">Programadas</p>
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold text-slate-600">
+                      {estadisticas.completadas}
+                    </p>
+                    <p className="text-sm text-slate-600">Completadas</p>
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold text-red-600">
+                      {estadisticas.canceladas}
+                    </p>
+                    <p className="text-sm text-slate-600">Canceladas</p>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </div>
+        </main>
       </div>
     </div>
   );

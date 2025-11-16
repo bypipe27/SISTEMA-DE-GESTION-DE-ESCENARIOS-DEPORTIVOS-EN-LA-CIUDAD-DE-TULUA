@@ -13,7 +13,6 @@ import ConfirmacionReservaPage from "./pages/ConfirmacionReservaPage";
 import MisReservasPage from "./pages/MisReservasPage";
 import RegisterProvider from "./pages/RegisterProvider";
 import ProviderDashboard from "./pages/DashboardProvider"; 
-import ProviderReportes from "./pages/ProviderReportes";
 import ProviderReservas from "./pages/ProviderReservas";
 import CanchasManager from "./pages/CanchasMananger";
 
@@ -48,7 +47,6 @@ function App() {
         <Route path="/mis-reservas" element={<MisReservasPage />} />
         <Route path="/register-provider" element={<RegisterProvider/>} />
         <Route path="/dashboard-provider" element={<ProviderDashboard />} />
-        <Route path="/reportes-provider" element={<ProviderReportes />} />
         <Route path="/reservas-provider" element={<ProviderReservas />} />
         <Route path="/canchas-manager" element={<CanchasManager />} />
         </Routes>

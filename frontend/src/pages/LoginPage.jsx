@@ -1,58 +1,23 @@
 import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import Button from "../components/Button";
 import NavBar from "../components/NavBar";
+import { useAuth } from "../hooks/useAuth";
 
 function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [form, setForm] = useState({ email: "", password: "", remember: true });
-  const [error, setError] = useState("");
-  const navigate = useNavigate();
+  const { loading, error, handleLogin, clearError } = useAuth();
 
   const onChange = (e) => {
     const { name, value, type, checked } = e.target;
     setForm((f) => ({ ...f, [name]: type === "checkbox" ? checked : value }));
-    setError("");
+    clearError();
   };
 
   const onSubmit = async (e) => {
     e.preventDefault();
-    setError("");
-
-    if (!form.email || !form.password) {
-      setError("Por favor, completa todos los campos.");
-      return;
-    }
-
-    try {
-  const res = await fetch(`${import.meta.env.VITE_API_BASE || "http://localhost:5000"}/api/usuarios/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: form.email,
-          contrasena: form.password, // 👈 Usa el mismo nombre del backend
-        }),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) throw new Error(data.error || "Error al iniciar sesión.");
-
-      // ✅ Guardar token y usuario en localStorage
-      localStorage.setItem("token", data.token);
-      localStorage.setItem("usuario", JSON.stringify(data.usuario));
-
-      // redirigir según role
-      if (data.usuario?.role === "provider" || data.usuario?.role === "proveedor") {
-        navigate("/dashboard-provider"); // crea esta ruta
-      } else {
-        navigate("/dashboard");
-      }
-
-    } catch (err) {
-      console.error("❌ Error al iniciar sesión:", err);
-      setError(err.message);
-    }
+    await handleLogin(form.email, form.password, form.remember);
   };
 
   return (
@@ -187,8 +152,8 @@ function LoginPage() {
           {/* Botones centrados */}
           <div className="lp-actions mt-4">
             <div className="w-full sm:w-3/4">
-              <Button color="green" className="w-full" onClick={onSubmit}>
-                Iniciar sesión
+              <Button color="green" className="w-full" onClick={onSubmit} disabled={loading}>
+                {loading ? "Iniciando..." : "Iniciar sesión"}
               </Button>
             </div>
 

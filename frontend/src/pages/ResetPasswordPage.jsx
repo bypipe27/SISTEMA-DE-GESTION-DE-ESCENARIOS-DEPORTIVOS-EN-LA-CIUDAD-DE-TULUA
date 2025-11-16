@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect } from "react";
 import { useSearchParams, useNavigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import NavBar from "../components/NavBar";
 import Button from "../components/Button";
+import { useResetPassword } from "../hooks/usePasswordRecovery";
 
 function ResetPasswordPage() {
   const [searchParams] = useSearchParams();
@@ -10,95 +11,33 @@ function ResetPasswordPage() {
   const token = searchParams.get("token");
   const email = searchParams.get("email");
 
-  const [formData, setFormData] = useState({
-    nuevaContrasena: "",
-    confirmarContrasena: "",
-  });
-  const [error, setError] = useState("");
-  const [mensaje, setMensaje] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [tokenValido, setTokenValido] = useState(false);
-  const [verificando, setVerificando] = useState(true);
+  const {
+    formData,
+    error,
+    mensaje,
+    loading,
+    tokenValido,
+    verificando,
+    verificarToken,
+    handleChange,
+    handleSubmit: submitPassword
+  } = useResetPassword(token, email);
 
   // Verificar token al cargar la página
   useEffect(() => {
-    const verificarToken = async () => {
-      if (!token || !email) {
-        setError("Enlace inválido o expirado.");
-        setVerificando(false);
-        return;
-      }
-
-      try {
-  const res = await fetch(`${import.meta.env.VITE_API_BASE || "http://localhost:5000"}/api/password/verify-reset-token`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ token, email }),
-        });
-
-        const data = await res.json();
-
-        if (res.ok && data.valido) {
-          setTokenValido(true);
-        } else {
-          setError(data.error || "El enlace ha expirado o es inválido.");
-        }
-      } catch (err) {
-        setError("Error al verificar el enlace.");
-      } finally {
-        setVerificando(false);
-      }
-    };
-
     verificarToken();
-  }, [token, email]);
+  }, []);
 
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-    setError("");
-  };
+  // Redirigir al login después de éxito
+  useEffect(() => {
+    if (mensaje) {
+      setTimeout(() => navigate("/login"), 3000);
+    }
+  }, [mensaje, navigate]);
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
-    setLoading(true);
-    setError("");
-
-    if (formData.nuevaContrasena !== formData.confirmarContrasena) {
-      setError("Las contraseñas no coinciden.");
-      setLoading(false);
-      return;
-    }
-
-    if (formData.nuevaContrasena.length < 6) {
-      setError("La contraseña debe tener al menos 6 caracteres.");
-      setLoading(false);
-      return;
-    }
-
-    try {
-  const res = await fetch(`${import.meta.env.VITE_API_BASE || "http://localhost:5000"}/api/password/reset-password`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          token,
-          email,
-          nueva_contrasena: formData.nuevaContrasena,
-        }),
-      });
-
-      const data = await res.json();
-
-      if (res.ok) {
-        setMensaje(data.mensaje);
-        setTimeout(() => navigate("/login"), 3000);
-      } else {
-        setError(data.error || "Ocurrió un error al restablecer la contraseña.");
-      }
-    } catch (err) {
-      setError("No se pudo conectar con el servidor.");
-    } finally {
-      setLoading(false);
-    }
+    submitPassword(e);
   };
 
   if (verificando) {

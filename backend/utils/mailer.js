@@ -19,10 +19,8 @@ async function enviarCorreo({ to, subject, html }) {
       }
     );
 
-    console.log("✅ Correo enviado correctamente:", response.data);
     return response.data;
   } catch (err) {
-    console.error("❌ Error al enviar correo:", err.response?.data || err);
     throw err;
   }
 }
