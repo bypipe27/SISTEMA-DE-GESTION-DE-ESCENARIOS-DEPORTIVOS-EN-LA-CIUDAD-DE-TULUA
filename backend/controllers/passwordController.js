@@ -51,7 +51,7 @@ async function solicitarResetPassword(req, res) {
     });
 
     // Enviar email con enlace (no bloqueante)
-    const resetLink = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/reset-password?token=${token}&email=${encodeURIComponent(email)}`;
+    const resetLink = `${process.env.FRONTEND_URL || 'http://localhost:5173/'}reset-password?token=${token}&email=${encodeURIComponent(email)}`;
 
     const emailHtml = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
