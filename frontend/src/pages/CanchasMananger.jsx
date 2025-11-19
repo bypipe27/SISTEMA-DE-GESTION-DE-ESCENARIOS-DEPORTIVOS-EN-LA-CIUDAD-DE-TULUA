@@ -37,6 +37,11 @@ function CanchasManager() {
     eliminar
   } = useCanchasManager();
 
+  // Configuración del backend
+  const BACKEND = import.meta.env.VITE_API_BASE || 
+                  import.meta.env.VITE_BACKEND_URL || 
+                  "http://localhost:5000";
+
   // Estados para manejo de imagen
   const [imagePreview, setImagePreview] = useState(null);
   const [uploadingImage, setUploadingImage] = useState(false);
@@ -118,8 +123,8 @@ function CanchasManager() {
 
     try {
       const url = editing
-        ? `http://localhost:5000/api/canchas/provider/${editing.id}`
-        : `http://localhost:5000/api/canchas/provider`;
+        ? `${BACKEND}/api/canchas/provider/${editing.id}`
+        : `${BACKEND}/api/canchas/provider`;
       const method = editing ? "PUT" : "POST";
       
       const token = localStorage.getItem("token");
