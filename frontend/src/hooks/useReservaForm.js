@@ -105,7 +105,7 @@ export const useReservaForm = (canchaId) => {
         end: selectedSlot.end,
         cliente_nombre: clienteNombre,
         cliente_telefono: clienteTelefono,
-        metodo_pago: "efectivo",
+        metodo_pago: "stripe",
         usuario_id: usuario?.id
       };
       
@@ -117,7 +117,7 @@ export const useReservaForm = (canchaId) => {
       
       if (res.status === 201) {
         const reservaCreada = await res.json();
-        navigate("/confirmacion-reserva", {
+        navigate("/pago", {
           state: {
             reserva: reservaCreada.reserva,
             cancha: cancha,

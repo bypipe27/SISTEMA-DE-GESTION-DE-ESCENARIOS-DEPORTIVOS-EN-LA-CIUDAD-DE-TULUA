@@ -19,4 +19,11 @@ async function existeUsuarioPorEmail(email) {
 module.exports = {
   crearUsuario,
   existeUsuarioPorEmail,
+  async findById(id) {
+    const r = await pool.query(
+      `SELECT id, nombre, email, telefono, verificado, role FROM usuarios WHERE id = $1 LIMIT 1`,
+      [id]
+    );
+    return r.rows[0] || null;
+  },
 };

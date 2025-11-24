@@ -19,6 +19,7 @@ import {
 } from "react-icons/fa";
 import SideNavBar from "../components/SideNavBar";
 import Button from "../components/Button";
+import { CustomDialog, CustomToast } from "../components/CustomDialog";
 
 function MisReservasPage() {
   const navigate = useNavigate();
@@ -34,7 +35,11 @@ function MisReservasPage() {
     getEstadoReserva,
     canCancelReserva,
     handleCancelarReserva,
-    estadisticas
+    estadisticas,
+    dialogState,
+    setDialogState,
+    toastState,
+    setToastState
   } = useMisReservas();
 
   // Funciones auxiliares de UI
@@ -314,6 +319,24 @@ function MisReservasPage() {
           </div>
         </main>
       </div>
+      
+      {/* Diálogo de confirmación personalizado */}
+      <CustomDialog
+        isOpen={dialogState.isOpen}
+        onClose={() => setDialogState({ ...dialogState, isOpen: false })}
+        onConfirm={dialogState.onConfirm}
+        title={dialogState.title}
+        message={dialogState.message}
+        type={dialogState.type}
+      />
+      
+      {/* Notificación (Toast) personalizada */}
+      <CustomToast
+        isOpen={toastState.isOpen}
+        onClose={() => setToastState({ ...toastState, isOpen: false })}
+        message={toastState.message}
+        type={toastState.type}
+      />
     </div>
   );
 }

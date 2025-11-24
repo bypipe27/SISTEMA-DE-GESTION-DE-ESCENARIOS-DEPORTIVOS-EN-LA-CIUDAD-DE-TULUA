@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import NavBar from "../components/NavBar";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
+import { FaStore, FaEnvelope, FaPhone, FaLock, FaCheckCircle, FaUserTie } from "react-icons/fa";
 
 function RegisterProvider() {
   const navigate = useNavigate();
@@ -35,103 +36,207 @@ function RegisterProvider() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-800 flex items-center justify-center p-6">
-      {/* estilos locales visuales (no afectan la lógica) */}
-      <style>{`
-        .rp-card { width:100%; max-width:560px; border-radius:14px; background:#fff; border:1px solid rgba(2,6,23,0.04); box-shadow:0 10px 30px rgba(2,6,23,0.06); }
-        /* Encabezado más oscuro para buen contraste */
-        .rp-header { color:#053f34; }
-        .rp-input { width:100%; padding:10px 12px; border-radius:10px; border:1px solid rgba(15,23,42,0.06); background:#fff; color:#0f172a; }
-        /* Nota más oscura */
-        .rp-note { color:#374151; font-size:0.95rem; }
-        .rp-actions { display:flex; justify-end; gap:12px; }
-        .rp-btn { border-radius:10px; padding:10px 14px; transition:transform .08s ease; }
-        .rp-btn:active { transform:translateY(1px); }
-      `}</style>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 relative overflow-hidden flex items-center justify-center p-4">
+      {/* Decoraciones de fondo */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-20 right-20 w-96 h-96 bg-blue-400/20 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-20 left-20 w-80 h-80 bg-indigo-400/20 rounded-full blur-3xl animate-pulse" style={{animationDelay: '1s'}}></div>
+        <div className="absolute top-1/2 left-1/2 w-64 h-64 bg-purple-400/20 rounded-full blur-3xl animate-pulse" style={{animationDelay: '2s'}}></div>
+      </div>
 
       <NavBar />
 
-      <div className="rp-card p-8 mt-20">
-        <h2 className="text-2xl font-semibold text-center mb-2 rp-header">Registro de proveedor</h2>
-        <p className="text-center rp-note mb-6">Registra tu negocio para gestionar canchas y reservas.</p>
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label htmlFor="nombre" className="block text-sm font-medium text-gray-700 mb-1">Nombre o negocio</label>
-            <input
-              id="nombre"
-              name="nombre"
-              value={form.nombre}
-              onChange={handleChange}
-              className="rp-input text-gray-800 focus:outline-none focus:ring-2 focus:ring-green-200"
-              required
-              aria-required="true"
-            />
+      <div className="relative z-10 w-full max-w-lg mt-16">
+        <div className="bg-white rounded-3xl shadow-2xl shadow-blue-500/20 border-2 border-blue-100 overflow-hidden">
+          {/* Header con gradiente */}
+          <div className="relative bg-gradient-to-r from-blue-500 via-indigo-600 to-purple-600 px-8 py-10 overflow-hidden">
+            {/* Decoraciones en el header */}
+            <div className="absolute inset-0 opacity-20">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-white rounded-full -translate-y-16 translate-x-16 animate-pulse"></div>
+              <div className="absolute bottom-0 left-0 w-24 h-24 bg-white rounded-full translate-y-12 -translate-x-12 animate-pulse" style={{animationDelay: '0.5s'}}></div>
+            </div>
+            
+            <div className="relative z-10 text-center">
+              <div className="inline-flex items-center justify-center w-20 h-20 bg-white/20 backdrop-blur-sm rounded-full mb-4">
+                <FaStore className="text-5xl text-white drop-shadow-lg" />
+              </div>
+              <h2 className="text-3xl font-bold text-white mb-2 drop-shadow-lg">Registro de proveedor</h2>
+              <p className="text-blue-50 text-sm">Registra tu negocio para gestionar canchas y reservas.</p>
+            </div>
           </div>
 
-          <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">Correo</label>
-            <input
-              id="email"
-              name="email"
-              type="email"
-              value={form.email}
-              onChange={handleChange}
-              className="rp-input text-gray-800 focus:outline-none focus:ring-2 focus:ring-green-200"
-              required
-              aria-required="true"
-            />
+          {/* Formulario */}
+          <div className="px-8 py-8 bg-gradient-to-b from-blue-50/30 to-white">
+            <form onSubmit={handleSubmit} className="space-y-5">
+              {/* Nombre o negocio */}
+              <div>
+                <label htmlFor="nombre" className="block text-sm font-bold text-slate-700 mb-2">
+                  Nombre o negocio
+                </label>
+                <div className="relative">
+                  <div className="absolute left-4 top-1/2 -translate-y-1/2 text-blue-600">
+                    <FaUserTie className="text-lg" />
+                  </div>
+                  <input
+                    id="nombre"
+                    name="nombre"
+                    value={form.nombre}
+                    onChange={handleChange}
+                    className="w-full pl-12 pr-4 py-3 border-2 border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white transition-all shadow-sm hover:border-blue-300 text-slate-800 placeholder-slate-400"
+                    required
+                    aria-required="true"
+                  />
+                </div>
+              </div>
+
+              {/* Correo */}
+              <div>
+                <label htmlFor="email" className="block text-sm font-bold text-slate-700 mb-2">
+                  Correo
+                </label>
+                <div className="relative">
+                  <div className="absolute left-4 top-1/2 -translate-y-1/2 text-blue-600">
+                    <FaEnvelope className="text-lg" />
+                  </div>
+                  <input
+                    id="email"
+                    name="email"
+                    type="email"
+                    value={form.email}
+                    onChange={handleChange}
+                    className="w-full pl-12 pr-4 py-3 border-2 border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white transition-all shadow-sm hover:border-blue-300 text-slate-800 placeholder-slate-400"
+                    required
+                    aria-required="true"
+                  />
+                </div>
+              </div>
+
+              {/* Teléfono */}
+              <div>
+                <label htmlFor="telefono" className="block text-sm font-bold text-slate-700 mb-2">
+                  Teléfono <span className="text-slate-500 font-normal">(opcional)</span>
+                </label>
+                <div className="relative">
+                  <div className="absolute left-4 top-1/2 -translate-y-1/2 text-blue-600">
+                    <FaPhone className="text-lg" />
+                  </div>
+                  <input
+                    id="telefono"
+                    name="telefono"
+                    value={form.telefono}
+                    onChange={handleChange}
+                    className="w-full pl-12 pr-4 py-3 border-2 border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white transition-all shadow-sm hover:border-blue-300 text-slate-800 placeholder-slate-400"
+                  />
+                </div>
+              </div>
+
+              {/* Contraseña */}
+              <div>
+                <label htmlFor="contrasena" className="block text-sm font-bold text-slate-700 mb-2">
+                  Contraseña
+                </label>
+                <div className="relative">
+                  <div className="absolute left-4 top-1/2 -translate-y-1/2 text-blue-600">
+                    <FaLock className="text-lg" />
+                  </div>
+                  <input
+                    id="contrasena"
+                    name="contrasena"
+                    type="password"
+                    value={form.contrasena}
+                    onChange={handleChange}
+                    className="w-full pl-12 pr-4 py-3 border-2 border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white transition-all shadow-sm hover:border-blue-300 text-slate-800"
+                    required
+                    aria-required="true"
+                  />
+                </div>
+              </div>
+
+              {/* Confirmar contraseña */}
+              <div>
+                <label htmlFor="confirmContrasena" className="block text-sm font-bold text-slate-700 mb-2">
+                  Confirmar contraseña
+                </label>
+                <div className="relative">
+                  <div className="absolute left-4 top-1/2 -translate-y-1/2 text-blue-600">
+                    <FaCheckCircle className="text-lg" />
+                  </div>
+                  <input
+                    id="confirmContrasena"
+                    name="confirmContrasena"
+                    type="password"
+                    value={form.confirmContrasena}
+                    onChange={handleChange}
+                    className="w-full pl-12 pr-4 py-3 border-2 border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white transition-all shadow-sm hover:border-blue-300 text-slate-800"
+                    required
+                    aria-required="true"
+                  />
+                </div>
+              </div>
+
+              {/* Mensajes de error o éxito */}
+              {error && (
+                <div 
+                  className="bg-gradient-to-r from-red-50 to-rose-50 border-2 border-red-300 text-red-700 px-4 py-3 rounded-xl flex items-start gap-3 shadow-sm"
+                  role="alert"
+                  aria-live="assertive"
+                >
+                  <span className="text-xl">⚠️</span>
+                  <span className="text-sm font-medium">{error}</span>
+                </div>
+              )}
+              
+              {mensaje && (
+                <div 
+                  className="bg-gradient-to-r from-emerald-50 to-teal-50 border-2 border-emerald-300 text-emerald-700 px-4 py-3 rounded-xl flex items-start gap-3 shadow-sm"
+                  role="status"
+                >
+                  <span className="text-xl">✅</span>
+                  <span className="text-sm font-medium">{mensaje}</span>
+                </div>
+              )}
+
+              {/* Botones de acción */}
+              <div className="flex flex-col sm:flex-row gap-3 pt-4">
+                <button
+                  type="button"
+                  onClick={() => navigate(-1)}
+                  className="flex-1 py-3 rounded-xl font-bold text-slate-700 text-base border-2 border-slate-200 bg-white hover:bg-slate-50 hover:border-slate-300 transition-all shadow-md hover:shadow-lg hover:scale-[1.02] active:scale-[0.98]"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className={`flex-1 py-3 rounded-xl font-bold text-white text-base transition-all shadow-lg ${
+                    loading
+                      ? 'bg-slate-400 cursor-not-allowed'
+                      : 'bg-gradient-to-r from-blue-500 via-indigo-600 to-purple-600 hover:from-blue-600 hover:via-indigo-700 hover:to-purple-700 hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]'
+                  }`}
+                >
+                  {loading ? (
+                    <span className="flex items-center justify-center gap-2">
+                      <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"/>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
+                      </svg>
+                      Enviando...
+                    </span>
+                  ) : (
+                    'Registrar proveedor'
+                  )}
+                </button>
+              </div>
+            </form>
           </div>
 
-          <div>
-            <label htmlFor="telefono" className="block text-sm font-medium text-gray-700 mb-1">Teléfono (opcional)</label>
-            <input
-              id="telefono"
-              name="telefono"
-              value={form.telefono}
-              onChange={handleChange}
-              className="rp-input text-gray-800 focus:outline-none focus:ring-2 focus:ring-green-200"
-            />
+          {/* Footer */}
+          <div className="bg-gradient-to-r from-slate-50 to-blue-50/30 px-8 py-4 border-t border-blue-100">
+            <p className="text-center text-xs text-slate-600 font-medium">
+              © 2025 Sistema de Gestión de Canchas — Proyecto académico
+            </p>
           </div>
-
-          <div>
-            <label htmlFor="contrasena" className="block text-sm font-medium text-gray-700 mb-1">Contraseña</label>
-            <input
-              id="contrasena"
-              name="contrasena"
-              type="password"
-              value={form.contrasena}
-              onChange={handleChange}
-              className="rp-input text-gray-800 focus:outline-none focus:ring-2 focus:ring-green-200"
-              required
-              aria-required="true"
-            />
-          </div>
-
-          <div>
-            <label htmlFor="confirmContrasena" className="block text-sm font-medium text-gray-700 mb-1">Confirmar contraseña</label>
-            <input
-              id="confirmContrasena"
-              name="confirmContrasena"
-              type="password"
-              value={form.confirmContrasena}
-              onChange={handleChange}
-              className="rp-input text-gray-800 focus:outline-none focus:ring-2 focus:ring-green-200"
-              required
-              aria-required="true"
-            />
-          </div>
-
-          {error && <p className="text-sm text-red-600" role="alert" aria-live="assertive">{error}</p>}
-          {mensaje && <p className="text-sm text-green-600" role="status">{mensaje}</p>}
-
-          <div className="flex justify-end gap-3">
-            <button type="button" onClick={() => navigate(-1)} className="px-4 py-2 border rounded-md rp-btn">Cancelar</button>
-            <button type="submit" disabled={loading} className="px-6 py-2 bg-green-800 text-white rounded-md rp-btn focus:outline-none focus:ring-2 focus:ring-green-300">
-              {loading ? "Enviando..." : "Registrar proveedor"}
-            </button>
-          </div>
-        </form>
+        </div>
       </div>
     </div>
   );

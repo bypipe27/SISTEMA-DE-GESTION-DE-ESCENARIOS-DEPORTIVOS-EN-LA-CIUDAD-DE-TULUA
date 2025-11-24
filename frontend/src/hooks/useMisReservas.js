@@ -9,6 +9,21 @@ export const useMisReservas = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("todas");
   const [usuario, setUsuario] = useState(null);
+  
+  // Estados para diálogos personalizados
+  const [dialogState, setDialogState] = useState({
+    isOpen: false,
+    title: '',
+    message: '',
+    type: 'confirm',
+    onConfirm: null
+  });
+  
+  const [toastState, setToastState] = useState({
+    isOpen: false,
+    message: '',
+    type: 'success'
+  });
 
   const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:5000";
 
@@ -139,27 +154,55 @@ export const useMisReservas = () => {
 
   // Cancelar reserva
   const handleCancelarReserva = async (reserva, formatearFecha) => {
-    if (!reserva || !reserva.id) return alert('Reserva inválida');
-    if (!confirm(`¿Seguro que deseas cancelar la reserva para ${reserva.cancha_nombre} el ${formatearFecha(reserva.fecha)}?`)) return;
-    
-    try {
-      setLoading(true);
-      const resp = await fetch(`${API_BASE}/api/reservas/cancelar/${reserva.id}`, { method: 'PUT' });
-      if (resp.ok) {
-        alert('Reserva cancelada correctamente. Se enviará notificación al proveedor.');
-        await cargarReservas();
-      } else {
-        const text = await resp.text();
-        let data = null;
-        try { data = JSON.parse(text); } catch {}
-        const msg = (data && (data.error || data.message)) || text || 'Error al cancelar la reserva';
-        alert(msg);
-      }
-    } catch (err) {
-      alert('Error conectando con el servidor al intentar cancelar.');
-    } finally {
-      setLoading(false);
+    if (!reserva || !reserva.id) {
+      setToastState({
+        isOpen: true,
+        message: 'Reserva inválida',
+        type: 'error'
+      });
+      return;
     }
+    
+    // Mostrar diálogo de confirmación personalizado
+    setDialogState({
+      isOpen: true,
+      title: 'Cancelar Reserva',
+      message: `¿Estás seguro de cancelar la reserva para ${reserva.cancha_nombre} el ${formatearFecha(reserva.fecha)}?`,
+      type: 'warning',
+      onConfirm: async () => {
+        try {
+          setLoading(true);
+          const resp = await fetch(`${API_BASE}/api/reservas/cancelar/${reserva.id}`, { method: 'PUT' });
+          
+          if (resp.ok) {
+            setToastState({
+              isOpen: true,
+              message: 'Reserva cancelada correctamente. Se enviará notificación al proveedor.',
+              type: 'success'
+            });
+            await cargarReservas();
+          } else {
+            const text = await resp.text();
+            let data = null;
+            try { data = JSON.parse(text); } catch {}
+            const msg = (data && (data.error || data.message)) || text || 'Error al cancelar la reserva';
+            setToastState({
+              isOpen: true,
+              message: msg,
+              type: 'error'
+            });
+          }
+        } catch (err) {
+          setToastState({
+            isOpen: true,
+            message: 'Error conectando con el servidor al intentar cancelar.',
+            type: 'error'
+          });
+        } finally {
+          setLoading(false);
+        }
+      }
+    });
   };
 
   // Filtrar reservas
@@ -203,6 +246,11 @@ export const useMisReservas = () => {
     getEstadoReserva,
     canCancelReserva,
     handleCancelarReserva,
-    estadisticas
+    estadisticas,
+    // Estados para diálogos y notificaciones
+    dialogState,
+    setDialogState,
+    toastState,
+    setToastState
   };
 };
