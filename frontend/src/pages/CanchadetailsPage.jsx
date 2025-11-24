@@ -42,21 +42,21 @@ function CanchaDetailsPage() {
   };
 
   if (loading) return (
-    <div className="min-h-screen bg-slate-50 flex">
+    <div className="min-h-screen bg-gradient-to-br from-cyan-50 via-blue-50 to-indigo-100 flex">
       <SideNavBar usuarioProp={currentUser} onLogout={handleLogout} />
       <div className="flex-1 ml-64 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
+        <div className="animate-spin rounded-full h-16 w-16 border-4 border-t-transparent border-cyan-500"></div>
       </div>
     </div>
   );
   
   if (!cancha) return (
-    <div className="min-h-screen bg-slate-50 flex">
+    <div className="min-h-screen bg-gradient-to-br from-cyan-50 via-blue-50 to-indigo-100 flex">
       <SideNavBar usuarioProp={currentUser} onLogout={handleLogout} />
       <div className="flex-1 ml-64 flex items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold text-slate-800 mb-4">Cancha no encontrada</h2>
-          <button onClick={handleBack} className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700">
+        <div className="text-center bg-white/80 backdrop-blur-sm p-8 rounded-2xl shadow-lg">
+          <h2 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-600 to-blue-600 mb-4">Cancha no encontrada</h2>
+          <button onClick={handleBack} className="px-6 py-3 bg-gradient-to-r from-cyan-600 to-blue-600 text-white rounded-xl hover:from-cyan-700 hover:to-blue-700 transition-all duration-300 shadow-md">
             Volver
           </button>
         </div>
@@ -85,8 +85,8 @@ function CanchaDetailsPage() {
     return (
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-7 gap-3 mt-4">
         {orderedDays.map((d) => (
-          <div key={d} className="bg-slate-50 border border-slate-200 rounded-lg p-3">
-            <h3 className="text-xs font-bold text-slate-900 mb-2 border-b border-slate-200 pb-1.5 text-center">
+          <div key={d} className="bg-gradient-to-br from-teal-50 to-cyan-100 border-2 border-teal-200 rounded-xl p-3 shadow-sm hover:shadow-md transition-shadow duration-300">
+            <h3 className="text-xs font-bold text-transparent bg-clip-text bg-gradient-to-r from-teal-700 to-cyan-700 mb-2 border-b-2 border-teal-300 pb-1.5 text-center">
               {Cancha.DAY_NAMES[d] ?? `Día ${d}`}
             </h3>
             <div className="space-y-1.5">
@@ -101,7 +101,7 @@ function CanchaDetailsPage() {
                   const start = Cancha.formatTime(s.start) || "--:--";
                   const end = s.end ? Cancha.formatTime(s.end) : null;
                   return (
-                    <div key={idx} className="px-2 py-1.5 rounded-md bg-green-100 text-green-800 text-xs font-medium text-center">
+                    <div key={idx} className="px-2 py-1.5 rounded-lg bg-gradient-to-r from-emerald-100 to-teal-100 border border-emerald-300 text-emerald-800 text-xs font-semibold text-center shadow-sm">
                       {start}{end ? ` - ${end}` : ""}
                     </div>
                   );
@@ -141,7 +141,7 @@ function CanchaDetailsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 flex">
+    <div className="min-h-screen bg-gradient-to-br from-cyan-50 via-blue-50 to-indigo-100 flex">
       {/* estilos locales para asegurar el iframe responsivo */}
       <style>{`
         .cancha-iframe-container iframe { width: 100% !important; height: 100% !important; border: 0; display:block; }
@@ -155,34 +155,34 @@ function CanchaDetailsPage() {
           <header className="flex items-center mb-6">
             <button
               onClick={handleBack}
-              className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-white hover:bg-slate-100 transition-colors duration-200"
+              className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 transition-all duration-300 shadow-lg hover:shadow-xl"
             >
-              <FaArrowLeft className="text-slate-600" />
+              <FaArrowLeft className="text-white text-lg" />
             </button>
           </header>
 
           <main>
             {/* Imagen principal */}
-            <div className="relative w-full h-96 rounded-lg overflow-hidden mb-6">
+            <div className="relative w-full h-96 rounded-2xl overflow-hidden mb-6 shadow-2xl border-4 border-white/50">
               {cancha.imagen_url ? (
                 <img
                   alt={`Vista principal de ${cancha.nombre}`}
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
                   src={cancha.imagen_url}
                 />
               ) : (
-                <div className="w-full h-full bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center">
+                <div className="w-full h-full bg-gradient-to-br from-emerald-400 via-teal-500 to-cyan-600 flex items-center justify-center">
                   <FaFutbol className="text-white text-8xl opacity-30" />
                 </div>
               )}
             </div>
 
             {/* Información principal */}
-            <div>
-              <h1 className="text-3xl font-bold text-slate-900 mb-2">{cancha.nombre}</h1>
-              <div className="flex items-center gap-1.5 text-slate-600 text-sm">
-                <FaMapMarkerAlt className="text-lg" />
-                <p>{cancha.direccion}</p>
+            <div className="bg-white/80 backdrop-blur-sm p-6 rounded-2xl shadow-lg border border-cyan-200">
+              <h1 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-600 via-blue-600 to-indigo-600 mb-3">{cancha.nombre}</h1>
+              <div className="flex items-center gap-2 text-cyan-700 text-base">
+                <FaMapMarkerAlt className="text-xl" />
+                <p className="font-medium">{cancha.direccion}</p>
               </div>
               <p className="mt-4 text-base leading-relaxed text-slate-700">
                 {cancha.descripcion}
@@ -193,42 +193,50 @@ function CanchaDetailsPage() {
 
             {/* Información adicional en cards */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
-              <div className="bg-slate-100 p-4 rounded-lg">
+              <div className="bg-gradient-to-br from-emerald-100 to-teal-100 p-5 rounded-xl shadow-md border-2 border-emerald-200 hover:shadow-lg transition-shadow duration-300">
                 <div className="flex items-center gap-3">
-                  <FaTag className="text-green-600 text-2xl" />
+                  <div className="bg-gradient-to-br from-emerald-500 to-teal-600 p-3 rounded-full">
+                    <FaTag className="text-white text-xl" />
+                  </div>
                   <div>
-                    <h3 className="font-medium text-sm text-slate-600">Precio por hora</h3>
-                    <p className="text-lg font-bold text-slate-900">{Cancha.formatPrice(cancha.precio)}</p>
+                    <h3 className="font-semibold text-sm text-emerald-800">Precio por hora</h3>
+                    <p className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-emerald-700 to-teal-700">{Cancha.formatPrice(cancha.precio)}</p>
                   </div>
                 </div>
               </div>
 
-              <div className="bg-slate-100 p-4 rounded-lg">
+              <div className="bg-gradient-to-br from-blue-100 to-indigo-100 p-5 rounded-xl shadow-md border-2 border-blue-200 hover:shadow-lg transition-shadow duration-300">
                 <div className="flex items-center gap-3">
-                  <FaInfoCircle className="text-green-600 text-2xl" />
+                  <div className="bg-gradient-to-br from-blue-500 to-indigo-600 p-3 rounded-full">
+                    <FaInfoCircle className="text-white text-xl" />
+                  </div>
                   <div>
-                    <h3 className="font-medium text-sm text-slate-600">Tipo de cancha</h3>
-                    <p className="text-lg font-bold text-slate-900">{cancha.tipo}</p>
+                    <h3 className="font-semibold text-sm text-blue-800">Tipo de cancha</h3>
+                    <p className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-700 to-indigo-700">{cancha.tipo}</p>
                   </div>
                 </div>
               </div>
             </div>
 
             {/* Horarios disponibles */}
-            <div className="bg-white p-6 rounded-lg shadow-sm border border-slate-200 mb-6">
-              <div className="flex items-center gap-3 mb-4">
-                <FaClock className="text-green-600 text-xl" />
-                <h2 className="text-xl font-bold text-slate-900">Horarios Disponibles</h2>
+            <div className="bg-gradient-to-br from-white via-teal-50 to-cyan-50 p-6 rounded-2xl shadow-lg border-2 border-teal-200 mb-6">
+              <div className="flex items-center gap-3 mb-5">
+                <div className="bg-gradient-to-br from-teal-500 to-cyan-600 p-3 rounded-full">
+                  <FaClock className="text-white text-xl" />
+                </div>
+                <h2 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-teal-600 to-cyan-700">Horarios Disponibles</h2>
               </div>
               {renderHorariosSection()}
             </div>
 
             {/* Días de mantenimiento */}
-            <div className="bg-amber-50 border border-amber-200 p-4 rounded-lg mb-6">
+            <div className="bg-gradient-to-br from-amber-100 to-orange-100 border-2 border-amber-300 p-5 rounded-2xl mb-6 shadow-lg">
               <div className="flex items-start gap-3">
-                <FaCalendarAlt className="text-amber-600 text-xl mt-0.5" />
+                <div className="bg-gradient-to-br from-amber-500 to-orange-600 p-3 rounded-full flex-shrink-0">
+                  <FaCalendarAlt className="text-white text-xl" />
+                </div>
                 <div className="flex-1">
-                  <h3 className="font-semibold text-slate-900 mb-2">Días de mantenimiento</h3>
+                  <h3 className="font-bold text-xl text-transparent bg-clip-text bg-gradient-to-r from-amber-700 to-orange-700 mb-3">Días de mantenimiento</h3>
                   {renderCerradosDias()}
                   {renderCerradosFechas()}
                 </div>
@@ -236,17 +244,19 @@ function CanchaDetailsPage() {
             </div>
 
             {/* Mapa de ubicación */}
-            <div>
-              <h2 className="text-xl font-bold text-slate-900 mb-4 flex items-center gap-2">
-                <FaMapMarkerAlt className="text-green-600" />
+            <div className="bg-white/80 backdrop-blur-sm p-6 rounded-2xl shadow-lg border-2 border-cyan-200">
+              <h2 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-600 to-blue-600 mb-5 flex items-center gap-3">
+                <div className="bg-gradient-to-br from-cyan-500 to-blue-600 p-3 rounded-full">
+                  <FaMapMarkerAlt className="text-white text-xl" />
+                </div>
                 Ubicación
               </h2>
-              <div className="rounded-lg overflow-hidden border border-slate-200">
+              <div className="rounded-xl overflow-hidden border-2 border-cyan-300 shadow-md">
                 {iframeHtml ? (
                   <div className="cancha-iframe-container" style={{ height: 320 }} dangerouslySetInnerHTML={{ __html: iframeHtml }} />
                 ) : (
-                  <div className="h-64 bg-slate-100 flex items-center justify-center">
-                    <p className="text-sm text-slate-500">No hay mapa disponible para esta cancha</p>
+                  <div className="h-64 bg-gradient-to-br from-cyan-100 to-blue-100 flex items-center justify-center">
+                    <p className="text-base text-cyan-700 font-medium">No hay mapa disponible para esta cancha</p>
                   </div>
                 )}
               </div>
