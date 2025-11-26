@@ -90,4 +90,25 @@ export async function del(endpoint, options = {}) {
   return request(endpoint, { ...options, method: "DELETE" });
 }
 
+/**
+ * PATCH request
+ */
+export async function patch(endpoint, body, options = {}) {
+  return request(endpoint, {
+    ...options,
+    method: "PATCH",
+    body: JSON.stringify(body),
+  });
+}
+
+// Exportación por defecto con todos los métodos
+const api = {
+  get,
+  post,
+  put,
+  delete: del,
+  patch,
+};
+
+export default api;
 export { API_BASE };

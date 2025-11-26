@@ -77,18 +77,19 @@ function SideNavBar({ usuarioProp, onLogout }) {
               <span>Mis reservas</span>
             </button>
           </li>
-          {/* Método de pago - Comentado por ahora
           <li>
             <button
-              onClick={() => {}}
-              className="flex items-center w-full px-4 py-3 text-sm font-semibold text-slate-500 hover:bg-slate-700/30 hover:text-slate-400 rounded-xl transition-all duration-200"
-              disabled
+              onClick={() => navigate("/metodos-pago")}
+              className={`flex items-center w-full px-4 py-3 text-sm font-semibold rounded-xl transition-all duration-200 ${
+                isActive("/metodos-pago")
+                  ? "bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-lg shadow-emerald-500/30"
+                  : "text-slate-300 hover:bg-slate-700/50 hover:text-white"
+              }`}
             >
               <FaCreditCard className="mr-3 text-base" />
-              <span>Método de pago</span>
+              <span>Métodos de pago</span>
             </button>
           </li>
-          */}
         </ul>
       </nav>
 
