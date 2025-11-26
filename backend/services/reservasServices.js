@@ -29,7 +29,7 @@ async function providerMarkCompleted(reservaId, providerId) {
   }
 
   const fechaStr = reserva.fecha?.toISOString?.().slice(0,10) || new Date(reserva.fecha).toISOString().slice(0,10);
-  const finTime = hhmm(reserva.fin || reserva.end);
+  const finTime = sliceHHMM(reserva.fin || reserva.end);
   if (!finTime) {
     const err = new Error("Hora de fin inválida");
     err.status = 400;
@@ -49,7 +49,7 @@ async function providerMarkCompleted(reservaId, providerId) {
     try {
       const cliente = await reservasModel.obtenerUsuarioPorId(reserva.usuario_id);
       if (cliente?.email) {
-        const inicioTime = hhmm(reserva.inicio);
+        const inicioTime = sliceHHMM(reserva.inicio);
         await enviarCorreo({
           to: cliente.email,
           subject: `Reserva completada - ${reserva.cancha_nombre || ""}`,
@@ -372,7 +372,7 @@ async function providerMarkNoShow(reservaId, providerId) {
   }
 
   const fechaStr = reserva.fecha?.toISOString?.().slice(0,10) || new Date(reserva.fecha).toISOString().slice(0,10);
-  const finTime = hhmm(reserva.fin || reserva.end);
+  const finTime = sliceHHMM(reserva.fin || reserva.end);
   if (!finTime) { const err = new Error("Hora fin inválida"); err.status = 400; throw err; }
   const fechaHoraFin = parseISO(`${fechaStr}T${finTime}`);
   if (new Date() < fechaHoraFin) {
@@ -386,7 +386,7 @@ async function providerMarkNoShow(reservaId, providerId) {
     try {
       const cliente = await reservasModel.obtenerUsuarioPorId(reserva.usuario_id);
       if (cliente?.email) {
-        const inicioTime = hhmm(reserva.inicio);
+        const inicioTime = sliceHHMM(reserva.inicio);
         await enviarCorreo({
           to: cliente.email,
           subject: `Reserva marcada como no-show - ${reserva.cancha_nombre || ""}`,
