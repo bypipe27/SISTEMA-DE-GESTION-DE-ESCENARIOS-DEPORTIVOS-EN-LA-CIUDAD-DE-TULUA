@@ -24,18 +24,24 @@ app.use(cors({
   },
   credentials: true
 }));;
+// Stripe webhook requiere raw body, declararlo antes del json parser
+app.use("/api/pagos/webhook", express.raw({ type: "application/json" }));
 
 app.use(express.json());
 // ...existing code...
 const usuariosRoutes = require("./routes/usuarios");
 const canchasRoutes = require("./routes/canchas");
 const reservasRoutes = require("./routes/reservas");
-const passwordRoutes = require("./routes/password");  
+const passwordRoutes = require("./routes/password");
+const pagosRoutes = require("./routes/pagos");
+const metodosPagoRoutes = require("./routes/metodosPago");
 
 app.use("/api/reservas", reservasRoutes);
 app.use("/api/usuarios", usuariosRoutes);
 app.use("/api/canchas", canchasRoutes);
-app.use("/api/password", passwordRoutes);  
+app.use("/api/password", passwordRoutes);
+app.use("/api/pagos", pagosRoutes);
+app.use("/api/metodos-pago", metodosPagoRoutes);
 
 // servidor
 const PORT = process.env.PORT || 5000;

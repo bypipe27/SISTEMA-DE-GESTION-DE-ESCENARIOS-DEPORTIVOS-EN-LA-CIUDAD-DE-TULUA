@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from "react";
-import { FaSyncAlt } from "react-icons/fa";
+import { FaSyncAlt, FaSearch } from "react-icons/fa";
 import SideNavBar from "../components/SideNavBar";
 import { useNavigate } from "react-router-dom";
 import { useCanchas } from "../hooks/useCanchas";
@@ -173,21 +173,22 @@ function DashboardPage({
 
           {/* SIDEBAR FILTROS */}
           <aside className="w-64 flex-shrink-0">
-            <div className="bg-white p-5 rounded-xl shadow-sm sticky top-6">
-              <h2 className="text-2xl font-bold mb-8 text-slate-900">Filtros</h2>
+            <div className="bg-gradient-to-br from-indigo-100 via-purple-100 to-pink-100 p-6 rounded-2xl shadow-lg sticky top-6 border border-indigo-200">
+              <h2 className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-700 to-purple-700 font-bold text-xl mb-6">Filtros</h2>
               
-              <form className="space-y-6" onSubmit={(e) => e.preventDefault()}>
+              <form className="space-y-5" onSubmit={(e) => e.preventDefault()}>
                 {/* Buscar */}
                 <div>
                   <label
-                    className="block text-sm font-semibold text-slate-700 mb-2"
+                    className="block text-sm font-semibold text-indigo-900 mb-2"
                     htmlFor="search"
                   >
                     Buscar
                   </label>
                   <div className="relative">
+                    <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-indigo-400" />
                     <input
-                      className="w-full pl-10 pr-4 py-2.5 border border-slate-300 bg-slate-50 rounded-lg focus:ring-green-600 focus:border-green-600 transition-colors text-sm"
+                      className="w-full pl-10 pr-4 py-2.5 border-2 border-indigo-200 bg-white/80 backdrop-blur-sm rounded-xl focus:ring-2 focus:ring-purple-400 focus:border-purple-400 transition-all duration-300 text-sm placeholder-indigo-300"
                       id="search"
                       value={q}
                       onChange={(e) => setQ(e.target.value)}
@@ -200,13 +201,13 @@ function DashboardPage({
                 {/* Tipo */}
                 <div>
                   <label
-                    className="block text-sm font-semibold text-slate-700 mb-2"
+                    className="block text-sm font-semibold text-indigo-900 mb-2"
                     htmlFor="type"
                   >
                     Tipo
                   </label>
                   <select
-                    className="w-full py-2.5 px-3 border border-slate-300 bg-slate-50 rounded-lg focus:ring-green-600 focus:border-green-600 transition-colors text-sm"
+                    className="w-full py-2.5 px-3 border-2 border-indigo-200 bg-white/80 backdrop-blur-sm rounded-xl focus:ring-2 focus:ring-purple-400 focus:border-purple-400 transition-all duration-300 text-sm"
                     id="type"
                     value={tipoFiltro}
                     onChange={(e) => setTipoFiltro(e.target.value)}
@@ -223,14 +224,14 @@ function DashboardPage({
                 {/* Fecha */}
                 <div>
                   <label
-                    className="block text-sm font-semibold text-slate-700 mb-2"
+                    className="block text-sm font-semibold text-indigo-900 mb-2"
                     htmlFor="date"
                   >
                     Fecha
                   </label>
                   <div className="relative">
                     <input
-                      className="w-full px-3 py-2.5 border border-slate-300 bg-slate-50 rounded-lg focus:ring-green-600 focus:border-green-600 transition-colors text-sm"
+                      className="w-full px-3 py-2.5 border-2 border-indigo-200 bg-white/80 backdrop-blur-sm rounded-xl focus:ring-2 focus:ring-purple-400 focus:border-purple-400 transition-all duration-300 text-sm"
                       id="date"
                       type="date"
                       value={fecha}
@@ -247,9 +248,9 @@ function DashboardPage({
                 </div>
 
                 {/* Solo disponibles */}
-                <div className="flex items-center justify-between pt-2">
+                <div className="flex items-center justify-between pt-2 px-1">
                   <label
-                    className="text-sm font-semibold text-slate-700"
+                    className="text-sm font-semibold text-indigo-900"
                     htmlFor="available"
                   >
                     Solo disponibles
@@ -265,14 +266,14 @@ function DashboardPage({
                       checked={soloDisponibles}
                       onChange={() => setSoloDisponibles((v) => !v)}
                     />
-                    <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-green-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
+                    <div className="w-11 h-6 bg-indigo-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-indigo-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gradient-to-r peer-checked:from-purple-500 peer-checked:to-pink-500"></div>
                   </label>
                 </div>
 
                 {/* Botones */}
-                <div className="pt-6 space-y-4">
+                <div className="pt-6 space-y-3">
                   <button
-                    className="w-full flex items-center justify-center py-2.5 px-4 border border-slate-300 text-slate-700 font-semibold rounded-lg hover:bg-slate-100 transition-colors"
+                    className="w-full flex items-center justify-center py-2.5 px-4 border-2 border-indigo-300 bg-white/60 backdrop-blur-sm text-indigo-700 font-semibold rounded-xl hover:bg-indigo-50 hover:border-indigo-400 transition-all duration-300 shadow-sm"
                     type="button"
                     onClick={() => {
                       setQ("");
@@ -284,7 +285,7 @@ function DashboardPage({
                     Limpiar filtros
                   </button>
                   <button
-                    className="w-full flex items-center justify-center py-2.5 px-4 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition-colors"
+                    className="w-full flex items-center justify-center py-2.5 px-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl hover:from-purple-700 hover:to-pink-700 transition-all duration-300 shadow-md hover:shadow-lg"
                     type="button"
                     onClick={refetch}
                   >
