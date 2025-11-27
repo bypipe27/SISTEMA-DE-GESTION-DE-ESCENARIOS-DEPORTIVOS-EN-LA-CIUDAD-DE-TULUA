@@ -123,11 +123,12 @@ async function existeConflictoReserva(canchaId, date, start, end, client = pool)
 
 async function insertarReserva(data, client = pool) {
   const q = `
-    INSERT INTO reservas 
-      (cancha_id, fecha, inicio, fin, cliente_nombre, cliente_telefono, metodo_pago, total, usuario_id)
-    VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
+     INSERT INTO reservas
+      (cancha_id, fecha, inicio, fin, cliente_nombre, cliente_telefono, metodo_pago, total, usuario_id, estado)
+    VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
     RETURNING *
   `;
+
   const params = [
     data.cancha_id,
     data.date,
@@ -138,6 +139,7 @@ async function insertarReserva(data, client = pool) {
     data.metodo_pago,
     data.totalFinal,
     data.usuario_id,
+    "activa"
   ];
   const { rows } = await client.query(q, params);
   return rows[0];

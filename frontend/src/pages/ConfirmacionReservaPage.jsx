@@ -8,7 +8,8 @@ import { descargarFactura } from "../services/pagoService";
 function ConfirmacionReservaPage() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { reserva, cancha, horario } = location.state || {};
+ const { reserva, cancha, horario, servicios_extra = [], totalAmount } = location.state || {};
+
 
   // Si no hay datos de reserva, redirigir al dashboard
   if (!Reserva.validarDatosReserva(reserva, cancha, horario)) {
@@ -119,8 +120,29 @@ function ConfirmacionReservaPage() {
                   </div>
                 </div>
 
-                {/* Total - Con más énfasis */}
-                {cancha.precio && (
+                {/* Servicios Extra */}
+                {servicios_extra && servicios_extra.length > 0 && (
+                  <div className="mt-5">
+                    <div className="border-t-2 border-dashed border-purple-300 mb-4"></div>
+                    <h3 className="text-sm font-bold text-purple-700 mb-3 flex items-center gap-2">
+                      <span className="text-base">✨</span> Servicios Extra
+                    </h3>
+                    <div className="space-y-2">
+                      {servicios_extra.map((servicio, index) => (
+                        <div key={index} className="flex justify-between items-center py-2 px-4 rounded-xl bg-gradient-to-r from-violet-50 to-purple-100 hover:from-violet-100 hover:to-purple-200 transition-all shadow-sm hover:shadow-md border border-violet-200">
+                          <p className="text-violet-700 text-xs font-bold">
+                            {servicio.nombre}
+                          </p>
+                          <p className="text-slate-900 text-sm font-bold">
+                            {Reserva.formatearPrecio(servicio.precio_aplicado)}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                                {/* Total - Con más énfasis */}
+                {(cancha.precio || totalAmount) && (
                   <>
                     <div className="border-t-2 border-dashed border-emerald-300 my-5"></div>
                     <div className="flex justify-between items-center py-4 px-5 bg-gradient-to-r from-emerald-400 via-teal-500 to-cyan-500 rounded-2xl shadow-lg hover:shadow-xl transition-all hover:scale-[1.02] border-2 border-emerald-300">
@@ -128,12 +150,14 @@ function ConfirmacionReservaPage() {
                         <span className="text-xl">💰</span> Total Pagado
                       </p>
                       <p className="text-white text-3xl font-black drop-shadow-lg">
-                        {Reserva.formatearPrecio(cancha.precio)}
+                        {Reserva.formatearPrecio(totalAmount || reserva.total || cancha.precio)}
                       </p>
                     </div>
                   </>
                 )}
               </div>
+
+
 
               {/* Información adicional - Con color */}
               <div className="border-t-2 border-emerald-200 px-8 py-6 bg-gradient-to-br from-blue-50 via-purple-50/50 to-pink-50/40">
