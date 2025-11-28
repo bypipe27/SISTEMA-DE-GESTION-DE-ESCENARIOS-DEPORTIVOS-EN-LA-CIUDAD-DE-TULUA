@@ -17,6 +17,7 @@ import ProviderDashboard from "./pages/DashboardProvider";
 import ProviderReservas from "./pages/ProviderReservas";
 import CanchasManager from "./pages/CanchasMananger";
 import MetodosPagoPage from "./pages/MetodosPagoPage";
+import ServiciosExtraManager from "./pages/ServiciosExtraMananger";
 
 
 function FocusToMainOnNavigation() {
@@ -53,6 +54,7 @@ function App() {
         <Route path="/reservas-provider" element={<ProviderReservas />} />
         <Route path="/canchas-manager" element={<CanchasManager />} />
         <Route path="/metodos-pago" element={<MetodosPagoPage />} />
+        <Route path="/servicios-extra-manager" element={<ServiciosExtraManager />} />
         </Routes>
       </main>
     </Router>

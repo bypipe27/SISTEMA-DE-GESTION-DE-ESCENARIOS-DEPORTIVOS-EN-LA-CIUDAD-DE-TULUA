@@ -29,7 +29,7 @@ async function providerMarkCompleted(reservaId, providerId) {
   }
 
   const fechaStr = reserva.fecha?.toISOString?.().slice(0,10) || new Date(reserva.fecha).toISOString().slice(0,10);
-  const finTime = hhmm(reserva.fin || reserva.end);
+  const finTime = sliceHHMM(reserva.fin || reserva.end);
   if (!finTime) {
     const err = new Error("Hora de fin inválida");
     err.status = 400;
@@ -49,7 +49,7 @@ async function providerMarkCompleted(reservaId, providerId) {
     try {
       const cliente = await reservasModel.obtenerUsuarioPorId(reserva.usuario_id);
       if (cliente?.email) {
-        const inicioTime = hhmm(reserva.inicio);
+        const inicioTime = sliceHHMM(reserva.inicio);
         await enviarCorreo({
           to: cliente.email,
           subject: `Reserva completada - ${reserva.cancha_nombre || ""}`,
@@ -134,6 +134,7 @@ function toCurrencyCOP(n) {
   return num.toLocaleString("es-CO") + " COP";
 }
 
+
 async function crearReserva(payload) {
   const {
     cancha_id,
@@ -145,7 +146,9 @@ async function crearReserva(payload) {
     metodo_pago = "efectivo",
     total = null,
     usuario_id,
+    servicios_extra = [] // nuevo campo para servicios adicionales
   } = payload || {};
+
 
   // Validación básica
   if (!cancha_id || !date || !start || !end || !cliente_nombre || !usuario_id) {
@@ -154,12 +157,15 @@ async function crearReserva(payload) {
     throw err;
   }
 
+
   const client = await db.connect();
   try {
     await client.query("BEGIN");
 
+
     // Precio de la cancha
     const canchaPrecio = await reservasModel.obtenerPrecioCancha(cancha_id, client);
+
 
     // Calcular total final
     let totalFinal = null;
@@ -167,9 +173,13 @@ async function crearReserva(payload) {
       const parsed = Number(total);
       totalFinal = Number.isNaN(parsed) ? null : parsed;
     }
+   
+    // Si no viene total del frontend, usar solo el precio de la cancha
+    // (los servicios se sumarán después si existen)
     if (totalFinal === null && canchaPrecio !== null) {
       totalFinal = Number(canchaPrecio);
     }
+
 
     // Verificar conflicto de horario
     const hayConflicto = await reservasModel.existeConflictoReserva(
@@ -185,6 +195,7 @@ async function crearReserva(payload) {
       err.status = 409;
       throw err;
     }
+
 
     // Insertar reserva
     const reserva = await reservasModel.insertarReserva(
@@ -202,13 +213,73 @@ async function crearReserva(payload) {
       client
     );
 
+
+    // Agregar servicios extra si se proporcionaron
+    let totalServiciosExtra = 0;
+    if (servicios_extra && servicios_extra.length > 0) {
+      for (const servicio of servicios_extra) {
+        if (servicio.servicio_id && servicio.precio_aplicado) {
+          try {
+            // Usar el cliente de la transacción directamente
+            const vincularQuery = `
+              INSERT INTO reserva_servicios_extra (reserva_id, servicio_extra_id, precio_aplicado)
+              VALUES ($1, $2, $3)
+              RETURNING *;
+            `;
+           
+            await client.query(vincularQuery, [
+              reserva.id,
+              servicio.servicio_id,
+              servicio.precio_aplicado
+            ]);
+           
+            totalServiciosExtra += Number(servicio.precio_aplicado);
+          } catch (err) {
+            console.error("Error vinculando servicio:", err);
+            throw err;
+          }
+        }
+      }
+    }
+
+
+    // IMPORTANTE: Solo actualizar el total si NO vino del frontend
+    // Si vino del frontend, ya incluye el precio base + servicios
+    // Si NO vino del frontend (solo precio de cancha), entonces sumar servicios
+    if (totalServiciosExtra > 0 && total === null) {
+      const nuevoTotal = (reserva.total || 0) + totalServiciosExtra;
+      await client.query(
+        "UPDATE reservas SET total = $1 WHERE id = $2",
+        [nuevoTotal, reserva.id]
+      );
+      reserva.total = nuevoTotal;
+    } else if (total !== null) {
+      // Si el total vino del frontend, asegurarse de que esté en la BD
+      reserva.total = totalFinal;
+    }
+
+
     await client.query("COMMIT");
+
 
     // Enviar correo al propietario (no bloqueante)
     (async () => {
       try {
         const canchaInfo = await reservasModel.obtenerInfoPropietarioPorCanchaId(cancha_id);
         if (canchaInfo?.propietario_email) {
+          let serviciosHtml = "";
+          if (servicios_extra && servicios_extra.length > 0) {
+            serviciosHtml = `
+              <li><b>Servicios extra:</b></li>
+              <ul>
+                ${servicios_extra.map(s =>
+                  `<li>${s.nombre || 'Servicio'}: ${toCurrencyCOP(s.precio_aplicado)}</li>`
+                ).join('')}
+              </ul>
+            `;
+          }
+
+
           await enviarCorreo({
             to: canchaInfo.propietario_email,
             subject: `Nueva reserva - ${canchaInfo.cancha_nombre}`,
@@ -224,6 +295,7 @@ async function crearReserva(payload) {
                 <li><b>Teléfono:</b> ${cliente_telefono || "N/A"}</li>
                 <li><b>Método pago:</b> ${metodo_pago}</li>
                 <li><b>Total:</b> ${toCurrencyCOP(reserva.total)}</li>
+                ${serviciosHtml}
                 <li><b>ID reserva:</b> ${reserva.id}</li>
               </ul>
               <p>Revisa el panel para más detalles.</p>
@@ -231,20 +303,25 @@ async function crearReserva(payload) {
           });
         }
       } catch (mailErr) {
+        console.error("Error enviando correo:", mailErr);
       }
     })();
+
 
     return reserva;
   } catch (err) {
     try {
       await client.query("ROLLBACK");
     } catch (rbErr) {
+      console.error("Error en rollback:", rbErr);
     }
     throw err;
   } finally {
     client.release();
   }
 }
+
+
 async function cancelarReservaUsuario(id) {
   const reserva = await reservasModel.obtenerReservaPorId(id);
   if (!reserva) {
@@ -372,7 +449,7 @@ async function providerMarkNoShow(reservaId, providerId) {
   }
 
   const fechaStr = reserva.fecha?.toISOString?.().slice(0,10) || new Date(reserva.fecha).toISOString().slice(0,10);
-  const finTime = hhmm(reserva.fin || reserva.end);
+  const finTime = sliceHHMM(reserva.fin || reserva.end);
   if (!finTime) { const err = new Error("Hora fin inválida"); err.status = 400; throw err; }
   const fechaHoraFin = parseISO(`${fechaStr}T${finTime}`);
   if (new Date() < fechaHoraFin) {
@@ -386,7 +463,7 @@ async function providerMarkNoShow(reservaId, providerId) {
     try {
       const cliente = await reservasModel.obtenerUsuarioPorId(reserva.usuario_id);
       if (cliente?.email) {
-        const inicioTime = hhmm(reserva.inicio);
+        const inicioTime = sliceHHMM(reserva.inicio);
         await enviarCorreo({
           to: cliente.email,
           subject: `Reserva marcada como no-show - ${reserva.cancha_nombre || ""}`,

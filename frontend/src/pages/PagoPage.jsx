@@ -228,7 +228,7 @@ const formatearFechaLocal = (valor) => {
 };
 
 // Formulario de pago simulado para proyecto académico
-function SimulatedCheckoutForm({ reserva, cancha, horario, onSuccess, paymentIntentId }) {
+function SimulatedCheckoutForm({ reservaData, totalAmount, onSuccess, paymentIntentId, nuevaReserva, canchaInfo }) {
   const navigate = useNavigate();
   const [isProcessing, setIsProcessing] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
@@ -369,7 +369,7 @@ function SimulatedCheckoutForm({ reserva, cancha, horario, onSuccess, paymentInt
         setDatosTransaccion({
           cardBrand: metodo?.marca || metodo?.banco || 'Tarjeta',
           lastDigits: metodo?.ultimos_digitos || '****',
-          amount: cancha.precio
+          amount: totalAmount
         });
         
         setMostrarTransaccionAprobada(true);
@@ -540,14 +540,23 @@ function SimulatedCheckoutForm({ reserva, cancha, horario, onSuccess, paymentInt
   // Función para cerrar modal de transacción y navegar
   const handleCerrarTransaccion = () => {
     setMostrarTransaccionAprobada(false);
+    // Limpiar localStorage
+    localStorage.removeItem('reservaData');
     navigate('/confirmacion-reserva', {
       state: { 
-        reserva: {
-          ...reserva,
-          pagado: true
-        }, 
-        cancha, 
-        horario 
+        reserva: nuevaReserva || {},
+        cancha: canchaInfo || {
+          nombre: reservaData?.cancha_nombre || 'Cancha',
+          direccion: 'Dirección no disponible',
+          precio: reservaData?.total || totalAmount
+        },
+        horario: {
+          start: reservaData?.start,
+          end: reservaData?.end
+        },
+        servicios_extra: reservaData?.servicios_extra || [],
+        totalAmount,
+        pagado: true
       }
     });
   };
@@ -865,7 +874,7 @@ function SimulatedCheckoutForm({ reserva, cancha, horario, onSuccess, paymentInt
             Procesando pago simulado...
           </span>
         ) : (
-          `Pagar ${formatearPrecio(cancha.precio)} (SIMULADO)`
+          `Pagar ${formatearPrecio(totalAmount)} (SIMULADO)`
         )}
       </button>
 
@@ -944,15 +953,42 @@ function SimulatedCheckoutForm({ reserva, cancha, horario, onSuccess, paymentInt
 function PagoPage() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { reserva, cancha, horario} = location.state || {};
+  
+  // Obtener datos desde location.state o localStorage
+  const stateData = location.state || {};
+  const reservaDataFromStorage = localStorage.getItem('reservaData');
+  const reservaData = stateData.reservaData || (reservaDataFromStorage ? JSON.parse(reservaDataFromStorage) : null);
+  const totalAmount = stateData.totalAmount || reservaData?.total || 0;
   
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
   const [paymentIntentId, setPaymentIntentId] = useState(null);
+  const [nuevaReserva, setNuevaReserva] = useState(null);
+  const [canchaInfo, setCanchaInfo] = useState(null);
+
+  // Cargar información de la cancha
+  useEffect(() => {
+    const cargarCancha = async () => {
+      if (reservaData?.cancha_id) {
+        try {
+          const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:5000";
+          const res = await fetch(`${API_BASE}/api/canchas/${reservaData.cancha_id}`);
+          if (res.ok) {
+            const cancha = await res.json();
+            setCanchaInfo(cancha);
+          }
+        } catch (err) {
+          console.error('Error cargando cancha:', err);
+        }
+      }
+    };
+    cargarCancha();
+  }, [reservaData?.cancha_id]);
 
   useEffect(() => {
     // Validar que tenemos los datos necesarios
-    if (!reserva || !cancha || !horario) {
+    if (!reservaData) {
+      console.error('❌ No hay datos de reserva disponibles');
       navigate('/dashboard');
       return;
     }
@@ -963,16 +999,32 @@ function PagoPage() {
         setIsLoading(true);
         setError('');
         
-        console.log('🔷 Iniciando pago SIMULADO para reserva:', reserva.id);
-        console.log('🔷 Datos de reserva:', { reserva, cancha, horario });
+        console.log('🔷 Iniciando pago SIMULADO para nueva reserva');
+        console.log('🔷 Datos de reserva:', reservaData);
+        
+        // Primero crear la reserva, luego el payment intent
+        const reservaService = (await import('../services/reservaService')).default;
+        const respuestaReserva = await reservaService.crearReserva(reservaData);
+        
+        console.log('✅ Respuesta de creación de reserva:', respuestaReserva);
+        
+        // La respuesta tiene formato { success: true, reserva: {...} }
+        const reservaCreada = respuestaReserva.reserva || respuestaReserva;
+        
+        if (!reservaCreada || !reservaCreada.id) {
+          throw new Error('No se pudo crear la reserva correctamente');
+        }
+        
+        console.log('✅ Reserva creada con ID:', reservaCreada.id);
+        setNuevaReserva(reservaCreada);
         
         const resultado = await crearPaymentIntent(
-          reserva.id,
-          cancha.precio,
+          reservaCreada.id,
+          totalAmount,
           {
-            cancha_nombre: cancha.nombre,
-            fecha: reserva.fecha,
-            horario: `${horario.start} - ${horario.end}`
+            cancha_nombre: reservaData.cancha_nombre || 'Cancha',
+            fecha: reservaData.date,
+            horario: `${reservaData.start} - ${reservaData.end}`
           }
         );
         
@@ -999,15 +1051,24 @@ function PagoPage() {
     };
 
     inicializarPago();
-  }, [reserva, cancha, horario, navigate]);
+  }, []); // Ejecutar solo una vez al montar el componente - evita múltiples llamadas
 
   const handleSuccess = (resultado) => {
     console.log('Pago exitoso:', resultado);
+    // Limpiar localStorage
+    localStorage.removeItem('reservaData');
+    // Redirigir a confirmación
+    navigate('/confirmacion-reserva', {
+      state: {
+        reserva: nuevaReserva || {},
+        pago: resultado,
+        totalAmount
+      }
+    });
   };
 
-  // Si se accede directamente a /pago (refresh o URL manual) se pierde location.state
-  // En lugar de devolver null (pantalla completamente en blanco), mostramos un aviso breve
-  if (!reserva || !cancha || !horario) {
+  // Si se accede directamente a /pago (refresh o URL manual) se pierden los datos
+  if (!reservaData) {
     return (
       <div className="flex h-screen bg-slate-50">
         <SideNavBar />
@@ -1078,15 +1139,15 @@ function PagoPage() {
                     <p className="text-xs text-emerald-700 font-semibold mb-1 uppercase tracking-wide flex items-center gap-2">
                       <span>⚽</span> Cancha
                     </p>
-                    <p className="text-sm font-bold text-slate-900">{cancha.nombre}</p>
-                    <p className="text-xs text-emerald-600 font-medium">{cancha.tipo}</p>
+                    <p className="text-sm font-bold text-slate-900">{reservaData.cancha_nombre || 'Cancha'}</p>
+                    <p className="text-xs text-emerald-600 font-medium">Cancha deportiva</p>
                   </div>
                   
                   <div className="p-4 bg-gradient-to-r from-blue-50 to-sky-50 rounded-xl border-2 border-blue-200 hover:border-blue-300 transition-all hover:shadow-md hover:-translate-y-0.5">
                     <p className="text-xs text-blue-700 font-semibold mb-1 uppercase tracking-wide flex items-center gap-2">
                       <span>📅</span> Fecha
                     </p>
-                    <p className="text-sm font-bold text-slate-900">{formatearFechaLocal(reserva.fecha)}</p>
+                    <p className="text-sm font-bold text-slate-900">{formatearFechaLocal(reservaData.date)}</p>
                   </div>
                   
                   <div className="p-4 bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl border-2 border-purple-200 hover:border-purple-300 transition-all hover:shadow-md hover:-translate-y-0.5">
@@ -1094,7 +1155,7 @@ function PagoPage() {
                       <span>⏰</span> Horario
                     </p>
                     <p className="text-sm font-bold text-slate-900">
-                      {horario.start} - {horario.end}
+                      {reservaData.start} - {reservaData.end}
                     </p>
                   </div>
                   
@@ -1102,7 +1163,7 @@ function PagoPage() {
                     <p className="text-xs text-amber-700 font-semibold mb-1 uppercase tracking-wide flex items-center gap-2">
                       <span>👤</span> Cliente
                     </p>
-                    <p className="text-sm font-bold text-slate-900">{reserva.cliente_nombre}</p>
+                    <p className="text-sm font-bold text-slate-900">{reservaData.cliente_nombre}</p>
                   </div>
                 </div>
 
@@ -1111,13 +1172,13 @@ function PagoPage() {
                   <div className="flex justify-between items-center py-2 px-3 bg-white rounded-lg">
                     <span className="text-sm font-bold text-slate-700">Subtotal</span>
                     <span className="text-sm font-bold text-slate-900">
-                      {formatearPrecio(cancha.precio / 1.19)}
+                      {formatearPrecio(totalAmount / 1.19)}
                     </span>
                   </div>
                   <div className="flex justify-between items-center py-2 px-3 bg-white rounded-lg">
                     <span className="text-sm font-bold text-slate-700">IVA (19%)</span>
                     <span className="text-sm font-bold text-slate-900">
-                      {formatearPrecio(cancha.precio - (cancha.precio / 1.19))}
+                      {formatearPrecio(totalAmount - (totalAmount / 1.19))}
                     </span>
                   </div>
                   <div className="border-t-2 border-dashed border-slate-300 my-2"></div>
@@ -1126,7 +1187,7 @@ function PagoPage() {
                       <span className="text-lg">💰</span> Total
                     </span>
                     <span className="text-2xl font-black text-white drop-shadow-lg">
-                      {formatearPrecio(cancha.precio)}
+                      {formatearPrecio(totalAmount)}
                     </span>
                   </div>
                 </div>
@@ -1186,11 +1247,12 @@ function PagoPage() {
               ) : (
                 <div className="bg-white/95 backdrop-blur-sm rounded-2xl p-8 shadow-2xl border border-slate-200">
                   <SimulatedCheckoutForm
-                    reserva={reserva}
-                    cancha={cancha}
-                    horario={horario}
+                    reservaData={reservaData}
+                    totalAmount={totalAmount}
                     paymentIntentId={paymentIntentId}
                     onSuccess={handleSuccess}
+                    nuevaReserva={nuevaReserva}
+                    canchaInfo={canchaInfo}
                   />
                 </div>
               )}
@@ -1238,3 +1300,4 @@ function PagoPage() {
 }
 
 export default PagoPage;
+

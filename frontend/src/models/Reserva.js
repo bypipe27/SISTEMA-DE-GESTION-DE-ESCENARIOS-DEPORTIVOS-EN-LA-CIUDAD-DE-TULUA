@@ -49,9 +49,21 @@ export default class Reserva {
    * @param {number} precio - Precio en COP
    * @returns {string} Precio formateado
    */
-  static formatearPrecio(precio) {
-    return `$${precio.toLocaleString()} COP`;
+   static formatearPrecio(precio) {
+    const numero = Number(precio);
+    if (isNaN(numero)) return '$0 COP';
+   
+    return new Intl.NumberFormat('es-CO', {
+      style: 'currency',
+      currency: 'COP',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(numero);
   }
+
+
+
+
 
   /**
    * Genera el número de reserva formateado

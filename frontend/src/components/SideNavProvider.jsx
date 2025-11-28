@@ -35,6 +35,8 @@ function SideNavProvider({
     { to: "/dashboard-provider", label: "Dashboard", icon: <MdDashboard size={20} /> },
     { to: "/canchas-manager", label: "Gestión de Canchas", icon: <MdSportsSoccer size={20} /> },
     { to: "/reservas-provider", label: "Gestión de Reservas", icon: <MdCalendarMonth size={20} /> },
+    { to: "/servicios-extra-manager", label: "Servicios Extra", icon: <span className="text-lg">🎪</span> },
+
   ];
 
   const navItems = Array.isArray(items) && items.length ? items : defaultItems;
