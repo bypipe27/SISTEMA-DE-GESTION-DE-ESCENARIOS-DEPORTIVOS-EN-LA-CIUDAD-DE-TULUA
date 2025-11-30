@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from "react";
-import { FaSyncAlt, FaSearch } from "react-icons/fa";
+import { FaSyncAlt, FaSearch, FaCheckCircle, FaTimes, FaCalendarAlt } from "react-icons/fa";
 import SideNavBar from "../components/SideNavBar";
 import { useNavigate } from "react-router-dom";
 import { useCanchas } from "../hooks/useCanchas";
@@ -28,6 +28,7 @@ function DashboardPage({
   const [q, setQ] = useState("");
   const [tipoFiltro, setTipoFiltro] = useState("");
   const [soloDisponibles, setSoloDisponibles] = useState(false);
+  const [isClearing, setIsClearing] = useState(false);
   const [fecha, setFecha] = useState(() => {
     // Establecer la fecha de hoy por defecto
     const hoy = new Date();
@@ -80,13 +81,35 @@ function DashboardPage({
           <section className="flex-1">
             <div className="flex items-center justify-between mb-8">
               <h2 className="text-3xl font-extrabold text-slate-900">Canchas Disponibles</h2>
-              <span className="text-sm font-medium text-slate-500">
-                {resultados.length} resultado{resultados.length !== 1 ? "s" : ""}
+              <span className="text-sm font-medium text-slate-500 bg-slate-100 px-4 py-2 rounded-full">
+                {loading ? (
+                  <span className="flex items-center gap-2">
+                    <div className="w-4 h-4 border-2 border-teal-600 border-t-transparent rounded-full animate-spin"></div>
+                    Cargando...
+                  </span>
+                ) : (
+                  `${resultados.length} resultado${resultados.length !== 1 ? "s" : ""}`
+                )}
               </span>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              {resultados.map((c) => {
+            {loading ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                {[1, 2, 3, 4].map((i) => (
+                  <div key={i} className="bg-white rounded-xl shadow-sm overflow-hidden animate-pulse">
+                    <div className="w-full h-48 bg-gradient-to-r from-slate-200 via-slate-300 to-slate-200 animate-shimmer"></div>
+                    <div className="p-5 space-y-3">
+                      <div className="h-4 bg-slate-200 rounded w-3/4"></div>
+                      <div className="h-3 bg-slate-200 rounded w-1/2"></div>
+                      <div className="h-3 bg-slate-200 rounded w-full"></div>
+                      <div className="h-10 bg-slate-200 rounded mt-4"></div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                {resultados.map((c) => {
                 const disponibleHoy = estaDisponibleEnFecha(c, fecha);
                 return (
                   <div
@@ -163,32 +186,44 @@ function DashboardPage({
                 );
               })}
               
-              {resultados.length === 0 && (
-                <div className="col-span-full text-center text-slate-500 py-8">
-                  No se encontraron canchas que coincidan con los filtros.
+              {resultados.length === 0 && !loading && (
+                <div className="col-span-full text-center py-12">
+                  <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-slate-100 mb-4">
+                    <FaSearch className="text-slate-400 text-2xl" />
+                  </div>
+                  <p className="text-slate-500 text-lg font-medium mb-2">No se encontraron canchas</p>
+                  <p className="text-slate-400 text-sm">Intenta ajustar los filtros para ver más resultados</p>
                 </div>
               )}
-            </div>
+              </div>
+            )}
           </section>
 
           {/* SIDEBAR FILTROS */}
-          <aside className="w-64 flex-shrink-0">
-            <div className="bg-gradient-to-br from-indigo-100 via-purple-100 to-pink-100 p-6 rounded-2xl shadow-lg sticky top-6 border border-indigo-200">
-              <h2 className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-700 to-purple-700 font-bold text-xl mb-6">Filtros</h2>
+          <aside className="w-72 flex-shrink-0">
+            <div className="bg-gradient-to-br from-white via-teal-50/30 to-emerald-50/30 p-6 rounded-2xl shadow-xl sticky top-6 border-2 border-teal-100 animate-fadeInUp backdrop-blur-sm">
+              {/* Header mejorado */}
+              <div className="mb-6 pb-4 border-b-2 border-teal-100">
+                <h2 className="text-transparent bg-clip-text bg-gradient-to-r from-teal-700 via-emerald-600 to-green-700 font-extrabold text-2xl flex items-center gap-2">
+                  <FaSearch className="text-teal-600" />
+                  Filtros
+                </h2>
+                <p className="text-xs text-teal-600 mt-1">Personaliza tu busqueda</p>
+              </div>
               
               <form className="space-y-5" onSubmit={(e) => e.preventDefault()}>
                 {/* Buscar */}
-                <div>
+                <div className="animate-slideInRight" style={{animationDelay: '0.1s', animationFillMode: 'both'}}>
                   <label
-                    className="block text-sm font-semibold text-indigo-900 mb-2"
+                    className="block text-sm font-bold text-teal-900 mb-2.5"
                     htmlFor="search"
                   >
-                    Buscar
+                    Buscar Cancha
                   </label>
-                  <div className="relative">
-                    <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-indigo-400" />
+                  <div className="relative group">
+                    <FaSearch className="absolute left-3.5 top-1/2 transform -translate-y-1/2 text-teal-400 transition-all duration-300 group-hover:text-teal-600 group-hover:scale-110" />
                     <input
-                      className="w-full pl-10 pr-4 py-2.5 border-2 border-indigo-200 bg-white/80 backdrop-blur-sm rounded-xl focus:ring-2 focus:ring-purple-400 focus:border-purple-400 transition-all duration-300 text-sm placeholder-indigo-300"
+                      className="w-full pl-11 pr-4 py-3 border-2 border-teal-200 bg-white rounded-xl focus:ring-4 focus:ring-teal-200 focus:border-teal-500 transition-all duration-300 text-sm placeholder-teal-300 hover:border-teal-400 hover:shadow-md"
                       id="search"
                       value={q}
                       onChange={(e) => setQ(e.target.value)}
@@ -199,20 +234,20 @@ function DashboardPage({
                 </div>
 
                 {/* Tipo */}
-                <div>
+                <div className="animate-slideInRight" style={{animationDelay: '0.2s', animationFillMode: 'both'}}>
                   <label
-                    className="block text-sm font-semibold text-indigo-900 mb-2"
+                    className="block text-sm font-bold text-teal-900 mb-2.5"
                     htmlFor="type"
                   >
-                    Tipo
+                    Tipo de Cancha
                   </label>
                   <select
-                    className="w-full py-2.5 px-3 border-2 border-indigo-200 bg-white/80 backdrop-blur-sm rounded-xl focus:ring-2 focus:ring-purple-400 focus:border-purple-400 transition-all duration-300 text-sm"
+                    className="w-full py-3 px-4 border-2 border-teal-200 bg-white rounded-xl focus:ring-4 focus:ring-teal-200 focus:border-teal-500 transition-all duration-300 text-sm hover:border-teal-400 hover:shadow-md cursor-pointer font-medium text-slate-700"
                     id="type"
                     value={tipoFiltro}
                     onChange={(e) => setTipoFiltro(e.target.value)}
                   >
-                    <option value="">Todos</option>
+                    <option value="">Todos los tipos</option>
                     {tipos.map((t) => (
                       <option key={t} value={t}>
                         {t}
@@ -222,16 +257,16 @@ function DashboardPage({
                 </div>
 
                 {/* Fecha */}
-                <div>
+                <div className="animate-slideInRight" style={{animationDelay: '0.3s', animationFillMode: 'both'}}>
                   <label
-                    className="block text-sm font-semibold text-indigo-900 mb-2"
+                    className="block text-sm font-bold text-teal-900 mb-2.5"
                     htmlFor="date"
                   >
-                    Fecha
+                    Seleccionar Fecha
                   </label>
                   <div className="relative">
                     <input
-                      className="w-full px-3 py-2.5 border-2 border-indigo-200 bg-white/80 backdrop-blur-sm rounded-xl focus:ring-2 focus:ring-purple-400 focus:border-purple-400 transition-all duration-300 text-sm"
+                      className="w-full px-4 py-3 border-2 border-teal-200 bg-white rounded-xl focus:ring-4 focus:ring-teal-200 focus:border-teal-500 transition-all duration-300 text-sm hover:border-teal-400 hover:shadow-md cursor-pointer font-medium text-slate-700"
                       id="date"
                       type="date"
                       value={fecha}
@@ -248,49 +283,64 @@ function DashboardPage({
                 </div>
 
                 {/* Solo disponibles */}
-                <div className="flex items-center justify-between pt-2 px-1">
-                  <label
-                    className="text-sm font-semibold text-indigo-900"
-                    htmlFor="available"
-                  >
-                    Solo disponibles
-                  </label>
-                  <label
-                    className="relative inline-flex items-center cursor-pointer"
-                    htmlFor="available"
-                  >
-                    <input
-                      className="sr-only peer"
-                      id="available"
-                      type="checkbox"
-                      checked={soloDisponibles}
-                      onChange={() => setSoloDisponibles((v) => !v)}
-                    />
-                    <div className="w-11 h-6 bg-indigo-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-indigo-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gradient-to-r peer-checked:from-purple-500 peer-checked:to-pink-500"></div>
-                  </label>
+                <div className="bg-gradient-to-br from-white to-teal-50/50 p-4 rounded-xl border-2 border-teal-200 animate-slideInRight hover:shadow-lg transition-all duration-300" style={{animationDelay: '0.4s', animationFillMode: 'both'}}>
+                  <div className="flex items-center justify-between">
+                    <label
+                      className="text-sm font-bold text-teal-900 cursor-pointer flex items-center gap-2"
+                      htmlFor="available"
+                    >
+                      <FaCheckCircle className="text-teal-600 text-base" />
+                      Solo disponibles
+                    </label>
+                    <label
+                      className="relative inline-flex items-center cursor-pointer"
+                      htmlFor="available"
+                    >
+                      <input
+                        className="sr-only peer"
+                        id="available"
+                        type="checkbox"
+                        checked={soloDisponibles}
+                        onChange={() => setSoloDisponibles((v) => !v)}
+                      />
+                      <div className="w-14 h-7 bg-teal-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-teal-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border-teal-300 after:border-2 after:rounded-full after:h-6 after:w-6 after:transition-all after:shadow-md peer-checked:bg-gradient-to-r peer-checked:from-teal-600 peer-checked:to-emerald-600 hover:shadow-lg transition-all duration-300"></div>
+                    </label>
+                  </div>
                 </div>
 
                 {/* Botones */}
-                <div className="pt-6 space-y-3">
+                <div className="pt-4 space-y-3 animate-slideInRight" style={{animationDelay: '0.5s', animationFillMode: 'both'}}>
                   <button
-                    className="w-full flex items-center justify-center py-2.5 px-4 border-2 border-indigo-300 bg-white/60 backdrop-blur-sm text-indigo-700 font-semibold rounded-xl hover:bg-indigo-50 hover:border-indigo-400 transition-all duration-300 shadow-sm"
+                    className="w-full flex items-center justify-center gap-2 py-3.5 px-4 border-2 border-teal-400 bg-white text-teal-700 font-bold rounded-xl hover:bg-teal-50 hover:border-teal-500 transition-all duration-300 shadow-md hover:shadow-xl transform hover:scale-[1.02] active:scale-95 group disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
                     type="button"
-                    onClick={() => {
+                    disabled={isClearing || loading}
+                    onClick={async () => {
+                      setIsClearing(true);
                       setQ("");
                       setTipoFiltro("");
                       setSoloDisponibles(false);
-                      setFecha("");
+                      const hoy = new Date();
+                      const yyyy = hoy.getFullYear();
+                      const mm = String(hoy.getMonth() + 1).padStart(2, "0");
+                      const dd = String(hoy.getDate()).padStart(2, "0");
+                      setFecha(`${yyyy}-${mm}-${dd}`);
+                      // Refrescar después de limpiar para mostrar todas las canchas
+                      await new Promise(resolve => setTimeout(resolve, 300));
+                      await refetch();
+                      setIsClearing(false);
                     }}
                   >
-                    Limpiar filtros
+                    <FaTimes className={`text-lg transition-transform duration-300 ${isClearing ? 'animate-spin' : 'group-hover:rotate-90'}`} />
+                    {isClearing ? 'Limpiando...' : 'Limpiar filtros'}
                   </button>
                   <button
-                    className="w-full flex items-center justify-center py-2.5 px-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl hover:from-purple-700 hover:to-pink-700 transition-all duration-300 shadow-md hover:shadow-lg"
+                    className="w-full flex items-center justify-center gap-2 py-3.5 px-4 bg-gradient-to-r from-teal-600 via-emerald-600 to-green-600 text-white font-bold rounded-xl hover:from-teal-700 hover:via-emerald-700 hover:to-green-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-95 hover:brightness-110 group disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:hover:brightness-100"
                     type="button"
                     onClick={refetch}
+                    disabled={loading}
                   >
-                    <FaSyncAlt className="mr-2" />
-                    Refrescar canchas
+                    <FaSyncAlt className={`transition-transform duration-500 ${loading ? 'animate-spin' : 'group-hover:rotate-180'}`} />
+                    {loading ? 'Actualizando...' : 'Refrescar canchas'}
                   </button>
                 </div>
               </form>

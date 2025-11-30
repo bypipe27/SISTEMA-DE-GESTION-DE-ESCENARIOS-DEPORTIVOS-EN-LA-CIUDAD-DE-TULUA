@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import SideNavBar from '../components/SideNavBar';
 import { crearPaymentIntent, confirmarPago } from '../services/pagoService';
 import { obtenerMetodosPago, crearMetodoPago, detectarTarjeta } from '../services/metodoPagoService';
-import { FaCreditCard, FaLock, FaCheckCircle, FaGraduationCap, FaInfoCircle, FaPlus, FaUniversity, FaSave } from 'react-icons/fa';
+import { FaCreditCard, FaLock, FaCheckCircle, FaGraduationCap, FaInfoCircle, FaPlus, FaUniversity, FaSave, FaReceipt, FaFutbol, FaCalendarAlt, FaClock, FaUser, FaMoneyBillWave, FaEnvelope, FaExclamationTriangle } from 'react-icons/fa';
 
 // Modo simulación para proyecto académico (siempre activo)
 const SIMULATION_MODE = true;
@@ -180,9 +180,9 @@ const TransactionApprovedModal = ({ show, cardBrand, lastDigits, amount, onClose
           </div>
 
           {/* Mensaje de confirmación */}
-          <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 flex items-start gap-3">
-            <FaInfoCircle className="text-blue-600 text-lg flex-shrink-0 mt-0.5" />
-            <p className="text-xs text-blue-900">
+          <div className="bg-teal-50 border border-teal-200 rounded-xl p-4 flex items-start gap-3">
+            <FaInfoCircle className="text-teal-600 text-lg flex-shrink-0 mt-0.5" />
+            <p className="text-xs text-teal-900">
               Recibirás un comprobante de esta transacción en tu correo electrónico registrado.
             </p>
           </div>
@@ -575,36 +575,43 @@ function SimulatedCheckoutForm({ reservaData, totalAmount, onSuccess, paymentInt
       )}
       
       {/* Banner de modo simulación */}
-      <div className="bg-gradient-to-r from-purple-500 to-indigo-600 rounded-2xl p-5 flex items-start gap-3 shadow-lg border border-purple-400/30">
-        <FaGraduationCap className="text-white text-4xl flex-shrink-0 mt-1 drop-shadow-md" />
-        <div>
+      <div className="bg-gradient-to-r from-teal-500 to-emerald-600 rounded-2xl p-5 flex items-start gap-3 shadow-lg border-2 border-teal-300 hover:shadow-xl transition-all">
+        <div className="p-2 bg-white/20 rounded-xl">
+          <FaGraduationCap className="text-white text-3xl flex-shrink-0" />
+        </div>
+        <div className="flex-1">
           <h3 className="font-bold text-white mb-2 flex items-center gap-2 text-lg">
             Modo Simulación - Proyecto Académico
-            <span className="text-xs bg-white/30 backdrop-blur-sm text-white px-3 py-1 rounded-full font-semibold">DEMO</span>
+            <span className="text-xs bg-white/90 text-teal-700 px-3 py-1 rounded-full font-bold">DEMO</span>
           </h3>
-          <p className="text-sm text-purple-50 mb-3">
+          <p className="text-sm text-white/90 mb-3 font-medium">
             Este es un sistema de pago <strong>completamente simulado</strong> para demostración académica. 
             No se procesarán cargos reales ni se conectará a Stripe.
           </p>
-          <div className="bg-white/20 backdrop-blur-sm rounded-xl p-3 mt-2 border border-white/30">
-            <p className="text-xs text-white font-semibold mb-2">Cualquier tarjeta válida es aceptada:</p>
-            <ul className="text-xs text-purple-50 space-y-1 ml-4 list-disc">
-              <li>Tarjeta Visa: <code className="bg-white/30 backdrop-blur-sm px-2 py-0.5 rounded font-mono font-bold">4242 4242 4242 4242</code></li>
-              <li>Mastercard: <code className="bg-white/30 backdrop-blur-sm px-2 py-0.5 rounded font-mono font-bold">5555 5555 5555 4444</code></li>
+          <div className="bg-white/20 backdrop-blur-sm rounded-xl p-4 border border-white/30">
+            <p className="text-xs text-white font-semibold mb-2 flex items-center gap-2">
+              <FaInfoCircle />
+              Cualquier tarjeta válida es aceptada:
+            </p>
+            <ul className="text-xs text-white/90 space-y-1 ml-4 list-disc">
+              <li>Tarjeta Visa: <code className="bg-white/30 px-2 py-0.5 rounded font-mono font-bold">4242 4242 4242 4242</code></li>
+              <li>Mastercard: <code className="bg-white/30 px-2 py-0.5 rounded font-mono font-bold">5555 5555 5555 4444</code></li>
               <li>Fecha: MM/YY (cualquier fecha futura)</li>
               <li>CVC: Cualquier 3-4 dígitos</li>
               <li>Nombre: Cualquier nombre</li>
             </ul>
-            <p className="text-xs text-green-200 mt-2 font-semibold">✅ El sistema valida automáticamente usando el algoritmo Luhn</p>
+            <p className="text-xs text-emerald-100 mt-2 font-semibold flex items-center gap-1">
+              <FaCheckCircle /> El sistema valida automáticamente usando el algoritmo Luhn
+            </p>
           </div>
         </div>
       </div>
 
       {/* Selección de método de pago */}
       {!loadingMetodos && metodosPago.length > 0 && (
-        <div className="bg-gradient-to-br from-slate-50 to-blue-50 p-6 rounded-2xl border border-slate-200 shadow-lg">
-          <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
-            <FaCreditCard className="text-indigo-600" />
+        <div className="bg-gradient-to-br from-teal-50 to-emerald-50 p-6 rounded-2xl border-2 border-teal-200 shadow-lg hover:shadow-xl transition-all">
+          <h3 className="text-lg font-bold bg-gradient-to-r from-teal-600 to-emerald-600 bg-clip-text text-transparent mb-4 flex items-center gap-2">
+            <FaCreditCard className="text-teal-600" />
             Selecciona un Método de Pago
           </h3>
           
@@ -617,10 +624,10 @@ function SimulatedCheckoutForm({ reservaData, totalAmount, onSuccess, paymentInt
                   setMetodoSeleccionado(metodo.id);
                   setMostrarNuevoMetodo(false);
                 }}
-                className={`w-full p-4 rounded-xl border-2 transition-all text-left ${
+                className={`w-full p-4 rounded-xl border-2 transition-all text-left hover:scale-[1.02] ${
                   metodoSeleccionado === metodo.id
-                    ? 'border-indigo-500 bg-indigo-50 shadow-md'
-                    : 'border-slate-200 bg-white hover:border-indigo-300'
+                    ? 'border-teal-500 bg-teal-50 shadow-md'
+                    : 'border-slate-200 bg-white hover:border-teal-300'
                 }`}
               >
                 <div className="flex items-center justify-between">
@@ -634,7 +641,7 @@ function SimulatedCheckoutForm({ reservaData, totalAmount, onSuccess, paymentInt
                       <p className="font-bold text-slate-800 flex items-center gap-2">
                         {metodo.marca || metodo.banco}
                         {metodo.es_predeterminado && (
-                          <span className="text-xs bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full font-semibold">
+                          <span className="text-xs bg-teal-100 text-teal-700 px-2 py-0.5 rounded-full font-semibold">
                             Predeterminado
                           </span>
                         )}
@@ -645,13 +652,13 @@ function SimulatedCheckoutForm({ reservaData, totalAmount, onSuccess, paymentInt
                       <p className="text-xs text-slate-500">{metodo.nombre_titular}</p>
                     </div>
                   </div>
-                  <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                  <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${
                     metodoSeleccionado === metodo.id
-                      ? 'border-indigo-600 bg-indigo-600'
+                      ? 'border-teal-600 bg-teal-600'
                       : 'border-slate-300'
                   }`}>
                     {metodoSeleccionado === metodo.id && (
-                      <div className="w-2 h-2 bg-white rounded-full"></div>
+                      <div className="w-2 h-2 bg-white rounded-full animate-scaleIn"></div>
                     )}
                   </div>
                 </div>
@@ -665,10 +672,10 @@ function SimulatedCheckoutForm({ reservaData, totalAmount, onSuccess, paymentInt
               setMostrarNuevoMetodo(!mostrarNuevoMetodo);
               setMetodoSeleccionado(null);
             }}
-            className={`w-full p-4 rounded-xl border-2 transition-all flex items-center justify-center gap-2 font-semibold ${
+            className={`w-full p-4 rounded-xl border-2 transition-all flex items-center justify-center gap-2 font-semibold hover:scale-[1.02] ${
               mostrarNuevoMetodo
-                ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
-                : 'border-slate-300 bg-white text-slate-700 hover:border-indigo-400'
+                ? 'border-teal-500 bg-teal-50 text-teal-700'
+                : 'border-slate-300 bg-white text-slate-700 hover:border-teal-400'
             }`}
           >
             <FaPlus className="text-sm" />
@@ -679,7 +686,7 @@ function SimulatedCheckoutForm({ reservaData, totalAmount, onSuccess, paymentInt
             <button
               type="button"
               onClick={() => navigate('/metodos-pago')}
-              className="text-sm text-indigo-600 hover:text-indigo-700 font-medium underline"
+              className="text-sm text-teal-600 hover:text-teal-700 font-medium underline transition-colors"
             >
               Administrar métodos de pago
             </button>
@@ -689,12 +696,12 @@ function SimulatedCheckoutForm({ reservaData, totalAmount, onSuccess, paymentInt
 
       {/* Formulario para nuevo método o si no hay métodos guardados */}
       {(mostrarNuevoMetodo || metodosPago.length === 0) && (
-        <div className="bg-gradient-to-br from-slate-50 to-blue-50 p-8 rounded-2xl border border-slate-200 shadow-lg">
+        <div className="bg-gradient-to-br from-teal-50 to-emerald-50 p-8 rounded-2xl border-2 border-teal-200 shadow-lg hover:shadow-xl transition-all animate-fadeIn">
           <div className="flex items-center gap-3 mb-6">
-            <div className="p-3 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl shadow-md">
+            <div className="p-3 bg-gradient-to-br from-teal-500 to-emerald-600 rounded-xl shadow-md">
               <FaCreditCard className="text-white text-2xl" />
             </div>
-            <h3 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-700 bg-clip-text text-transparent">
+            <h3 className="text-xl font-bold bg-gradient-to-r from-teal-600 to-emerald-600 bg-clip-text text-transparent">
               Información de Pago (Simulado)
             </h3>
           </div>
@@ -711,7 +718,7 @@ function SimulatedCheckoutForm({ reservaData, totalAmount, onSuccess, paymentInt
                 onChange={(e) => setCardNumber(formatCardNumber(e.target.value))}
                 placeholder="1234 5678 9012 3456"
                 maxLength="19"
-                className="w-full px-4 py-3 border-2 border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white transition-all shadow-sm hover:border-blue-400"
+                className="w-full px-4 py-3 border-2 border-slate-300 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 bg-white transition-all shadow-sm hover:border-teal-400 placeholder-slate-500"
                 required
               />
               <p className="text-xs text-slate-500 mt-1.5">
@@ -731,7 +738,7 @@ function SimulatedCheckoutForm({ reservaData, totalAmount, onSuccess, paymentInt
                   onChange={(e) => setExpiryDate(formatExpiryDate(e.target.value))}
                   placeholder="MM/AA"
                   maxLength="5"
-                  className="w-full px-4 py-3 border-2 border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white transition-all shadow-sm hover:border-blue-400"
+                  className="w-full px-4 py-3 border-2 border-slate-300 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 bg-white transition-all shadow-sm hover:border-teal-400 placeholder-slate-500"
                   required
                 />
               </div>
@@ -745,7 +752,7 @@ function SimulatedCheckoutForm({ reservaData, totalAmount, onSuccess, paymentInt
                   onChange={(e) => setCvc(e.target.value.replace(/\D/g, '').slice(0, 4))}
                   placeholder="123"
                   maxLength="4"
-                  className="w-full px-4 py-3 border-2 border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white transition-all shadow-sm hover:border-blue-400"
+                  className="w-full px-4 py-3 border-2 border-slate-300 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 bg-white transition-all shadow-sm hover:border-teal-400 placeholder-slate-500"
                   required
                 />
               </div>
@@ -761,7 +768,7 @@ function SimulatedCheckoutForm({ reservaData, totalAmount, onSuccess, paymentInt
                 value={cardHolder}
                 onChange={(e) => setCardHolder(e.target.value.toUpperCase())}
                 placeholder="NOMBRE APELLIDO"
-                className="w-full px-4 py-3 border-2 border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white transition-all shadow-sm hover:border-blue-400"
+                className="w-full px-4 py-3 border-2 border-slate-300 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 bg-white transition-all shadow-sm hover:border-teal-400 placeholder-slate-500"
                 required
               />
             </div>
@@ -785,7 +792,7 @@ function SimulatedCheckoutForm({ reservaData, totalAmount, onSuccess, paymentInt
               </div>
               <div className="flex-1">
                 <p className="text-white font-bold text-base mb-1">
-                  {bloqueado ? '⚠️ Sistema Bloqueado' : 'Error de Validación'}
+                  {bloqueado ? 'Sistema Bloqueado' : 'Error de Validación'}
                 </p>
                 <p className="text-white/95 text-sm">{errorMessage}</p>
                 {bloqueado && (
@@ -826,8 +833,8 @@ function SimulatedCheckoutForm({ reservaData, totalAmount, onSuccess, paymentInt
                   </div>
                 )}
                 {!bloqueado && intentosFallidos > 0 && (
-                  <p className="text-yellow-200 text-xs mt-2 font-semibold">
-                    ⚠️ Intentos fallidos: {intentosFallidos}/3
+                  <p className="text-yellow-200 text-xs mt-2 font-semibold flex items-center gap-1">
+                    <FaExclamationTriangle /> Intentos fallidos: {intentosFallidos}/3
                   </p>
                 )}
               </div>
@@ -847,7 +854,7 @@ function SimulatedCheckoutForm({ reservaData, totalAmount, onSuccess, paymentInt
       )}
 
       <div className="flex items-center justify-center gap-2 text-slate-600 text-sm bg-slate-100/50 rounded-xl p-3 border border-slate-200/50">
-        <FaLock className="text-blue-600" />
+        <FaLock className="text-teal-600" />
         <span className="font-medium">Pago seguro simulado para proyecto académico</span>
       </div>
 
@@ -889,8 +896,8 @@ function SimulatedCheckoutForm({ reservaData, totalAmount, onSuccess, paymentInt
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 transform transition-all">
             <div className="flex items-center gap-4 mb-4">
-              <div className="p-3 bg-indigo-100 rounded-full">
-                <FaSave className="text-indigo-600 text-xl" />
+              <div className="p-3 bg-teal-100 rounded-full">
+                <FaSave className="text-teal-600 text-xl" />
               </div>
               <div>
                 <h3 className="text-xl font-bold text-slate-800">Guardar Método de Pago</h3>
@@ -903,7 +910,7 @@ function SimulatedCheckoutForm({ reservaData, totalAmount, onSuccess, paymentInt
                 ¿Deseas guardar este método de pago para tus próximas reservas?
               </p>
               <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-slate-200">
-                <FaCreditCard className="text-indigo-600 text-2xl" />
+                <FaCreditCard className="text-teal-600 text-2xl" />
                 <div>
                   <p className="font-bold text-slate-800">
                     {datosMetodoTemp.marca || 'Tarjeta'}
@@ -915,12 +922,12 @@ function SimulatedCheckoutForm({ reservaData, totalAmount, onSuccess, paymentInt
                 </div>
               </div>
 
-              <label className="flex items-center gap-3 mt-4 p-3 bg-indigo-50 rounded-lg cursor-pointer hover:bg-indigo-100 transition-colors">
+              <label className="flex items-center gap-3 mt-4 p-3 bg-teal-50 rounded-lg cursor-pointer hover:bg-teal-100 transition-colors">
                 <input
                   type="checkbox"
                   checked={guardarComoDefault}
                   onChange={(e) => setGuardarComoDefault(e.target.checked)}
-                  className="w-5 h-5 text-indigo-600 rounded focus:ring-2 focus:ring-indigo-500"
+                  className="w-5 h-5 text-teal-600 rounded focus:ring-2 focus:ring-teal-500"
                 />
                 <span className="text-sm font-medium text-slate-700">
                   Establecer como método predeterminado
@@ -939,7 +946,7 @@ function SimulatedCheckoutForm({ reservaData, totalAmount, onSuccess, paymentInt
               <button
                 type="button"
                 onClick={() => procesarPago(true)}
-                className="flex-1 px-4 py-3 bg-indigo-600 text-white rounded-xl font-semibold hover:bg-indigo-700 transition-all shadow-lg"
+                className="flex-1 px-4 py-3 bg-teal-600 text-white rounded-xl font-semibold hover:bg-teal-700 transition-all shadow-lg hover:scale-[1.02]"
               >
                 Guardar y Pagar
               </button>
@@ -1081,7 +1088,7 @@ function PagoPage() {
             </p>
             <button
               onClick={() => navigate('/dashboard')}
-              className="px-5 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium"
+              className="px-5 py-2 rounded-lg bg-teal-600 hover:bg-teal-700 text-white text-sm font-medium transition-colors"
             >
               Ir al Dashboard
             </button>
@@ -1092,12 +1099,12 @@ function PagoPage() {
   }
 
   return (
-    <div className="flex h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 relative overflow-hidden">
+    <div className="flex h-screen bg-gradient-to-br from-teal-50 via-emerald-50 to-green-100 relative overflow-hidden">
       {/* Decoraciones de fondo animadas */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-20 right-20 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute bottom-20 left-20 w-80 h-80 bg-blue-500/10 rounded-full blur-3xl animate-pulse delay-700"></div>
-        <div className="absolute top-1/2 left-1/2 w-72 h-72 bg-purple-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
+        <div className="absolute top-20 right-20 w-96 h-96 bg-emerald-400/10 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-20 left-20 w-80 h-80 bg-teal-400/10 rounded-full blur-3xl animate-pulse" style={{animationDelay: '0.7s'}}></div>
+        <div className="absolute top-1/2 left-1/2 w-72 h-72 bg-green-400/10 rounded-full blur-3xl animate-pulse" style={{animationDelay: '1s'}}></div>
       </div>
       
       <SideNavBar />
@@ -1106,16 +1113,16 @@ function PagoPage() {
         <div className="max-w-4xl mx-auto">
           {/* Header con gradiente mejorado */}
           <div className="mb-8 text-center">
-            <div className="inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-emerald-500/20 via-teal-500/20 to-cyan-500/20 backdrop-blur-md rounded-2xl border border-emerald-400/30 mb-4 shadow-2xl hover:shadow-emerald-500/20 transition-all group">
-              <div className="p-3 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-xl shadow-lg group-hover:scale-110 transition-transform">
+            <div className="inline-flex items-center gap-3 px-8 py-4 bg-white/90 backdrop-blur-md rounded-2xl border-2 border-teal-200 mb-4 shadow-xl hover:shadow-2xl transition-all group animate-fadeInUp">
+              <div className="p-3 bg-gradient-to-br from-teal-500 to-emerald-600 rounded-xl shadow-lg group-hover:scale-110 transition-transform">
                 <FaCreditCard className="text-2xl text-white" />
               </div>
               <div className="text-left">
-                <h1 className="text-2xl font-bold text-white drop-shadow-lg">
+                <h1 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-teal-600 to-emerald-600">
                   Procesar Pago
                 </h1>
-                <p className="text-emerald-200 text-sm font-medium">
-                  Completa tu reserva de forma segura 🔒
+                <p className="text-slate-600 text-sm font-medium">
+                  Completa tu reserva de forma segura
                 </p>
               </div>
             </div>
@@ -1124,77 +1131,77 @@ function PagoPage() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Resumen de la reserva - Mejorado */}
             <div className="lg:col-span-1">
-              <div className="bg-gradient-to-br from-white via-emerald-50/30 to-slate-50 rounded-2xl shadow-2xl hover:shadow-emerald-500/20 border border-slate-200 p-6 sticky top-6 transition-all hover:scale-[1.02]">
-                <div className="flex items-center gap-2 mb-5">
-                  <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center">
-                    <span className="text-white text-sm">📋</span>
+              <div className="bg-white rounded-2xl shadow-xl hover:shadow-2xl border-2 border-teal-200 p-6 sticky top-6 transition-all hover:scale-[1.02] animate-fadeInUp">
+                <div className="flex items-center gap-3 mb-5">
+                  <div className="w-10 h-10 bg-gradient-to-br from-teal-500 to-emerald-600 rounded-xl flex items-center justify-center shadow-md">
+                    <FaReceipt className="text-white text-lg" />
                   </div>
-                  <h2 className="text-lg font-bold text-slate-900">
+                  <h2 className="text-lg font-bold text-transparent bg-clip-text bg-gradient-to-r from-teal-600 to-emerald-600">
                     Resumen de Reserva
                   </h2>
                 </div>
                 
-                <div className="space-y-4 mb-6">
-                  <div className="p-4 bg-gradient-to-r from-emerald-50 to-teal-50 rounded-xl border-2 border-emerald-200 hover:border-emerald-300 transition-all hover:shadow-md hover:-translate-y-0.5">
+                <div className="space-y-3 mb-6">
+                  <div className="p-4 bg-gradient-to-r from-emerald-50 to-teal-50 rounded-xl border border-emerald-200 hover:border-emerald-400 transition-all hover:shadow-md">
                     <p className="text-xs text-emerald-700 font-semibold mb-1 uppercase tracking-wide flex items-center gap-2">
-                      <span>⚽</span> Cancha
+                      <FaFutbol className="text-emerald-600" /> Cancha
                     </p>
                     <p className="text-sm font-bold text-slate-900">{reservaData.cancha_nombre || 'Cancha'}</p>
-                    <p className="text-xs text-emerald-600 font-medium">Cancha deportiva</p>
+                    <p className="text-xs text-slate-600 font-medium">Cancha deportiva</p>
                   </div>
                   
-                  <div className="p-4 bg-gradient-to-r from-blue-50 to-sky-50 rounded-xl border-2 border-blue-200 hover:border-blue-300 transition-all hover:shadow-md hover:-translate-y-0.5">
-                    <p className="text-xs text-blue-700 font-semibold mb-1 uppercase tracking-wide flex items-center gap-2">
-                      <span>📅</span> Fecha
+                  <div className="p-4 bg-gradient-to-r from-teal-50 to-cyan-50 rounded-xl border border-teal-200 hover:border-teal-400 transition-all hover:shadow-md">
+                    <p className="text-xs text-teal-700 font-semibold mb-1 uppercase tracking-wide flex items-center gap-2">
+                      <FaCalendarAlt className="text-teal-600" /> Fecha
                     </p>
                     <p className="text-sm font-bold text-slate-900">{formatearFechaLocal(reservaData.date)}</p>
                   </div>
                   
-                  <div className="p-4 bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl border-2 border-purple-200 hover:border-purple-300 transition-all hover:shadow-md hover:-translate-y-0.5">
-                    <p className="text-xs text-purple-700 font-semibold mb-1 uppercase tracking-wide flex items-center gap-2">
-                      <span>⏰</span> Horario
+                  <div className="p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl border border-green-200 hover:border-green-400 transition-all hover:shadow-md">
+                    <p className="text-xs text-green-700 font-semibold mb-1 uppercase tracking-wide flex items-center gap-2">
+                      <FaClock className="text-green-600" /> Horario
                     </p>
                     <p className="text-sm font-bold text-slate-900">
                       {reservaData.start} - {reservaData.end}
                     </p>
                   </div>
                   
-                  <div className="p-4 bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl border-2 border-amber-200 hover:border-amber-300 transition-all hover:shadow-md hover:-translate-y-0.5">
-                    <p className="text-xs text-amber-700 font-semibold mb-1 uppercase tracking-wide flex items-center gap-2">
-                      <span>👤</span> Cliente
+                  <div className="p-4 bg-gradient-to-r from-cyan-50 to-teal-50 rounded-xl border border-cyan-200 hover:border-cyan-400 transition-all hover:shadow-md">
+                    <p className="text-xs text-cyan-700 font-semibold mb-1 uppercase tracking-wide flex items-center gap-2">
+                      <FaUser className="text-cyan-600" /> Cliente
                     </p>
                     <p className="text-sm font-bold text-slate-900">{reservaData.cliente_nombre}</p>
                   </div>
                 </div>
 
                 {/* Desglose de costos mejorado */}
-                <div className="bg-gradient-to-br from-slate-50 to-blue-50 rounded-xl p-4 space-y-3 border-2 border-slate-200 shadow-inner">
-                  <div className="flex justify-between items-center py-2 px-3 bg-white rounded-lg">
-                    <span className="text-sm font-bold text-slate-700">Subtotal</span>
+                <div className="bg-gradient-to-br from-slate-50 to-teal-50 rounded-xl p-4 space-y-3 border border-teal-100 shadow-sm">
+                  <div className="flex justify-between items-center py-2 px-3 bg-white rounded-lg hover:shadow-sm transition-shadow">
+                    <span className="text-sm font-semibold text-slate-700">Subtotal</span>
                     <span className="text-sm font-bold text-slate-900">
                       {formatearPrecio(totalAmount / 1.19)}
                     </span>
                   </div>
-                  <div className="flex justify-between items-center py-2 px-3 bg-white rounded-lg">
-                    <span className="text-sm font-bold text-slate-700">IVA (19%)</span>
+                  <div className="flex justify-between items-center py-2 px-3 bg-white rounded-lg hover:shadow-sm transition-shadow">
+                    <span className="text-sm font-semibold text-slate-700">IVA (19%)</span>
                     <span className="text-sm font-bold text-slate-900">
                       {formatearPrecio(totalAmount - (totalAmount / 1.19))}
                     </span>
                   </div>
-                  <div className="border-t-2 border-dashed border-slate-300 my-2"></div>
-                  <div className="flex justify-between items-center py-3 px-4 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-xl shadow-lg">
+                  <div className="border-t-2 border-dashed border-teal-200 my-2"></div>
+                  <div className="flex justify-between items-center py-3 px-4 bg-gradient-to-r from-teal-500 to-emerald-600 rounded-xl shadow-lg hover:shadow-xl transition-all">
                     <span className="text-base font-bold text-white flex items-center gap-2">
-                      <span className="text-lg">💰</span> Total
+                      <FaMoneyBillWave /> Total
                     </span>
-                    <span className="text-2xl font-black text-white drop-shadow-lg">
+                    <span className="text-2xl font-extrabold text-white drop-shadow-lg">
                       {formatearPrecio(totalAmount)}
                     </span>
                   </div>
                 </div>
 
-                <div className="mt-6 p-4 bg-gradient-to-r from-blue-500 via-indigo-600 to-purple-600 rounded-xl shadow-lg hover:shadow-xl transition-all hover:scale-[1.02] border border-blue-400/30">
-                  <p className="text-xs text-white font-semibold flex items-center gap-2">
-                    <span className="text-lg">✉️</span>
+                <div className="mt-6 p-4 bg-gradient-to-r from-amber-50 to-orange-50 border-l-4 border-amber-400 rounded-r-xl">
+                  <p className="text-xs text-amber-800 font-medium flex items-start gap-2">
+                    <FaEnvelope className="text-amber-600 mt-0.5 flex-shrink-0" />
                     <span>Recibirás una factura electrónica en tu correo después del pago</span>
                   </p>
                 </div>
@@ -1204,24 +1211,28 @@ function PagoPage() {
             {/* Formulario de pago */}
             <div className="lg:col-span-2">
               {isLoading ? (
-                <div className="bg-white/10 backdrop-blur-md rounded-2xl border border-white/20 shadow-2xl p-12">
+                <div className="bg-white/90 backdrop-blur-md rounded-2xl border-2 border-teal-200 shadow-2xl p-12">
                   <div className="flex flex-col items-center justify-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-4 border-emerald-400 mb-4"></div>
-                    <p className="text-white font-medium">Inicializando pago seguro...</p>
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-4 border-teal-500 mb-4"></div>
+                    <p className="text-slate-700 font-semibold">Inicializando pago seguro...</p>
                   </div>
                 </div>
               ) : error ? (
-                <div className="bg-white/10 backdrop-blur-md rounded-2xl border border-red-400/50 shadow-2xl p-8">
+                <div className="bg-white/90 backdrop-blur-md rounded-2xl border-2 border-red-300 shadow-2xl p-8">
                   <div className="text-center">
-                    <div className="text-red-400 text-5xl mb-4 animate-pulse">⚠️</div>
-                    <h3 className="text-xl font-bold text-white mb-2">Error al inicializar el pago</h3>
-                    <div className="bg-red-500/20 border border-red-400/30 rounded-xl p-4 mb-4 backdrop-blur-sm">
-                      <p className="text-red-200 text-sm font-semibold mb-2">Detalles del error:</p>
-                      <p className="text-red-100 text-sm">{error}</p>
+                    <div className="bg-red-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+                      <FaInfoCircle className="text-red-600 text-3xl" />
                     </div>
-                    <div className="bg-blue-500/20 border border-blue-400/30 rounded-xl p-4 mb-4 text-left backdrop-blur-sm">
-                      <p className="text-blue-200 text-xs mb-2 font-semibold">💡 Posibles soluciones:</p>
-                      <ul className="text-blue-100 text-xs space-y-1 ml-4 list-disc">
+                    <h3 className="text-xl font-bold text-slate-900 mb-2">Error al inicializar el pago</h3>
+                    <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-4">
+                      <p className="text-red-700 text-sm font-semibold mb-2">Detalles del error:</p>
+                      <p className="text-red-600 text-sm">{error}</p>
+                    </div>
+                    <div className="bg-teal-50 border border-teal-200 rounded-xl p-4 mb-4 text-left">
+                      <p className="text-teal-700 text-xs mb-2 font-semibold flex items-center gap-2">
+                        <FaInfoCircle /> Posibles soluciones:
+                      </p>
+                      <ul className="text-slate-700 text-xs space-y-1 ml-4 list-disc">
                         <li>Verifica que el servidor backend esté corriendo en el puerto 5000</li>
                         <li>Abre la consola del navegador (F12) para ver más detalles</li>
                         <li>Verifica que estés autenticado correctamente</li>
@@ -1231,13 +1242,13 @@ function PagoPage() {
                     <div className="flex gap-3 justify-center">
                       <button
                         onClick={() => window.location.reload()}
-                        className="px-6 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-xl hover:from-blue-600 hover:to-indigo-700 text-sm font-semibold shadow-lg"
+                        className="px-6 py-3 bg-gradient-to-r from-teal-500 to-emerald-600 text-white rounded-xl hover:from-teal-600 hover:to-emerald-700 text-sm font-semibold shadow-lg transform hover:scale-105 transition-all"
                       >
                         Reintentar
                       </button>
                       <button
                         onClick={() => navigate('/dashboard')}
-                        className="px-6 py-3 bg-white/20 backdrop-blur-sm text-white rounded-xl hover:bg-white/30 text-sm font-semibold border border-white/30"
+                        className="px-6 py-3 bg-white border-2 border-teal-200 text-teal-700 rounded-xl hover:bg-teal-50 text-sm font-semibold transition-all"
                       >
                         Volver al Dashboard
                       </button>
@@ -1258,32 +1269,34 @@ function PagoPage() {
               )}
 
               {/* Información de seguridad */}
-              <div className="mt-6 bg-white rounded-lg border border-slate-200 p-6">
-                <h3 className="text-sm font-semibold text-slate-900 mb-3 flex items-center gap-2">
-                  <FaLock className="text-blue-600" />
+              <div className="mt-6 bg-white rounded-xl border-2 border-teal-200 p-6 shadow-lg hover:shadow-xl transition-all">
+                <h3 className="text-sm font-bold text-transparent bg-clip-text bg-gradient-to-r from-teal-600 to-emerald-600 mb-4 flex items-center gap-2">
+                  <div className="p-2 bg-gradient-to-br from-teal-500 to-emerald-600 rounded-lg">
+                    <FaLock className="text-white text-sm" />
+                  </div>
                   Sistema de Pago Simulado
                 </h3>
-                <ul className="space-y-2 text-sm text-slate-600">
-                  <li className="flex items-start gap-2">
-                    <span className="text-blue-600 mt-0.5">✓</span>
-                    <span><strong>Modo Académico:</strong> Sin cargos reales</span>
+                <ul className="space-y-3 text-sm text-slate-700">
+                  <li className="flex items-start gap-3 p-3 bg-teal-50 rounded-lg hover:bg-teal-100 transition-colors">
+                    <FaCheckCircle className="text-teal-600 mt-0.5 flex-shrink-0" />
+                    <span><strong className="text-teal-700">Modo Académico:</strong> Sin cargos reales</span>
                   </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-blue-600 mt-0.5">✓</span>
-                    <span><strong>Facturación:</strong> Se genera factura simulada</span>
+                  <li className="flex items-start gap-3 p-3 bg-emerald-50 rounded-lg hover:bg-emerald-100 transition-colors">
+                    <FaCheckCircle className="text-emerald-600 mt-0.5 flex-shrink-0" />
+                    <span><strong className="text-emerald-700">Facturación:</strong> Se genera factura simulada</span>
                   </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-blue-600 mt-0.5">✓</span>
-                    <span><strong>Notificaciones:</strong> Correos de confirmación incluidos</span>
+                  <li className="flex items-start gap-3 p-3 bg-cyan-50 rounded-lg hover:bg-cyan-100 transition-colors">
+                    <FaCheckCircle className="text-cyan-600 mt-0.5 flex-shrink-0" />
+                    <span><strong className="text-cyan-700">Notificaciones:</strong> Correos de confirmación incluidos</span>
                   </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-blue-600 mt-0.5">✓</span>
-                    <span><strong>Seguridad:</strong> Datos no se almacenan ni envían a terceros</span>
+                  <li className="flex items-start gap-3 p-3 bg-green-50 rounded-lg hover:bg-green-100 transition-colors">
+                    <FaCheckCircle className="text-green-600 mt-0.5 flex-shrink-0" />
+                    <span><strong className="text-green-700">Seguridad:</strong> Datos no se almacenan ni envían a terceros</span>
                   </li>
                 </ul>
-                <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
-                  <p className="text-xs text-blue-800 flex items-start gap-2">
-                    <FaInfoCircle className="flex-shrink-0 mt-0.5" />
+                <div className="mt-4 p-4 bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl border-l-4 border-amber-400">
+                  <p className="text-xs text-amber-800 flex items-start gap-2 font-medium">
+                    <FaInfoCircle className="flex-shrink-0 mt-0.5 text-amber-600" />
                     <span>
                       Este proyecto usa una implementación simulada de Stripe para fines educativos. 
                       Toda la funcionalidad es demostrativa y no procesa pagos reales.

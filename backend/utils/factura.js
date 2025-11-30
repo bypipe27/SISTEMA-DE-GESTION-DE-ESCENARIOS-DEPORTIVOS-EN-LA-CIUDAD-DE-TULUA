@@ -8,7 +8,7 @@ const path = require('path');
 async function generarFacturaPDF(facturaData) {
   return new Promise((resolve, reject) => {
     try {
-      const doc = new PDFDocument({ margin: 50, size: 'A4' });
+      const doc = new PDFDocument({ margin: 0, size: 'A4' });
       const chunks = [];
 
       // Capturar el PDF en memoria
@@ -16,230 +16,158 @@ async function generarFacturaPDF(facturaData) {
       doc.on('end', () => resolve(Buffer.concat(chunks)));
       doc.on('error', reject);
 
-      // Header minimalista con marca de agua
-      doc
-        .fontSize(28)
-        .font('Helvetica-Bold')
-        .fillColor('#10b981')
-        .text('FACTURA', 50, 50)
-        .fontSize(9)
-        .font('Helvetica')
-        .fillColor('#64748b')
-        .text('Electrónica', 50, 80)
-        .moveDown(2);
+      const pageWidth = 595.28;
+      const pageHeight = 841.89;
+      const margin = 40;
 
-      // Información de la empresa - minimalista
-      doc
-        .fontSize(9)
-        .font('Helvetica')
-        .fillColor('#64748b')
-        .text('Sistema de Gestión de Escenarios Deportivos', 350, 50, { align: 'right', width: 195 })
-        .text('Tuluá, Valle del Cauca', 350, 63, { align: 'right', width: 195 })
-        .text('Universidad del Valle', 350, 76, { align: 'right', width: 195 })
-        .moveDown(3);
+      // ========== HEADER CON BANNER TEAL ==========
+      doc.rect(0, 0, pageWidth, 150).fill('#14b8a6');
 
-      // Línea divisoria minimalista
-      doc
-        .strokeColor('#e2e8f0')
-        .lineWidth(1)
-        .moveTo(50, 120)
-        .lineTo(545, 120)
-        .stroke()
-        .moveDown(1.5);
+      // Decoración circular
+      doc.circle(520, 40, 50).fillOpacity(0.12).fill('#ffffff');
+      doc.circle(550, 95, 40).fillOpacity(0.08).fill('#ffffff');
+      doc.circle(35, 105, 45).fillOpacity(0.1).fill('#ffffff');
+      doc.fillOpacity(1);
 
-      // Información de la factura - diseño minimalista
-      const startY = 140;
-      doc
-        .fontSize(8)
-        .font('Helvetica')
-        .fillColor('#94a3b8')
-        .text('NÚMERO', 50, startY)
-        .fontSize(11)
-        .font('Helvetica-Bold')
-        .fillColor('#0f172a')
-        .text(facturaData.numero_factura, 50, startY + 12)
-        
-        .fontSize(8)
-        .font('Helvetica')
-        .fillColor('#94a3b8')
-        .text('FECHA', 200, startY)
-        .fontSize(11)
-        .font('Helvetica-Bold')
-        .fillColor('#0f172a')
-        .text(formatearFecha(facturaData.fecha_emision || new Date()), 200, startY + 12)
-        .moveDown(3);
+      // Logo y título principal - Círculo como logo
+      doc.circle(70, 62, 28).lineWidth(4).strokeColor('#ffffff').stroke();
+      doc.fontSize(16).font('Helvetica-Bold').fillColor('#ffffff').text('PR', 58, 53);
+      
+      doc.fontSize(34).font('Helvetica-Bold').fillColor('#ffffff').text('Panel Reservas', 110, 42);
+      doc.fontSize(10).font('Helvetica').fillColor('#ecfeff').text('Sistema de Gestion de Escenarios Deportivos', 110, 80);
 
-      // Información del cliente - minimalista
-      doc
-        .fontSize(8)
-        .font('Helvetica')
-        .fillColor('#94a3b8')
-        .text('FACTURADO A', 50, doc.y)
-        .moveDown(0.7);
+      // Badge FACTURA
+      doc.roundedRect(410, 48, 145, 55, 10).fill('#ffffff');
+      doc.fontSize(24).font('Helvetica-Bold').fillColor('#14b8a6').text('FACTURA', 420, 58, { width: 125, align: 'center' });
+      doc.fontSize(10).font('Helvetica').fillColor('#64748b').text('Electrónica', 420, 83, { width: 125, align: 'center' });
 
-      doc
-        .fontSize(11)
-        .font('Helvetica-Bold')
-        .fillColor('#0f172a')
-        .text(facturaData.cliente_nombre, 50, doc.y)
-        .moveDown(0.3);
+      // ========== INFORMACIÓN SUPERIOR ==========
+      let yPos = 180;
 
-      doc
-        .fontSize(9)
-        .font('Helvetica')
-        .fillColor('#64748b')
-        .text(facturaData.cliente_email, 50, doc.y)
-        .moveDown(0.2);
+      // Información de factura centrada
+      doc.fontSize(12).font('Helvetica-Bold').fillColor('#0f766e').text('INFORMACION DE FACTURA', margin, yPos);
 
-      doc
-        .text(facturaData.cliente_telefono || 'N/A', 50, doc.y)
-        .moveDown(2.5);
+      // Badge número de factura con fecha en línea horizontal
+      doc.roundedRect(margin, yPos + 28, pageWidth - (margin * 2), 58, 10).fill('#f0fdfa');
+      
+      // Número de factura (izquierda)
+      doc.fontSize(9).font('Helvetica').fillColor('#64748b').text('Numero de Factura:', margin + 20, yPos + 42);
+      doc.fontSize(20).font('Helvetica-Bold').fillColor('#0f766e').text(facturaData.numero_factura, margin + 20, yPos + 60);
 
-      // Tabla de items - minimalista
-      doc
-        .fontSize(8)
-        .font('Helvetica')
-        .fillColor('#94a3b8')
-        .text('DETALLE', 50, doc.y)
-        .moveDown(1);
+      // Fecha (derecha)
+      const fechaFormateada = formatearFecha(facturaData.fecha_emision || new Date());
+      doc.fontSize(9).font('Helvetica').fillColor('#64748b').text('Fecha:', pageWidth - 220, yPos + 42);
+      doc.fontSize(14).font('Helvetica-Bold').fillColor('#0f172a').text(fechaFormateada, pageWidth - 220, yPos + 60);
 
-      // Encabezado de tabla minimalista
-      const tableTop = doc.y;
-      const itemColumn = 50;
-      const descriptionColumn = 170;
-      const priceColumn = 430;
-      const totalColumn = 495;
+      // ========== DATOS DEL CLIENTE ==========
+      yPos = 280;
 
-      doc
-        .fontSize(8)
-        .font('Helvetica-Bold')
-        .fillColor('#64748b');
+      doc.roundedRect(margin, yPos, pageWidth - (margin * 2), 110, 12).lineWidth(2.5).fillAndStroke('#ecfdf5', '#5eead4');
+      
+      doc.fontSize(11).font('Helvetica-Bold').fillColor('#0f766e').text('FACTURADO A', margin + 20, yPos + 18);
+      
+      doc.fontSize(16).font('Helvetica-Bold').fillColor('#0f172a').text(facturaData.cliente_nombre, margin + 20, yPos + 42);
+      
+      doc.fontSize(10).font('Helvetica').fillColor('#475569')
+         .text(`Email:  ${facturaData.cliente_email}`, margin + 20, yPos + 68)
+         .text(`Tel:    ${facturaData.cliente_telefono || 'No proporcionado'}`, margin + 20, yPos + 86);
 
-      doc
-        .text('#', itemColumn, tableTop)
-        .text('DESCRIPCIÓN', descriptionColumn, tableTop)
-        .text('PRECIO', priceColumn, tableTop)
-        .text('TOTAL', totalColumn, tableTop, { align: 'right' });
+      // ========== TABLA DE DETALLES ==========
+      yPos = 425;
 
-      // Línea sutil debajo del encabezado
-      doc
-        .strokeColor('#e2e8f0')
-        .lineWidth(1)
-        .moveTo(50, tableTop + 13)
-        .lineTo(545, tableTop + 13)
-        .stroke();
+      doc.fontSize(13).font('Helvetica-Bold').fillColor('#0f766e').text('DETALLE DE LA RESERVA', margin, yPos);
 
-      // Items - minimalista
-      let y = tableTop + 22;
-      doc.fontSize(9).font('Helvetica').fillColor('#0f172a');
+      // Header tabla con fondo completo
+      yPos += 32;
+      doc.roundedRect(margin, yPos, pageWidth - (margin * 2), 36, 8).fill('#14b8a6');
+      
+      doc.fontSize(10).font('Helvetica-Bold').fillColor('#ffffff')
+         .text('#', margin + 15, yPos + 12)
+         .text('DESCRIPCIÓN', margin + 60, yPos + 12)
+         .text('PRECIO', pageWidth - 180, yPos + 12)
+         .text('TOTAL', pageWidth - 95, yPos + 12, { width: 55, align: 'right' });
 
-      const items = typeof facturaData.items === 'string' 
-        ? JSON.parse(facturaData.items) 
-        : facturaData.items;
+      // Items
+      yPos += 46;
+      const items = typeof facturaData.items === 'string' ? JSON.parse(facturaData.items) : facturaData.items;
 
       items.forEach((item, index) => {
-        // Fondo alternado sutil
+        const itemHeight = item.detalle ? 50 : 40;
+        
+        // Fondo alternado
         if (index % 2 === 0) {
-          doc
-            .fillColor('#f8fafc')
-            .rect(45, y - 3, 505, 22)
-            .fill();
+          doc.rect(margin, yPos - 5, pageWidth - (margin * 2), itemHeight).fillOpacity(0.5).fill('#f0fdfa');
+          doc.fillOpacity(1);
         }
-        
-        doc
-          .fillColor('#64748b')
-          .fontSize(9)
-          .text((index + 1).toString(), itemColumn, y)
-          .fillColor('#0f172a')
-          .text(item.descripcion, descriptionColumn, y, { width: 240 })
-          .fillColor('#64748b')
-          .text(formatearPrecio(item.precio), priceColumn, y)
-          .fillColor('#0f172a')
-          .font('Helvetica-Bold')
-          .text(formatearPrecio(item.total || item.precio), totalColumn, y, { align: 'right' })
-          .font('Helvetica');
-        
-        y += 25;
+
+        // Círculo con número
+        doc.circle(margin + 22, yPos + 8, 13).fill('#14b8a6');
+        doc.fontSize(11).font('Helvetica-Bold').fillColor('#ffffff').text((index + 1).toString(), margin + 17, yPos + 3, { width: 10, align: 'center' });
+
+        // Descripción sin emojis
+        doc.fontSize(11).font('Helvetica-Bold').fillColor('#0f172a').text(item.descripcion, margin + 60, yPos + 3, { width: 280 });
+
+        // Detalle si existe
+        if (item.detalle) {
+          doc.fontSize(8).font('Helvetica').fillColor('#64748b').text(item.detalle, margin + 80, yPos + 20, { width: 260 });
+        }
+
+        // Precio
+        doc.fontSize(10).font('Helvetica').fillColor('#64748b').text(formatearPrecio(item.precio), pageWidth - 180, yPos + 6);
+
+        // Total
+        doc.fontSize(13).font('Helvetica-Bold').fillColor('#0f766e').text(formatearPrecio(item.total || item.precio), pageWidth - 95, yPos + 5, { width: 55, align: 'right' });
+
+        yPos += itemHeight;
       });
 
-      // Espacio antes de totales
-      y += 15;
+      // ========== RESUMEN DE TOTALES ==========
+      yPos += 25;
 
-      // Línea sutil antes de totales
-      doc
-        .strokeColor('#e2e8f0')
-        .lineWidth(1)
-        .moveTo(380, y)
-        .lineTo(545, y)
-        .stroke();
+      // Línea separadora
+      doc.moveTo(pageWidth - 230, yPos).lineTo(pageWidth - margin, yPos).lineWidth(2).strokeColor('#5eead4').stroke();
 
-      y += 15;
+      yPos += 20;
 
-      // Totales - minimalista
-      doc
-        .fontSize(9)
-        .font('Helvetica')
-        .fillColor('#64748b')
-        .text('Subtotal', 430, y)
-        .fillColor('#0f172a')
-        .text(formatearPrecio(facturaData.subtotal), 495, y, { align: 'right' });
+      // Subtotal
+      doc.fontSize(11).font('Helvetica').fillColor('#64748b').text('Subtotal', pageWidth - 220, yPos);
+      doc.font('Helvetica-Bold').fillColor('#0f172a').text(formatearPrecio(facturaData.subtotal), pageWidth - 120, yPos, { width: 80, align: 'right' });
 
-      y += 18;
-      doc
-        .fillColor('#64748b')
-        .text('IVA (19%)', 430, y)
-        .fillColor('#0f172a')
-        .text(formatearPrecio(facturaData.impuestos), 495, y, { align: 'right' });
+      yPos += 26;
 
-      y += 10;
-      // Línea antes del total - minimalista
-      doc
-        .strokeColor('#e2e8f0')
-        .lineWidth(1)
-        .moveTo(380, y)
-        .lineTo(545, y)
-        .stroke();
+      // IVA
+      doc.font('Helvetica').fillColor('#64748b').text('IVA (19%)', pageWidth - 220, yPos);
+      doc.font('Helvetica-Bold').fillColor('#0f172a').text(formatearPrecio(facturaData.impuestos), pageWidth - 120, yPos, { width: 80, align: 'right' });
 
-      y += 15;
-      doc
-        .fontSize(11)
-        .font('Helvetica-Bold')
-        .fillColor('#10b981')
-        .text('TOTAL', 430, y)
-        .fontSize(16)
-        .text(formatearPrecio(facturaData.total), 495, y, { align: 'right' });
+      yPos += 30;
 
-      // Nota al pie - minimalista
-      const footerY = doc.page.height - 80;
+      // TOTAL - Caja destacada
+      doc.roundedRect(pageWidth - 230, yPos - 8, 190, 55, 12).fill('#14b8a6');
       
-      // Línea superior del footer
-      doc
-        .strokeColor('#e2e8f0')
-        .lineWidth(1)
-        .moveTo(50, footerY - 20)
-        .lineTo(545, footerY - 20)
-        .stroke();
+      doc.fontSize(15).font('Helvetica-Bold').fillColor('#ffffff').text('TOTAL A PAGAR', pageWidth - 218, yPos + 5);
+      doc.fontSize(26).font('Helvetica-Bold').fillColor('#ffffff').text(formatearPrecio(facturaData.total), pageWidth - 218, yPos + 25, { width: 170, align: 'right' });
 
-      doc
-        .fontSize(8)
-        .font('Helvetica')
-        .fillColor('#94a3b8')
-        .text(
-          'Factura electrónica generada automáticamente',
-          50,
-          footerY,
-          { align: 'center', width: 495 }
-        )
-        .fontSize(7)
-        .fillColor('#cbd5e0')
-        .text(
-          '© 2025 Universidad del Valle · Sistema de Gestión de Escenarios Deportivos',
-          50,
-          footerY + 15,
-          { align: 'center', width: 495 }
-        );
+      // ========== FOOTER ==========
+      const footerY = pageHeight - 115;
 
-      // Finalizar el documento
+      // Banda superior
+      doc.rect(0, footerY - 12, pageWidth, 4).fill('#14b8a6');
+
+      // Textos del footer
+      doc.fontSize(9).font('Helvetica').fillColor('#64748b')
+         .text('Factura electronica generada automaticamente', 0, footerY + 8, { align: 'center', width: pageWidth });
+
+      doc.fontSize(12).font('Helvetica-Bold').fillColor('#0f766e')
+         .text('Gracias por tu reserva!', 0, footerY + 32, { align: 'center', width: pageWidth });
+
+      doc.fontSize(8).font('Helvetica').fillColor('#94a3b8')
+         .text('2025 Universidad del Valle - Sistema de Gestion de Escenarios Deportivos', 0, footerY + 58, { align: 'center', width: pageWidth })
+         .text('Tulua, Valle del Cauca, Colombia', 0, footerY + 72, { align: 'center', width: pageWidth });
+
+      // Círculos decorativos
+      doc.circle(35, footerY + 55, 20).fillOpacity(0.08).fill('#14b8a6');
+      doc.circle(pageWidth - 35, footerY + 55, 20).fillOpacity(0.08).fill('#14b8a6');
+
       doc.end();
     } catch (error) {
       reject(error);
@@ -248,28 +176,27 @@ async function generarFacturaPDF(facturaData) {
 }
 
 /**
- * Formatear precio a COP
+ * Formatear precio a COP sin símbolo
  */
 function formatearPrecio(precio) {
-  return new Intl.NumberFormat('es-CO', {
-    style: 'currency',
-    currency: 'COP',
-    minimumFractionDigits: 0
+  const formatted = new Intl.NumberFormat('es-CO', {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2
   }).format(precio);
+  return `$ ${formatted}`;
 }
 
 /**
- * Formatear fecha
+ * Formatear fecha sin hora
  */
 function formatearFecha(fecha) {
   const date = typeof fecha === 'string' ? new Date(fecha) : fecha;
-  return new Intl.DateTimeFormat('es-CO', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
-  }).format(date);
+  const dia = date.getDate();
+  const meses = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+  const mes = meses[date.getMonth()];
+  const anio = date.getFullYear();
+  
+  return `${dia} de ${mes} de ${anio}`;
 }
 
 module.exports = {

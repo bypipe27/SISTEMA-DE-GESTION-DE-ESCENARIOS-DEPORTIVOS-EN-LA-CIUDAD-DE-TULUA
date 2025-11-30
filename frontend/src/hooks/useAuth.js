@@ -97,8 +97,8 @@ export function useAuth() {
     }
 
     try {
-      // Remover confirmContrasena antes de enviar
-      const { confirmContrasena, confirmarContrasena, ...dataToSend } = providerData;
+      // Remover confirmarContrasena antes de enviar
+      const { confirmarContrasena, ...dataToSend } = providerData;
       const result = await authService.registerProvider(dataToSend);
 
       return {

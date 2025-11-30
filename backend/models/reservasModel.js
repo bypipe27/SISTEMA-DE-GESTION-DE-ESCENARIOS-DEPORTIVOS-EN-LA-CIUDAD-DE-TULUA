@@ -113,7 +113,7 @@ async function existeConflictoReserva(canchaId, date, start, end, client = pool)
     SELECT 1 FROM reservas
     WHERE cancha_id = $1
       AND fecha = $2
-      AND estado != 'cancelada'
+      AND estado IN ('activa', 'programada', 'completada')
       AND NOT (fin <= $3 OR inicio >= $4)
     LIMIT 1
   `;
