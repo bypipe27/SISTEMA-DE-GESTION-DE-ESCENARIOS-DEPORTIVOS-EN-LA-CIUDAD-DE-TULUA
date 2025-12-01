@@ -24,6 +24,10 @@ const EMAIL_PASS = (process.env.EMAIL_PASS || "").replace(/\s+/g, "");
 
 // Usamos Resend a través del helper `enviarCorreo` en utils/mailer.js
 const { enviarCorreo } = require("../utils/mailer");
+const { 
+  plantillaCodigoVerificacionUsuario,
+  plantillaCodigoVerificacionProveedor 
+} = require("../utils/emailTemplates");
 
 const CODIGO_MINUTOS_EXPIRA = 10;
 const MAX_INTENTOS = 5;
@@ -118,17 +122,24 @@ async function registrarUsuario(req, res) {
 
     (async () => {
       try {
+        const esProveedor = role === "provider";
+        const plantilla = esProveedor 
+          ? plantillaCodigoVerificacionProveedor 
+          : plantillaCodigoVerificacionUsuario;
+        
         await enviarCorreo({
           to: email,
-          subject: "Tu código de verificación",
-          html: `
-            <h3>¡Hola ${nombre}!</h3>
-            <p>Usa este código para confirmar tu cuenta:</p>
-            <div style="font-size:28px;font-weight:bold;letter-spacing:4px">${codigo}</div>
-            <p>Caduca en <b>${CODIGO_MINUTOS_EXPIRA} minutos</b>.</p>
-          `,
+          subject: esProveedor 
+            ? "Verificación de Proveedor - Panel Reservas" 
+            : "Verifica tu cuenta - Panel Reservas",
+          html: plantilla({
+            nombre: nombre,
+            codigo: codigo,
+            minutosExpira: CODIGO_MINUTOS_EXPIRA
+          }),
         });
       } catch (mailErr) {
+        console.error("Error enviando correo:", mailErr);
       }
     })();
     return;
@@ -226,16 +237,26 @@ async function reenviarCodigo(req, res) {
 
     (async () => {
       try {
+        const pendiente = await obtenerPendientePorEmail(email);
+        const nombre = pendiente?.nombre || "Usuario";
+        const esProveedor = pendiente?.role === "provider";
+        const plantilla = esProveedor 
+          ? plantillaCodigoVerificacionProveedor 
+          : plantillaCodigoVerificacionUsuario;
+        
         await enviarCorreo({
           to: email,
-          subject: "Nuevo código de verificación",
-          html: `
-            <p>Tu nuevo código:</p>
-            <div style="font-size:28px;font-weight:bold;letter-spacing:4px">${codigo}</div>
-            <p>Caduca en <b>${CODIGO_MINUTOS_EXPIRA} minutos</b>.</p>
-          `,
+          subject: esProveedor 
+            ? "Nuevo código - Verificación de Proveedor" 
+            : "Nuevo código de verificación - Panel Reservas",
+          html: plantilla({
+            nombre: nombre,
+            codigo: codigo,
+            minutosExpira: CODIGO_MINUTOS_EXPIRA
+          }),
         });
       } catch (mailErr) {
+        console.error("Error enviando correo:", mailErr);
       }
     })();
     return;

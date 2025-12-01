@@ -1,6 +1,7 @@
 const { differenceInHours, parseISO } = require("date-fns");
 const reservasModel = require("../models/reservasModel");
 const { enviarCorreo } = require("../utils/mailer");
+const { plantillaConfirmacionReserva, plantillaNotificacionPropietario } = require("../utils/emailTemplates");
 const db = require("../db"); 
 function toISODateOnly(dateLike) {
   try {
@@ -267,39 +268,37 @@ async function crearReserva(payload) {
       try {
         const canchaInfo = await reservasModel.obtenerInfoPropietarioPorCanchaId(cancha_id);
         if (canchaInfo?.propietario_email) {
-          let serviciosHtml = "";
-          if (servicios_extra && servicios_extra.length > 0) {
-            serviciosHtml = `
-              <li><b>Servicios extra:</b></li>
-              <ul>
-                ${servicios_extra.map(s =>
-                  `<li>${s.nombre || 'Servicio'}: ${toCurrencyCOP(s.precio_aplicado)}</li>`
-                ).join('')}
-              </ul>
-            `;
-          }
+          // Formatear servicios extra para la plantilla
+          const serviciosFormateados = servicios_extra && servicios_extra.length > 0 
+            ? servicios_extra.map(s => ({
+                nombre: s.nombre || 'Servicio',
+                precio_aplicado: toCurrencyCOP(s.precio_aplicado)
+              }))
+            : [];
 
+          // Formatear fecha
+          const fechaFormateada = new Intl.DateTimeFormat('es-CO', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+          }).format(new Date(date));
 
           await enviarCorreo({
             to: canchaInfo.propietario_email,
-            subject: `Nueva reserva - ${canchaInfo.cancha_nombre}`,
-            html: `
-              <h3>Hola ${canchaInfo.propietario_nombre || "propietario"}</h3>
-              <p>Se ha realizado una nueva reserva en tu cancha:</p>
-              <ul>
-                <li><b>Cancha:</b> ${canchaInfo.cancha_nombre}</li>
-                <li><b>Fecha:</b> ${date}</li>
-                <li><b>Inicio:</b> ${start}</li>
-                <li><b>Fin:</b> ${end}</li>
-                <li><b>Cliente:</b> ${cliente_nombre}</li>
-                <li><b>Teléfono:</b> ${cliente_telefono || "N/A"}</li>
-                <li><b>Método pago:</b> ${metodo_pago}</li>
-                <li><b>Total:</b> ${toCurrencyCOP(reserva.total)}</li>
-                ${serviciosHtml}
-                <li><b>ID reserva:</b> ${reserva.id}</li>
-              </ul>
-              <p>Revisa el panel para más detalles.</p>
-            `,
+            subject: `🎉 Nueva Reserva - ${canchaInfo.cancha_nombre} | Panel Reservas`,
+            html: plantillaNotificacionPropietario({
+              propietario_nombre: canchaInfo.propietario_nombre || "propietario",
+              cancha_nombre: canchaInfo.cancha_nombre,
+              cliente_nombre: cliente_nombre,
+              cliente_telefono: cliente_telefono || 'No proporcionado',
+              fecha: fechaFormateada,
+              hora_inicio: start,
+              hora_fin: end,
+              metodo_pago: metodo_pago || 'Tarjeta',
+              total: toCurrencyCOP(reserva.total),
+              servicios_extra: serviciosFormateados,
+              numero_reserva: `#${String(reserva.id).padStart(6, '0')}`
+            }),
           });
         }
       } catch (mailErr) {

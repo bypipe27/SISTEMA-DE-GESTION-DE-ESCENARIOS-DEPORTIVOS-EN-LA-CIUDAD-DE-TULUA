@@ -11,7 +11,7 @@ function RegisterProvider() {
     email: "",
     telefono: "",
     contrasena: "",
-    confirmContrasena: "",
+    confirmarContrasena: "",
   });
   const [mensaje, setMensaje] = useState("");
   const { loading, error, handleRegisterProvider, clearError } = useAuth();
@@ -154,7 +154,7 @@ function RegisterProvider() {
 
               {/* Confirmar contraseña */}
               <div>
-                <label htmlFor="confirmContrasena" className="block text-sm font-bold text-slate-700 mb-2">
+                <label htmlFor="confirmarContrasena" className="block text-sm font-bold text-slate-700 mb-2">
                   Confirmar contraseña
                 </label>
                 <div className="relative">
@@ -162,10 +162,10 @@ function RegisterProvider() {
                     <FaCheckCircle className="text-lg" />
                   </div>
                   <input
-                    id="confirmContrasena"
-                    name="confirmContrasena"
+                    id="confirmarContrasena"
+                    name="confirmarContrasena"
                     type="password"
-                    value={form.confirmContrasena}
+                    value={form.confirmarContrasena}
                     onChange={handleChange}
                     className="w-full pl-12 pr-4 py-3 border-2 border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white transition-all shadow-sm hover:border-blue-300 text-slate-800"
                     required

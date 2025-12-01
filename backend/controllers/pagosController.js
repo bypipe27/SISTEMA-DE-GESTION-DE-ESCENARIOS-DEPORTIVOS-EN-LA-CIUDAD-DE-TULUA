@@ -70,6 +70,7 @@ const usuarioModel = require('../models/usuarioModel');
 const canchaModel = require('../models/canchaModel');
 const { generarFacturaPDF } = require('../utils/factura');
 const { enviarCorreo } = require('../utils/mailer');
+const { plantillaConfirmacionReserva } = require('../utils/emailTemplates');
 const db = require("../db.js");
 const pool = db.pool || db.default || db;
 
@@ -230,11 +231,32 @@ async function confirmarPago(req, res) {
     // Generar PDF de la factura
     const pdfBuffer = await generarFacturaPDF(facturaData);
 
-    // Enviar factura por correo
+    // Formatear datos para el template de correo
+    const serviciosExtra = [];
+    if (facturaData.items.length > 1) {
+      for (let i = 1; i < facturaData.items.length; i++) {
+        serviciosExtra.push({
+          nombre: facturaData.items[i].descripcion,
+          precio_aplicado: formatearPrecio(facturaData.items[i].precio)
+        });
+      }
+    }
+
+    // Enviar factura por correo usando la plantilla profesional
     await enviarCorreo({
       to: usuario.email,
-      subject: `Factura ${numeroFactura} - Reserva Confirmada`,
-      html: generarEmailFactura(facturaData, cancha, reserva),
+      subject: `✅ Factura ${numeroFactura} - Reserva Confirmada | Panel Reservas`,
+      html: plantillaConfirmacionReserva({
+        cliente_nombre: reserva.cliente_nombre,
+        numero_reserva: `#${String(reserva.id).padStart(6, '0')}`,
+        cancha_nombre: cancha.nombre,
+        fecha: formatearFecha(reserva.fecha),
+        hora_inicio: reserva.inicio,
+        hora_fin: reserva.fin,
+        total: formatearPrecio(pago.monto),
+        direccion: cancha.direccion || 'Por confirmar',
+        servicios_extra: serviciosExtra
+      }),
       attachments: [
         {
           filename: `factura-${numeroFactura}.pdf`,
