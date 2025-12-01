@@ -4,19 +4,12 @@ import { FaArrowLeft, FaMapMarkerAlt, FaClock, FaCalendarAlt, FaTag, FaInfoCircl
 import { useCancha } from "../hooks/useCanchas";
 import { Cancha } from "../models/Cancha";
 import SideNavBar from "../components/SideNavBar";
-import RatingWidget from "../components/RatingWidget";
-import reviewService from "../services/reviewService";
-import useSocket from "../hooks/useSocket";
-import { ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
-// Reviews moved to ReservaPage panel
 
 function CanchaDetailsPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
   const { cancha, loading } = useCancha(id);
-  const [stats, setStats] = React.useState({ avg: cancha?.avg_rating ?? 0, count: cancha?.reviews_count ?? 0 });
   
   // Detectar de dónde viene el usuario
   const fromReserva = location.state?.from === 'reserva';
@@ -47,22 +40,6 @@ function CanchaDetailsPage() {
       navigate(backTo);
     }
   };
-
-  // actualizar stats cuando cambie cancha
-  React.useEffect(() => {
-    setStats({ avg: cancha?.avg_rating ?? 0, count: cancha?.reviews_count ?? 0 });
-  }, [cancha]);
-
-  // Socket: actualizar stats en tiempo real
-  useSocket(import.meta.env.VITE_API_BASE || null, {
-    'cancha:statsUpdated': (payload) => {
-      try {
-        if (payload?.canchaId === cancha?.id && payload.stats) {
-          setStats({ avg: payload.stats.avg_rating, count: payload.stats.reviews_count });
-        }
-      } catch (e) {}
-    }
-  });
 
   if (loading) return (
     <div className="min-h-screen bg-gradient-to-br from-cyan-50 via-blue-50 to-indigo-100 flex">
@@ -174,7 +151,6 @@ function CanchaDetailsPage() {
       
       <div className="flex-1 ml-64">
         <div className="container mx-auto max-w-5xl p-4 sm:p-6 lg:p-8">
-          <ToastContainer position="top-right" />
           {/* Header con botón de volver */}
           <header className="flex items-center mb-6">
             <button
@@ -212,8 +188,6 @@ function CanchaDetailsPage() {
                 {cancha.descripcion}
               </p>
             </div>
-
-            {/* Reseñas ahora se muestran en el panel de reserva */}
 
             <div className="w-full h-px bg-slate-200 my-6"></div>
 

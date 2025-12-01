@@ -4,8 +4,6 @@ require("dotenv").config();
 
 
 const app = express();
-const http = require('http');
-const { Server } = require('socket.io');
 // reemplazamos app.use(cors()) por configuración controlada:
 const FRONTEND_URL = (process.env.FRONTEND_URL || "").replace(/\/+$/, "");
 const allowedOrigins = [
@@ -41,7 +39,6 @@ const passwordRoutes = require("./routes/password");
 const pagosRoutes = require("./routes/pagos");
 const metodosPagoRoutes = require("./routes/metodosPago");
 const serviciosExtraRoutes = require("./routes/servicesExtra");
-const reviewsRoutes = require("./routes/reviews");
 
 
 
@@ -53,9 +50,6 @@ app.use("/api/canchas", canchasRoutes);
 app.use("/api/password", passwordRoutes);
 app.use("/api/pagos", pagosRoutes);
 app.use("/api/metodos-pago", metodosPagoRoutes);
-
-// Rutas de reviews (reseñas)
-app.use('/api', reviewsRoutes);
 
 
 // Middleware de manejo de errores
@@ -69,22 +63,7 @@ app.use((err, req, res, next) => {
 });
 
 
-// servidor con Socket.IO
+// servidor
 const PORT = process.env.PORT || 5000;
-const server = http.createServer(app);
-const io = new Server(server, {
-  cors: {
-    origin: allowedOrigins,
-    methods: ['GET','POST']
-  }
-});
+app.listen(PORT, () => console.log(`✅ Servidor corriendo en puerto ${PORT}`));
 
-// Exponer la instancia io en app para usar en controladores
-app.set('io', io);
-
-io.on('connection', (socket) => {
-  console.log('🔌 Cliente Socket.IO conectado', socket.id);
-  socket.on('disconnect', () => console.log('🔌 Cliente Socket.IO desconectado', socket.id));
-});
-
-server.listen(PORT, () => console.log(`✅ Servidor corriendo con Socket.IO en puerto ${PORT}`));
