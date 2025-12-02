@@ -127,16 +127,28 @@ function RegisterProvider() {
                     value={form.telefono}
                     onChange={handleChange}
                     onInput={(e) => {
-                      // Filtrar solo números, espacios, guiones y paréntesis
-                      e.target.value = e.target.value.replace(/[^0-9+\-\s()]/g, '');
+                      // Filtrar solo números y limitar a máximo 10 dígitos
+                      let valor = e.target.value.replace(/[^0-9]/g, '');
+                      if (valor.length > 10) {
+                        valor = valor.slice(0, 10);
+                      }
+                      e.target.value = valor;
+                      // Actualizar el estado del formulario
+                      setForm(prev => ({ ...prev, telefono: valor }));
                     }}
                     onKeyPress={(e) => {
-                      // Prevenir ingreso de letras
-                      if (!/[0-9+\-\s()]/.test(e.key) && e.key !== 'Backspace' && e.key !== 'Delete' && e.key !== 'Tab') {
+                      // Prevenir ingreso de letras y limitar a 10 números
+                      const valorActual = e.target.value.replace(/[^0-9]/g, '');
+                      if (!/[0-9]/.test(e.key) && e.key !== 'Backspace' && e.key !== 'Delete' && e.key !== 'Tab') {
+                        e.preventDefault();
+                      } else if (valorActual.length >= 10 && /[0-9]/.test(e.key)) {
                         e.preventDefault();
                       }
                     }}
-                    placeholder="Número de contacto (ej: 3001234567)"
+                    placeholder="Número de contacto (máx. 10 dígitos)"
+                    pattern="[0-9]{10}"
+                    maxLength="10"
+                    title="Ingrese un número de teléfono válido (máximo 10 dígitos)"
                     className="w-full pl-12 pr-4 py-3 border-2 border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white transition-all shadow-sm hover:border-blue-300 text-slate-800 placeholder-slate-400"
                   />
                 </div>

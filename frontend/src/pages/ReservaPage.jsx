@@ -387,17 +387,27 @@ function ReservaPage() {
                             value={clienteTelefono}
                             onChange={(e) => setClienteTelefono(e.target.value)}
                             onInput={(e) => {
-                              // Filtrar solo números, espacios, guiones y paréntesis
-                              e.target.value = e.target.value.replace(/[^0-9+\-\s()]/g, '');
-                              setClienteTelefono(e.target.value);
+                              // Filtrar solo números y limitar a máximo 10 dígitos
+                              let valor = e.target.value.replace(/[^0-9]/g, '');
+                              if (valor.length > 10) {
+                                valor = valor.slice(0, 10);
+                              }
+                              e.target.value = valor;
+                              setClienteTelefono(valor);
                             }}
                             onKeyPress={(e) => {
-                              // Prevenir ingreso de letras
-                              if (!/[0-9+\-\s()]/.test(e.key) && e.key !== 'Backspace' && e.key !== 'Delete' && e.key !== 'Tab') {
+                              // Prevenir ingreso de letras y limitar a 10 números
+                              const valorActual = e.target.value.replace(/[^0-9]/g, '');
+                              if (!/[0-9]/.test(e.key) && e.key !== 'Backspace' && e.key !== 'Delete' && e.key !== 'Tab') {
+                                e.preventDefault();
+                              } else if (valorActual.length >= 10 && /[0-9]/.test(e.key)) {
                                 e.preventDefault();
                               }
                             }}
-                            placeholder="Tu número de teléfono"
+                            placeholder="Tu número de teléfono (máx. 10 dígitos)"
+                            pattern="[0-9]{10}"
+                            maxLength="10"
+                            title="Ingrese un número de teléfono válido (máximo 10 dígitos)"
                             className="w-full pl-10 pr-3 py-2.5 rounded-xl border-2 border-purple-200 bg-white/80 backdrop-blur-sm focus:ring-2 focus:ring-pink-400 focus:border-pink-400 transition-all duration-300 placeholder-purple-300"
                             required
                           />

@@ -39,8 +39,8 @@ function RegisterPage() {
       }
 
       // Validar formato de teléfono si se proporciona
-      if (formData.telefono && !/^[0-9+\-\s()]{10,15}$/.test(formData.telefono)) {
-        throw new Error('El formato del teléfono no es válido');
+      if (formData.telefono && !/^[0-9]{10}$/.test(formData.telefono)) {
+        throw new Error('El teléfono debe tener exactamente 10 dígitos');
       }
 
       const result = await handleRegister(formData);
@@ -185,18 +185,28 @@ function RegisterPage() {
                 value={formData.telefono}
                 onChange={handleChange}
                 onInput={(e) => {
-                  // Filtrar solo números, espacios, guiones y paréntesis
-                  e.target.value = e.target.value.replace(/[^0-9+\-\s()]/g, '');
+                  // Filtrar solo números y limitar a máximo 10 dígitos
+                  let valor = e.target.value.replace(/[^0-9]/g, '');
+                  if (valor.length > 10) {
+                    valor = valor.slice(0, 10);
+                  }
+                  e.target.value = valor;
+                  // Actualizar el estado del formulario
+                  setFormData(prev => ({ ...prev, telefono: valor }));
                 }}
                 onKeyPress={(e) => {
-                  // Prevenir ingreso de letras
-                  if (!/[0-9+\-\s()]/.test(e.key) && e.key !== 'Backspace' && e.key !== 'Delete' && e.key !== 'Tab') {
+                  // Prevenir ingreso de letras y limitar a 10 números
+                  const valorActual = e.target.value.replace(/[^0-9]/g, '');
+                  if (!/[0-9]/.test(e.key) && e.key !== 'Backspace' && e.key !== 'Delete' && e.key !== 'Tab') {
+                    e.preventDefault();
+                  } else if (valorActual.length >= 10 && /[0-9]/.test(e.key)) {
                     e.preventDefault();
                   }
                 }}
-                placeholder="Número de contacto (ej: 3001234567)"
-                pattern="[0-9+\-\s()]{10,15}"
-                title="Ingrese un número de teléfono válido (10-15 dígitos)"
+                placeholder="Número de contacto (máx. 10 dígitos)"
+                pattern="[0-9]{10}"
+                maxLength="10"
+                title="Ingrese un número de teléfono válido (máximo 10 dígitos)"
                 className="w-full pl-12 pr-4 py-3.5 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all text-slate-800 placeholder-slate-400 bg-slate-50 hover:bg-white"
               />
             </div>
