@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { FaPlus, FaSyncAlt, FaTrash, FaEdit, FaImage, FaTimes } from "react-icons/fa";
 import SideNavProvider from "../components/SideNavProvider";
+import Toast from "../components/Toast";
 import { useCanchasManager } from "../hooks/useCanchasManager";
 import { uploadImage, validateImage, generatePreview } from "../services/uploadService";
 function CanchasManager() {
@@ -46,8 +47,9 @@ function CanchasManager() {
   const [imagePreview, setImagePreview] = useState(null);
   const [uploadingImage, setUploadingImage] = useState(false);
   const [imageError, setImageError] = useState("");
-
-  // Manejar selección de imagen
+  
+  // Estado para notificaciones toast
+  const [toast, setToast] = useState({ isOpen: false, message: "", type: "success" });  // Manejar selección de imagen
   const handleImageSelect = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -154,7 +156,12 @@ function CanchasManager() {
       setImagePreview(null);
       setImageError("");
       
-      alert(editing ? "Cancha actualizada exitosamente" : "Cancha creada exitosamente");
+      // Mostrar mensaje de éxito con toast
+      setToast({
+        isOpen: true,
+        message: editing ? "Cancha actualizada exitosamente" : "Cancha creada exitosamente",
+        type: "success"
+      });
       
     } catch (err) {
       setError("Error al guardar cancha: " + err.message);
@@ -448,6 +455,14 @@ function CanchasManager() {
           </div>
         )}
       </main>
+      
+      {/* Toast para notificaciones */}
+      <Toast
+        isOpen={toast.isOpen}
+        message={toast.message}
+        type={toast.type}
+        onClose={() => setToast({ ...toast, isOpen: false })}
+      />
     </div>
   );
 }

@@ -26,14 +26,43 @@ function RegisterPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const result = await handleRegister(formData);
+    // Validaciones adicionales antes del registro
+    try {
+      // Validar confirmación de contraseña
+      if (formData.contrasena !== formData.confirmarContrasena) {
+        throw new Error('Las contraseñas no coinciden');
+      }
 
-    if (result.success) {
-      setMensaje(result.message);
-      // Redirigir a verificación
-      setTimeout(() => {
-        navigate(`/verify?email=${encodeURIComponent(result.email)}`);
-      }, 500);
+      // Validar longitud mínima de contraseña
+      if (formData.contrasena.length < 6) {
+        throw new Error('La contraseña debe tener al menos 6 caracteres');
+      }
+
+      // Validar formato de teléfono si se proporciona
+      if (formData.telefono && !/^[0-9+\-\s()]{10,15}$/.test(formData.telefono)) {
+        throw new Error('El formato del teléfono no es válido');
+      }
+
+      const result = await handleRegister(formData);
+
+      if (result.success) {
+        setMensaje(result.message);
+        // Redirigir a verificación
+        setTimeout(() => {
+          navigate(`/verify?email=${encodeURIComponent(result.email)}`);
+        }, 500);
+      } else if (result.error) {
+        // Manejo específico de errores del servidor
+        if (result.error.includes('email ya existe') || result.error.includes('already exists')) {
+          setMensaje('Este correo electrónico ya está registrado. Intenta con otro.');
+        } else if (result.error.includes('telefono ya existe')) {
+          setMensaje('Este número de teléfono ya está registrado.');
+        } else {
+          setMensaje(result.error);
+        }
+      }
+    } catch (validationError) {
+      setMensaje(validationError.message);
     }
   };
 
@@ -99,6 +128,9 @@ function RegisterPage() {
                 value={formData.nombre}
                 onChange={handleChange}
                 placeholder="Tu nombre completo"
+                minLength="2"
+                maxLength="50"
+                title="El nombre debe tener entre 2 y 50 caracteres"
                 className="w-full pl-12 pr-4 py-3.5 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all text-slate-800 placeholder-slate-400 bg-slate-50 hover:bg-white"
                 required
                 aria-invalid={error && !formData.nombre ? "true" : undefined}
@@ -152,7 +184,9 @@ function RegisterPage() {
                 name="telefono"
                 value={formData.telefono}
                 onChange={handleChange}
-                placeholder="Número de contacto"
+                placeholder="Número de contacto (ej: 3001234567)"
+                pattern="[0-9+\-\s()]{10,15}"
+                title="Ingrese un número de teléfono válido (10-15 dígitos)"
                 className="w-full pl-12 pr-4 py-3.5 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all text-slate-800 placeholder-slate-400 bg-slate-50 hover:bg-white"
               />
             </div>
@@ -173,7 +207,10 @@ function RegisterPage() {
                 name="contrasena"
                 value={formData.contrasena}
                 onChange={handleChange}
-                placeholder="Crea una contraseña segura"
+                placeholder="Crea una contraseña segura (mín. 6 caracteres)"
+                minLength="6"
+                maxLength="50"
+                title="La contraseña debe tener entre 6 y 50 caracteres"
                 className="w-full pl-12 pr-4 py-3.5 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all text-slate-800 placeholder-slate-400 bg-slate-50 hover:bg-white"
                 required
                 aria-invalid={error && !formData.contrasena ? "true" : undefined}

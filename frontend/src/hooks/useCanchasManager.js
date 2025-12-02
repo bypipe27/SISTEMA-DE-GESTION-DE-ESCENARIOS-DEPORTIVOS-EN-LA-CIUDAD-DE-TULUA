@@ -425,13 +425,15 @@ export const useCanchasManager = () => {
       } catch {}
       
       if (!res.ok) {
-        alert((data && (data.error || data.message)) || `Error ${res.status}`);
-        return;
+        console.error('Error eliminando cancha:', (data && (data.error || data.message)) || `Error ${res.status}`);
+        return { success: false, message: (data && (data.error || data.message)) || `Error ${res.status}` };
       }
       
       setCanchas(prev => prev.filter(c => c.id !== cancha.id));
+      return { success: true, message: "Cancha eliminada exitosamente" };
     } catch (err) {
-      alert("Error eliminando cancha");
+      console.error("Error eliminando cancha:", err);
+      return { success: false, message: "Error eliminando cancha" };
     }
   }
 
