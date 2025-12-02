@@ -184,6 +184,16 @@ function RegisterPage() {
                 name="telefono"
                 value={formData.telefono}
                 onChange={handleChange}
+                onInput={(e) => {
+                  // Filtrar solo números, espacios, guiones y paréntesis
+                  e.target.value = e.target.value.replace(/[^0-9+\-\s()]/g, '');
+                }}
+                onKeyPress={(e) => {
+                  // Prevenir ingreso de letras
+                  if (!/[0-9+\-\s()]/.test(e.key) && e.key !== 'Backspace' && e.key !== 'Delete' && e.key !== 'Tab') {
+                    e.preventDefault();
+                  }
+                }}
                 placeholder="Número de contacto (ej: 3001234567)"
                 pattern="[0-9+\-\s()]{10,15}"
                 title="Ingrese un número de teléfono válido (10-15 dígitos)"

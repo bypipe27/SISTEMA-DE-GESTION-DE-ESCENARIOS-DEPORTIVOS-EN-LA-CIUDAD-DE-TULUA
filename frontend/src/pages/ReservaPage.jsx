@@ -386,6 +386,17 @@ function ReservaPage() {
                             type="tel"
                             value={clienteTelefono}
                             onChange={(e) => setClienteTelefono(e.target.value)}
+                            onInput={(e) => {
+                              // Filtrar solo números, espacios, guiones y paréntesis
+                              e.target.value = e.target.value.replace(/[^0-9+\-\s()]/g, '');
+                              setClienteTelefono(e.target.value);
+                            }}
+                            onKeyPress={(e) => {
+                              // Prevenir ingreso de letras
+                              if (!/[0-9+\-\s()]/.test(e.key) && e.key !== 'Backspace' && e.key !== 'Delete' && e.key !== 'Tab') {
+                                e.preventDefault();
+                              }
+                            }}
                             placeholder="Tu número de teléfono"
                             className="w-full pl-10 pr-3 py-2.5 rounded-xl border-2 border-purple-200 bg-white/80 backdrop-blur-sm focus:ring-2 focus:ring-pink-400 focus:border-pink-400 transition-all duration-300 placeholder-purple-300"
                             required

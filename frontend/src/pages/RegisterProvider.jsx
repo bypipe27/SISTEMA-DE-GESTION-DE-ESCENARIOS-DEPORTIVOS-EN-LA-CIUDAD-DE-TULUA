@@ -123,8 +123,20 @@ function RegisterProvider() {
                   <input
                     id="telefono"
                     name="telefono"
+                    type="tel"
                     value={form.telefono}
                     onChange={handleChange}
+                    onInput={(e) => {
+                      // Filtrar solo números, espacios, guiones y paréntesis
+                      e.target.value = e.target.value.replace(/[^0-9+\-\s()]/g, '');
+                    }}
+                    onKeyPress={(e) => {
+                      // Prevenir ingreso de letras
+                      if (!/[0-9+\-\s()]/.test(e.key) && e.key !== 'Backspace' && e.key !== 'Delete' && e.key !== 'Tab') {
+                        e.preventDefault();
+                      }
+                    }}
+                    placeholder="Número de contacto (ej: 3001234567)"
                     className="w-full pl-12 pr-4 py-3 border-2 border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white transition-all shadow-sm hover:border-blue-300 text-slate-800 placeholder-slate-400"
                   />
                 </div>
