@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import SideNavProvider from "../components/SideNavProvider";
 import { useProviderReservasManager } from "../hooks/useProviderReservasManager";
 import Reserva from "../models/Reserva";
@@ -18,19 +18,79 @@ function ProviderReservas() {
     marcarNoShow
   } = useProviderReservasManager();
 
+  // Ref para el contenedor del menú
+  const menuRef = useRef(null);
+
+  // Función para determinar la posición del dropdown
+  const getDropdownPosition = (index, totalItems) => {
+    const isNearBottom = index >= totalItems - 3; // Últimas 3 filas
+    return isNearBottom 
+      ? "absolute right-0 bottom-full mb-2 w-64 bg-white border pr-dropdown z-50"
+      : "absolute right-0 top-full mt-2 w-64 bg-white border pr-dropdown z-50";
+  };
+
+  // Cerrar menú con clic fuera o tecla Escape
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        setOpenMenu(null);
+      }
+    };
+
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') {
+        setOpenMenu(null);
+      }
+    };
+
+    if (openMenu) {
+      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener('keydown', handleKeyDown);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [openMenu, setOpenMenu]);
+
   // Funciones auxiliares de formato
   function formatTime(t) {
-    if (!t) return "";
-    if (typeof t === 'string') {
-      const m = t.match(/^(\d{2}:\d{2})/);
-      if (m) return m[1];
-      if (t.includes('T')) {
-        try { return new Date(t).toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' }); } catch {}
+    if (!t) return "--:--";
+    
+    // Convertir a string para manejo uniforme
+    const timeStr = String(t);
+    
+    // Si ya está en formato HH:MM o HH:MM:SS
+    if (timeStr.includes(':')) {
+      const parts = timeStr.split(':');
+      if (parts.length >= 2) {
+        const hours = parts[0].padStart(2, '0');
+        const minutes = parts[1].padStart(2, '0');
+        return `${hours}:${minutes}`;
       }
-      return t;
     }
-    if (t instanceof Date) return t.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' });
-    return String(t);
+    
+    // Si contiene 'T' (formato ISO)
+    if (timeStr.includes('T')) {
+      try {
+        return new Date(timeStr).toLocaleTimeString('es-CO', { 
+          hour: '2-digit', 
+          minute: '2-digit',
+          hour12: false
+        });
+      } catch {
+        return timeStr;
+      }
+    }
+    
+    // Si es solo un número (asumir hora)
+    const numericTime = parseInt(timeStr);
+    if (!isNaN(numericTime) && numericTime >= 0 && numericTime <= 23) {
+      return `${numericTime.toString().padStart(2, '0')}:00`;
+    }
+    
+    return timeStr;
   }
 
   return (
@@ -48,12 +108,15 @@ function ProviderReservas() {
           .pr-table th:first-child { border-radius: 0; }
           .pr-table th:last-child { border-radius: 0; }
           .pr-table td { padding: 16px; vertical-align: middle; color:#374151; background: #ffffff; }
+          .pr-table th:nth-child(4), .pr-table td:nth-child(4) { min-width: 140px; }
           .pr-row:nth-child(even) td { background: linear-gradient(to right, #faf5ff, #f3e8ff); }
           .pr-row:hover td { background: linear-gradient(to right, #e9d5ff, #ddd6fe) !important; }
           .pr-badge { display:inline-block; padding:8px 14px; border-radius:999px; font-weight:700; font-size:0.8rem; letter-spacing:0.02em; }
           .pr-actions-btn { padding:10px 16px; border-radius:12px; background: linear-gradient(135deg, #8b5cf6, #a78bfa); border:2px solid #7c3aed; color: #ffffff; cursor:pointer; font-weight:700; transition: all 0.2s; }
           .pr-actions-btn:hover { background: linear-gradient(135deg, #7c3aed, #8b5cf6); transform: translateY(-2px); box-shadow: 0 4px 12px rgba(139,92,246,0.3); }
           .pr-dropdown { min-width:240px; border-radius:16px; overflow:hidden; box-shadow:0 12px 32px rgba(2,6,23,0.15); z-index: 50; border: 2px solid rgba(2,6,23,0.08); }
+          .pr-table { position: relative; }
+          .pr-table td { position: relative; }
           .pr-note { font-size:0.875rem; color:#6b7280; font-weight:500; }
         `}</style>
 
@@ -148,13 +211,13 @@ function ProviderReservas() {
                   <th>Cancha</th>
                   <th>Usuario</th>
                   <th>Fecha</th>
-                  <th>Hora</th>
+                  <th style={{minWidth: 140}}>Hora</th>
                   <th>Estado</th>
                   <th style={{width: 180}}>Acciones</th>
                 </tr>
               </thead>
               <tbody>
-                {reservas.map(r => (
+                {reservas.map((r, index) => (
                   <tr key={r.id} className="pr-row">
                     <td className="py-2">
                       <div className="font-bold text-gray-900 text-base">⚽ {r.cancha_nombre || r.cancha_id}</div>
@@ -165,7 +228,7 @@ function ProviderReservas() {
                       {r.cliente_telefono && <div className="pr-note">📞 {r.cliente_telefono}</div>}
                     </td>
                     <td className="py-2 pr-note font-semibold">📅 {Reserva.formatearFecha(r.fecha)}</td>
-                    <td className="py-2 pr-note font-semibold">⏰ {formatTime(r.inicio)} — {formatTime(r.fin)}</td>
+                    <td className="py-2 pr-note font-semibold whitespace-nowrap">⏰ {formatTime(r.inicio)} - {formatTime(r.fin)}</td>
                     <td className="py-2">
                       <span
                         className="pr-badge"
@@ -197,7 +260,7 @@ function ProviderReservas() {
 
                       {/* Menú desplegable */}
                       {openMenu === r.id && (
-                        <div className="absolute right-0 mt-2 w-64 bg-white border pr-dropdown z-10">
+                        <div ref={menuRef} className={getDropdownPosition(index, reservas.length)}>
                           {/* Cancelar */}
                           {(() => {
                             const info = getCancelInfo(r);
@@ -205,7 +268,12 @@ function ProviderReservas() {
                               <div className="px-4 py-3 border-b-2 border-gray-100 hover:bg-red-50 transition-colors">
                                 <button
                                   disabled={!info.allowed}
-                                  onClick={() => info.allowed && cancelarReserva(r.id)}
+                                  onClick={() => {
+                                    if (info.allowed) {
+                                      cancelarReserva(r.id);
+                                      setOpenMenu(null);
+                                    }
+                                  }}
                                   className={`w-full text-left font-bold ${info.allowed ? 'text-red-600' : 'text-gray-400 cursor-not-allowed'}`}
                                 >❌ Cancelar reserva</button>
                                 {!info.allowed && <div className="text-xs text-gray-600 mt-2 font-medium">{info.reason}</div>}
@@ -220,7 +288,12 @@ function ProviderReservas() {
                               <div className="px-4 py-3 border-b-2 border-gray-100 hover:bg-emerald-50 transition-colors">
                                 <button
                                   disabled={!info.allowed}
-                                  onClick={() => info.allowed && completarReserva(r.id)}
+                                  onClick={() => {
+                                    if (info.allowed) {
+                                      completarReserva(r.id);
+                                      setOpenMenu(null);
+                                    }
+                                  }}
                                   className={`w-full text-left font-bold ${info.allowed ? 'text-emerald-600' : 'text-gray-400 cursor-not-allowed'}`}
                                 >✅ Marcar como completada</button>
                                 {!info.allowed && <div className="text-xs text-gray-600 mt-2 font-medium">{info.reason}</div>}
@@ -235,7 +308,12 @@ function ProviderReservas() {
                               <div className="px-4 py-3 hover:bg-yellow-50 transition-colors">
                                 <button
                                   disabled={!info.allowed}
-                                  onClick={() => info.allowed && marcarNoShow(r.id)}
+                                  onClick={() => {
+                                    if (info.allowed) {
+                                      marcarNoShow(r.id);
+                                      setOpenMenu(null);
+                                    }
+                                  }}
                                   className={`w-full text-left font-bold ${info.allowed ? 'text-yellow-600' : 'text-gray-400 cursor-not-allowed'}`}
                                 >⚠️ Cliente no se presentó (no-show)</button>
                                 {!info.allowed && <div className="text-xs text-gray-600 mt-2 font-medium">{info.reason}</div>}

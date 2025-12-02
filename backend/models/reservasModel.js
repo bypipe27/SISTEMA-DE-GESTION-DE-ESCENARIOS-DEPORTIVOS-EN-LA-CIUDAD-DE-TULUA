@@ -7,6 +7,7 @@ async function buscarPorProveedorId(providerId) {
       r.id, 
       r.fecha, 
       r.inicio, 
+      r.fin,
       r.estado,
       c.nombre as cancha_nombre,
       r.cliente_nombre as cliente_nombre
@@ -28,6 +29,7 @@ async function buscarProximasPorProveedorId(providerId, limit = 5) {
       r.id, 
       r.fecha, 
       r.inicio,
+      r.fin,
       c.nombre as cancha_nombre,
       r.cliente_nombre as cliente_nombre
     FROM reservas r

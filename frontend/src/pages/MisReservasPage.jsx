@@ -71,9 +71,15 @@ function MisReservasPage() {
 
   // Función para formatear hora sin ceros extras (17:00:00 -> 17:00)
   const formatearHora = (hora) => {
-    if (!hora) return "";
+    if (!hora) return "--:--";
+    // Convertir a string si es necesario
+    const horaStr = String(hora);
     // Si tiene formato HH:MM:SS, quitar los segundos
-    return hora.split(":").slice(0, 2).join(":");
+    if (horaStr.includes(':')) {
+      return horaStr.split(":").slice(0, 2).join(":");
+    }
+    // Si es solo un número, asumir que es la hora
+    return horaStr.padStart(2, '0') + ':00';
   };
 
   // Agrupar reservas por estado
@@ -155,42 +161,53 @@ function MisReservasPage() {
 
           <div className="border-t-2 border-teal-200 my-4"></div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+          <div className="space-y-3">
+            {/* Fecha */}
             <div className="flex items-center gap-3 bg-white/90 p-3 rounded-xl shadow-sm border border-teal-100 hover:border-teal-300 transition-colors">
-              <div className="bg-gradient-to-br from-teal-500 to-green-600 p-2 rounded-lg shadow-md">
+              <div className="bg-gradient-to-br from-teal-500 to-green-600 p-2 rounded-lg shadow-md flex-shrink-0">
                 <FaCalendarAlt className="text-white text-lg" />
               </div>
-              <div>
+              <div className="flex-grow">
+                <p className="text-slate-500 text-xs">Fecha:</p>
                 <p className="font-bold text-slate-800">{Reserva.formatearFecha(reserva.fecha)}</p>
               </div>
             </div>
             
-            <div className="flex items-center gap-3 bg-white/90 p-3 rounded-xl shadow-sm border border-teal-100 hover:border-teal-300 transition-colors">
-              <div className="bg-gradient-to-br from-emerald-500 to-teal-600 p-2 rounded-lg shadow-md">
-                <FaClock className="text-white text-lg" />
+            {/* Horario */}
+            <div className="bg-white/90 p-4 rounded-xl shadow-sm border border-teal-100 hover:border-teal-300 transition-colors">
+              <div className="flex items-center gap-3 mb-2">
+                <div className="bg-gradient-to-br from-emerald-500 to-teal-600 p-2 rounded-lg shadow-md flex-shrink-0">
+                  <FaClock className="text-white text-lg" />
+                </div>
+                <p className="text-slate-500 text-sm font-medium">Horario:</p>
               </div>
-              <div>
-                <p className="font-bold text-slate-800">{formatearHora(reserva.inicio)} - {formatearHora(reserva.fin)}</p>
-              </div>
-            </div>
-            
-            <div className="flex items-center gap-3 bg-white/90 p-3 rounded-xl shadow-sm border border-teal-100 hover:border-teal-300 transition-colors">
-              <div className="bg-gradient-to-br from-cyan-500 to-teal-600 p-2 rounded-lg shadow-md">
-                <FaUser className="text-white text-lg" />
-              </div>
-              <div>
-                <p className="text-slate-500 text-xs">Reservado por:</p>
-                <p className="font-bold text-slate-800">{reserva.cliente_nombre}</p>
+              <div className="pl-12">
+                <p className="font-bold text-slate-800 text-xl whitespace-nowrap">
+                  {formatearHora(reserva.inicio)} - {formatearHora(reserva.fin)}
+                </p>
               </div>
             </div>
             
-            <div className="flex items-center gap-3 bg-white/90 p-3 rounded-xl shadow-sm border border-teal-100 hover:border-teal-300 transition-colors">
-              <div className="bg-gradient-to-br from-green-500 to-emerald-600 p-2 rounded-lg shadow-md">
-                <FaMoneyBillWave className="text-white text-lg" />
+            {/* Cliente y Precio en una fila */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="flex items-center gap-3 bg-white/90 p-3 rounded-xl shadow-sm border border-teal-100 hover:border-teal-300 transition-colors">
+                <div className="bg-gradient-to-br from-cyan-500 to-teal-600 p-2 rounded-lg shadow-md flex-shrink-0">
+                  <FaUser className="text-white text-lg" />
+                </div>
+                <div className="flex-grow min-w-0">
+                  <p className="text-slate-500 text-xs">Reservado por:</p>
+                  <p className="font-bold text-slate-800 truncate">{reserva.cliente_nombre}</p>
+                </div>
               </div>
-              <div>
-                <p className="text-slate-500 text-xs">Precio:</p>
-                <p className="font-bold text-lg text-transparent bg-clip-text bg-gradient-to-r from-teal-600 to-green-600">${precioNum.toLocaleString()} COP</p>
+              
+              <div className="flex items-center gap-3 bg-white/90 p-3 rounded-xl shadow-sm border border-teal-100 hover:border-teal-300 transition-colors">
+                <div className="bg-gradient-to-br from-green-500 to-emerald-600 p-2 rounded-lg shadow-md flex-shrink-0">
+                  <FaMoneyBillWave className="text-white text-lg" />
+                </div>
+                <div className="flex-grow min-w-0">
+                  <p className="text-slate-500 text-xs">Precio:</p>
+                  <p className="font-bold text-lg text-transparent bg-clip-text bg-gradient-to-r from-teal-600 to-green-600">${precioNum.toLocaleString()}</p>
+                </div>
               </div>
             </div>
           </div>
@@ -335,7 +352,7 @@ function MisReservasPage() {
                         {reservasAgrupadas.proximas.length}
                       </span>
                     </div>
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
                       {reservasAgrupadas.proximas.map((reserva, index) => renderReservaCard(reserva, index))}
                     </div>
                   </motion.section>
@@ -359,7 +376,7 @@ function MisReservasPage() {
                         {reservasAgrupadas.programadas.length}
                       </span>
                     </div>
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
                       {reservasAgrupadas.programadas.map((reserva, index) => renderReservaCard(reserva, index))}
                     </div>
                   </motion.section>
@@ -383,7 +400,7 @@ function MisReservasPage() {
                         {reservasAgrupadas.completadas.length}
                       </span>
                     </div>
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
                       {reservasAgrupadas.completadas.map((reserva, index) => renderReservaCard(reserva, index))}
                     </div>
                   </motion.section>
@@ -407,7 +424,7 @@ function MisReservasPage() {
                         {reservasAgrupadas.canceladas.length}
                       </span>
                     </div>
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
                       {reservasAgrupadas.canceladas.map((reserva, index) => renderReservaCard(reserva, index))}
                     </div>
                   </motion.section>

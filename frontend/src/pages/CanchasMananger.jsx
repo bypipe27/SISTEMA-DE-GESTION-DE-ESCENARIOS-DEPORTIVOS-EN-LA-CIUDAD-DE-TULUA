@@ -49,7 +49,17 @@ function CanchasManager() {
   const [imageError, setImageError] = useState("");
   
   // Estado para notificaciones toast
-  const [toast, setToast] = useState({ isOpen: false, message: "", type: "success" });  // Manejar selección de imagen
+  const [toast, setToast] = useState({ isOpen: false, message: "", type: "success" });
+  
+  // Estado para modal de confirmación
+  const [confirmModal, setConfirmModal] = useState({
+    isOpen: false,
+    title: "",
+    message: "",
+    onConfirm: null,
+    confirmText: "Confirmar",
+    cancelText: "Cancelar"
+  });  // Manejar selección de imagen
   const handleImageSelect = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -168,6 +178,43 @@ function CanchasManager() {
     }
   };
 
+  // Función para manejar eliminación con confirmación y Toast
+  const handleEliminar = (cancha) => {
+    setConfirmModal({
+      isOpen: true,
+      title: "🗑️ Eliminar Cancha",
+      message: `¿Estás seguro de que deseas eliminar la cancha "${cancha.nombre}"?\n\nEsta acción no se puede deshacer y se perderán todos los datos asociados.`,
+      confirmText: "Sí, eliminar",
+      cancelText: "Cancelar",
+      onConfirm: async () => {
+        setConfirmModal({ ...confirmModal, isOpen: false });
+        
+        // Limpiar errores previos
+        setError("");
+        
+        const resultado = await eliminar(cancha);
+        
+        if (resultado) {
+          setToast({
+            isOpen: true,
+            message: resultado.message,
+            type: resultado.success ? "success" : "error"
+          });
+          
+          // Solo mostrar error en el estado si es un error crítico
+          if (!resultado.success && !resultado.message.includes('reserva(s) activa(s)')) {
+            setError(resultado.message);
+          }
+        }
+      }
+    });
+  };
+  
+  // Función para cerrar modal de confirmación
+  const closeConfirmModal = () => {
+    setConfirmModal({ ...confirmModal, isOpen: false });
+  };
+
   // Cuando se abre el formulario, cargar imagen existente
   React.useEffect(() => {
     if (openForm && editing && form.imagen_url) {
@@ -281,7 +328,7 @@ function CanchasManager() {
                         <FaEdit className="text-lg mr-1" />
                         Editar
                       </button>
-                      <button onClick={() => eliminar(c)} className="flex items-center px-4 py-2.5 rounded-xl text-sm font-bold text-white bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 transition-all shadow-md hover:shadow-lg transform hover:scale-105" title={`Eliminar ${c.nombre}`}>
+                      <button onClick={() => handleEliminar(c)} className="flex items-center px-4 py-2.5 rounded-xl text-sm font-bold text-white bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 transition-all shadow-md hover:shadow-lg transform hover:scale-105" title={`Eliminar ${c.nombre}`}>
                         <FaTrash className="text-lg mr-1" />
                         Eliminar
                       </button>
@@ -463,6 +510,45 @@ function CanchasManager() {
         type={toast.type}
         onClose={() => setToast({ ...toast, isOpen: false })}
       />
+      
+      {/* Modal de confirmación personalizado */}
+      {confirmModal.isOpen && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[60] p-4">
+          <div className="bg-white rounded-2xl shadow-2xl border-2 border-red-200 max-w-md w-full transform transition-all duration-300 scale-100">
+            {/* Header del modal */}
+            <div className="bg-gradient-to-r from-red-500 to-red-600 text-white px-6 py-4 rounded-t-2xl">
+              <h3 className="text-xl font-bold flex items-center gap-2">
+                {confirmModal.title}
+              </h3>
+            </div>
+            
+            {/* Contenido del modal */}
+            <div className="p-6">
+              <div className="mb-6">
+                <p className="text-gray-700 leading-relaxed whitespace-pre-line font-medium">
+                  {confirmModal.message}
+                </p>
+              </div>
+              
+              {/* Botones de acción */}
+              <div className="flex gap-3 justify-end">
+                <button
+                  onClick={closeConfirmModal}
+                  className="px-5 py-2.5 border-2 border-gray-300 bg-gray-50 text-gray-700 rounded-xl font-bold hover:bg-gray-100 hover:border-gray-400 transition-all shadow-sm hover:shadow-md"
+                >
+                  {confirmModal.cancelText}
+                </button>
+                <button
+                  onClick={confirmModal.onConfirm}
+                  className="px-5 py-2.5 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-xl font-bold hover:from-red-600 hover:to-red-700 transition-all shadow-md hover:shadow-lg transform hover:scale-105"
+                >
+                  {confirmModal.confirmText}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

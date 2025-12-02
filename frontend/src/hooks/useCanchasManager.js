@@ -410,8 +410,6 @@ export const useCanchasManager = () => {
 
   // Eliminar cancha
   async function eliminar(cancha) {
-    if (!confirm(`Eliminar cancha "${cancha.nombre}"?`)) return;
-    
     try {
       const res = await fetch(`${BACKEND}/api/canchas/provider/${cancha.id}`, {
         method: "DELETE",
@@ -425,15 +423,23 @@ export const useCanchasManager = () => {
       } catch {}
       
       if (!res.ok) {
-        console.error('Error eliminando cancha:', (data && (data.error || data.message)) || `Error ${res.status}`);
-        return { success: false, message: (data && (data.error || data.message)) || `Error ${res.status}` };
+        const errorMessage = data && (data.error || data.message);
+        let userFriendlyMessage = errorMessage || `Error ${res.status}`;
+        
+        // Detectar si el error es por reservas futuras
+        if (errorMessage && errorMessage.includes('reserva(s) futura(s)')) {
+          const match = errorMessage.match(/(\d+)\s+reserva\(s\)\s+futura\(s\)/);
+          const numReservas = match ? match[1] : 'algunas';
+          userFriendlyMessage = `No se puede eliminar la cancha "${cancha.nombre}" porque tiene ${numReservas} reserva(s) activa(s). Debe esperar a que finalicen o cancelarlas primero.`;
+        }
+        
+        return { success: false, message: userFriendlyMessage };
       }
       
       setCanchas(prev => prev.filter(c => c.id !== cancha.id));
-      return { success: true, message: "Cancha eliminada exitosamente" };
+      return { success: true, message: `Cancha "${cancha.nombre}" eliminada exitosamente` };
     } catch (err) {
-      console.error("Error eliminando cancha:", err);
-      return { success: false, message: "Error eliminando cancha" };
+      return { success: false, message: `Error de conexión al eliminar la cancha "${cancha.nombre}"` };
     }
   }
 
