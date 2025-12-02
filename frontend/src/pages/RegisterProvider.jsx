@@ -126,23 +126,32 @@ function RegisterProvider() {
                     type="tel"
                     value={form.telefono}
                     onChange={handleChange}
-                    onInput={(e) => {
-                      // Filtrar solo números y limitar a máximo 10 dígitos
-                      let valor = e.target.value.replace(/[^0-9]/g, '');
-                      if (valor.length > 10) {
-                        valor = valor.slice(0, 10);
+                    onKeyDown={(e) => {
+                      // Bloquear completamente letras, espacios y caracteres especiales
+                      const isNumber = /[0-9]/.test(e.key);
+                      const isControlKey = ['Backspace', 'Delete', 'Tab', 'Enter', 'ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(e.key);
+                      const isCtrlA = e.ctrlKey && e.key === 'a';
+                      
+                      // Solo permitir números, teclas de control y Ctrl+A
+                      if (!isNumber && !isControlKey && !isCtrlA) {
+                        e.preventDefault();
+                        return false;
                       }
-                      e.target.value = valor;
-                      // Actualizar el estado del formulario
-                      setForm(prev => ({ ...prev, telefono: valor }));
-                    }}
-                    onKeyPress={(e) => {
-                      // Prevenir ingreso de letras y limitar a 10 números
+                      
+                      // Limitar a máximo 10 dígitos
                       const valorActual = e.target.value.replace(/[^0-9]/g, '');
-                      if (!/[0-9]/.test(e.key) && e.key !== 'Backspace' && e.key !== 'Delete' && e.key !== 'Tab') {
+                      if (valorActual.length >= 10 && isNumber) {
                         e.preventDefault();
-                      } else if (valorActual.length >= 10 && /[0-9]/.test(e.key)) {
-                        e.preventDefault();
+                        return false;
+                      }
+                    }}
+                    onPaste={(e) => {
+                      // Prevenir pegar contenido no numérico
+                      e.preventDefault();
+                      const paste = (e.clipboardData || window.clipboardData).getData('text');
+                      const onlyNumbers = paste.replace(/[^0-9]/g, '').slice(0, 10);
+                      if (onlyNumbers) {
+                        setForm(prev => ({ ...prev, telefono: onlyNumbers }));
                       }
                     }}
                     placeholder="Número de contacto (máx. 10 dígitos)"
